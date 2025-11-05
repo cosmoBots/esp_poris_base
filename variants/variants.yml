@@ -1,0 +1,28 @@
+defaults_dir: "sdkconfig"
+out_dir: "buildcfg"
+
+variants:
+  - id: C6DevkitOT
+    target: esp32c6
+    overlays: [ "target_esp32c6.defaults", "stack_openthread.defaults", "feat_minimal.defaults" ]
+    cmake: { ESPB_STACK: "OT", ESPB_LCD_1P47: "OFF" }
+
+  - id: C6DevkitWifi
+    target: esp32c6
+    overlays: [ "target_esp32c6.defaults", "stack_wifi.defaults", "feat_minimal.defaults" ]
+    cmake: { ESPB_STACK: "WIFI", ESPB_LCD_1P47: "OFF" }
+
+  - id: C5DevkitOT
+    target: esp32c5
+    overlays: [ "target_esp32c5.defaults", "stack_openthread.defaults", "feat_minimal.defaults" ]
+    cmake: { ESPB_STACK: "OT", ESPB_LCD_1P47: "OFF" }
+
+  - id: C5DevkitWifi
+    target: esp32c5
+    overlays: [ "target_esp32c5.defaults", "stack_wifi.defaults", "feat_minimal.defaults" ]
+    cmake: { ESPB_STACK: "WIFI", ESPB_LCD_1P47: "OFF" }
+
+  - id: S3WifiLCD
+    target: esp32s3
+    overlays: [ "target_esp32s3.defaults", "stack_wifi.defaults", "feat_lcd_1p47.defaults" ]
+    cmake: { ESPB_STACK: "WIFI", ESPB_LCD_1P47: "ON" }
