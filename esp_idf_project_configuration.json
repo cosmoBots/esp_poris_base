@@ -1,0 +1,147 @@
+{
+  "S3WifiLCD": {
+    "build": {
+      "compileArgs": [],
+      "ninjaArgs": [],
+      "buildDirectoryPath": "./build_s3wifilcd",
+      "sdkconfigDefaults": [
+        "buildcfg/sdkconfig.S3WifiLCD.defaults"
+      ],
+      "sdkconfigFilePath": "./build_s3wifilcd/sdkconfig"
+    },
+    "env": {
+      "VARIANT": "S3WifiLCD",
+      "VAR_SUFFIX": "s3wifilcd"
+    },
+    "idfTarget": "esp32s3",
+    "flashBaudRate": "",
+    "monitorBaudRate": "",
+    "openOCD": {
+      "debugLevel": 0,
+      "configs": [],
+      "args": []
+    },
+    "tasks": {
+      "preBuild": "",
+      "preFlash": "",
+      "postBuild": "",
+      "postFlash": ""
+    }
+  },
+  "C6Devkit": {
+    "build": {
+      "compileArgs": [],
+      "ninjaArgs": [],
+      "buildDirectoryPath": "./build_c6devkit",
+      "sdkconfigDefaults": [
+        "buildcfg/sdkconfig.C6Devkit.defaults"
+      ],
+      "sdkconfigFilePath": "./build_c6devkit/sdkconfig"
+    },
+    "env": {
+      "VARIANT": "C6Devkit",
+      "VAR_SUFFIX": "c6devkit"
+    },
+    "idfTarget": "esp32c6",
+    "flashBaudRate": "",
+    "monitorBaudRate": "",
+    "openOCD": {
+      "debugLevel": 0,
+      "configs": [],
+      "args": []
+    },
+    "tasks": {
+      "preBuild": "",
+      "preFlash": "",
+      "postBuild": "",
+      "postFlash": ""
+    }
+  },
+  "C6DevKitUSB": {
+    "build": {
+      "compileArgs": [],
+      "ninjaArgs": [],
+      "buildDirectoryPath": "./build_c6devkitusb",
+      "sdkconfigDefaults": [
+        "buildcfg/sdkconfig.C6DevKitUSB.defaults"
+      ],
+      "sdkconfigFilePath": "./build_c6devkitusb/sdkconfig"
+    },
+    "env": {
+      "VARIANT": "C6DevKitUSB",
+      "VAR_SUFFIX": "c6devkitusb"
+    },
+    "idfTarget": "esp32c6",
+    "flashBaudRate": "",
+    "monitorBaudRate": "",
+    "openOCD": {
+      "debugLevel": 0,
+      "configs": [],
+      "args": []
+    },
+    "tasks": {
+      "preBuild": "",
+      "preFlash": "",
+      "postBuild": "",
+      "postFlash": ""
+    }
+  },
+  "C5Devkit": {
+    "build": {
+      "compileArgs": [],
+      "ninjaArgs": [],
+      "buildDirectoryPath": "./build_c5devkit",
+      "sdkconfigDefaults": [
+        "buildcfg/sdkconfig.C5Devkit.defaults"
+      ],
+      "sdkconfigFilePath": "./build_c5devkit/sdkconfig"
+    },
+    "env": {
+      "VARIANT": "C5Devkit",
+      "VAR_SUFFIX": "c5devkit"
+    },
+    "idfTarget": "esp32c5",
+    "flashBaudRate": "",
+    "monitorBaudRate": "",
+    "openOCD": {
+      "debugLevel": 0,
+      "configs": [],
+      "args": []
+    },
+    "tasks": {
+      "preBuild": "",
+      "preFlash": "",
+      "postBuild": "",
+      "postFlash": ""
+    }
+  },
+  "C5DevKitUSB": {
+    "build": {
+      "compileArgs": [],
+      "ninjaArgs": [],
+      "buildDirectoryPath": "./build_c5devkitusb",
+      "sdkconfigDefaults": [
+        "buildcfg/sdkconfig.C5DevKitUSB.defaults"
+      ],
+      "sdkconfigFilePath": "./build_c5devkitusb/sdkconfig"
+    },
+    "env": {
+      "VARIANT": "C5DevKitUSB",
+      "VAR_SUFFIX": "c5devkitusb"
+    },
+    "idfTarget": "esp32c5",
+    "flashBaudRate": "",
+    "monitorBaudRate": "",
+    "openOCD": {
+      "debugLevel": 0,
+      "configs": [],
+      "args": []
+    },
+    "tasks": {
+      "preBuild": "",
+      "preFlash": "",
+      "postBuild": "",
+      "postFlash": ""
+    }
+  }
+}
