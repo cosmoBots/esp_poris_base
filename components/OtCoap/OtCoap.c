@@ -1,22 +1,62 @@
-#include <stdio.h>
 #include <PrjCfg.h>
 
-#include "$1.h"
+#include "include/OtCoap.h"
 
-void OtCoap_setup(void)
+#ifdef CONFIG_PORIS_ENABLE_OTCOAP
+// Optional: code that depends on Kconfig switch
+
+/**
+ *  This is to be called on initialization
+ */
+OtCoap_return_code OtCoap_setup(void)
 {
-    // This is to be called on initialization
-#error "compiling this component"
+#error "Unimplemented"
+    return OtCoap_ret_error;
 }
 
-void OtCoap_spin(void)
+/**
+ * This is not blocking, an execution step for this module
+ */
+OtCoap_return_code OtCoap_spin(void)
 {
-    // This is not blocking, an execution step for this module
-
+#error "Unimplemented"
+    return OtCoap_ret_error;
 }
 
-void OtCoap_start(void)
+/**
+ * In case you want to use a separate thread, use this function
+ */
+OtCoap_return_code OtCoap_start(void)
 {
-    // In case you want to use a separate thread, use this function
+#error "Unimplemented"
+    return OtCoap_ret_error;
 }
 
+/**
+ * This is a thread-safe function to get a clone of the OtCoap_dre.
+ */
+OtCoap_return_code OtCoap_get_dre_clone(OtCoap_dre *OtCoap_dre_destination)
+{
+#error "Unimplemented"
+    return OtCoap_ret_error;
+}
+
+/**
+ * This is a thread-safe function to enable OtCoap.
+ */
+OtCoap_return_code OtCoap_enable(void)
+{
+#error "Unimplemented"
+    return OtCoap_ret_error;
+}
+
+/**
+ * This is a thread-safe function to disable OtCoap.
+ */
+OtCoap_return_code OtCoap_disable(void)
+{
+#error "Unimplemented"
+    return OtCoap_ret_error;
+}
+
+#endif
