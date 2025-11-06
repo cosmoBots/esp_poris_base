@@ -115,6 +115,39 @@ set(PORIS_COMPONENTS_LIST "${_raw_list}" CACHE STRING "PORIS components list for
 
 message(STATUS "PORIS_COMPONENTS_LIST (env)='${_raw_list}'")
 
+# --- Deriva el slug de VARIANT para localizar build_<slug>/config.env -----
+function(_poris_slug OUT VAR)
+  string(TOLOWER "${VAR}" _low)
+  string(REGEX REPLACE "[^a-z0-9]" "" _slug "${_low}")
+  set(${OUT} "${_slug}" PARENT_SCOPE)
+endfunction()
+
+if(NOT DEFINED VARIANT AND DEFINED ENV{VARIANT})
+  set(VARIANT "$ENV{VARIANT}")
+endif()
+
+if(DEFINED VARIANT AND NOT VARIANT STREQUAL "")
+  _poris_slug(_PORIS_SLUG "${VARIANT}")
+  set(_PORIS_CONFIG_ENV "${CMAKE_SOURCE_DIR}/build_${_PORIS_SLUG}/config.env")
+
+  if(EXISTS "${_PORIS_CONFIG_ENV}")
+    file(STRINGS "${_PORIS_CONFIG_ENV}" _PORIS_ENV_LINES
+         REGEX "^[A-Za-z_][A-Za-z0-9_]*=.*")
+    foreach(_line IN LISTS _PORIS_ENV_LINES)
+      string(REGEX MATCH "^[A-Za-z_][A-Za-z0-9_]*" _k "${_line}")
+      string(REGEX REPLACE "^[A-Za-z_][A-Za-z0-9_]*=" "" _v "${_line}")
+      # Exporta al entorno del proceso CMake (visible a sub-steps como kconfiggen)
+      set(ENV{${_k}} "${_v}")
+      # Opcional: espejo CMake por si quieres consultarlo dentro del script
+      set(PORIS_EXTRA_${_k} "${_v}" CACHE STRING "env from config.env" FORCE)
+    endforeach()
+    message(STATUS "PORIS: cargado entorno de ${_PORIS_CONFIG_ENV}")
+  else()
+    message(STATUS "PORIS: no hay ${_PORIS_CONFIG_ENV} (aún). Ejecuta prebuild primero si necesitas extra_env.")
+  endif()
+endif()
+
+
 # --- IDF project.cmake + nombre de proyecto --------------------------------
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(poris_base)
