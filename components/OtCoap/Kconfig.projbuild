@@ -1,0 +1,10 @@
+menu "PORIS components"
+
+config PORIS_ENABLE_OtCoap
+    bool "Enable component OtCoap"
+    default y
+    help
+      Enable or disable component OtCoap at Kconfig level.
+      This is independent from the build-time variant gating by environment.
+
+endmenu

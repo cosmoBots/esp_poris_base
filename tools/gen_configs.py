@@ -7,9 +7,9 @@ def slug_lower(s: str) -> str:
     return re.sub(r'[^a-z0-9]+', '', s.lower())
 
 def main():
-    ap = argparse.ArgumentParser(description="Genera configuraciones JSON desde variants.yml")
+    ap = argparse.ArgumentParser(description="Genera esp_idf_project_configuration.json desde variants.yml")
     ap.add_argument("--variants-yml", default="variants/variants.yml")
-    ap.add_argument("--out", default="poris_base.configs.json",
+    ap.add_argument("--out", default="esp_idf_project_configuration.json",
                     help="Ruta del JSON a generar")
     ap.add_argument("--project", default="poris_base",
                     help="Sólo informativo; no se usa dentro del JSON salvo que quieras extenderlo")
@@ -61,7 +61,7 @@ def main():
                 "args": []
             },
             "tasks": {
-                "preBuild": "",
+                "preBuild": f"python3 tools/gen_variant.py --variant {vid} && python3 tools/ensure_variant.py --variant {vid}",
                 "preFlash": "",
                 "postBuild": "",
                 "postFlash": ""

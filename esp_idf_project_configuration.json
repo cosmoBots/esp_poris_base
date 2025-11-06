@@ -22,7 +22,7 @@
       "args": []
     },
     "tasks": {
-      "preBuild": "",
+      "preBuild": "python3 tools/gen_variant.py --variant S3WifiLCD && python3 tools/ensure_variant.py --variant S3WifiLCD",
       "preFlash": "",
       "postBuild": "",
       "postFlash": ""
@@ -51,7 +51,7 @@
       "args": []
     },
     "tasks": {
-      "preBuild": "",
+      "preBuild": "python3 tools/gen_variant.py --variant C6Devkit && python3 tools/ensure_variant.py --variant C6Devkit",
       "preFlash": "",
       "postBuild": "",
       "postFlash": ""
@@ -80,7 +80,7 @@
       "args": []
     },
     "tasks": {
-      "preBuild": "",
+      "preBuild": "python3 tools/gen_variant.py --variant C6DevKitUSB && python3 tools/ensure_variant.py --variant C6DevKitUSB",
       "preFlash": "",
       "postBuild": "",
       "postFlash": ""
@@ -109,7 +109,7 @@
       "args": []
     },
     "tasks": {
-      "preBuild": "",
+      "preBuild": "python3 tools/gen_variant.py --variant C5Devkit && python3 tools/ensure_variant.py --variant C5Devkit",
       "preFlash": "",
       "postBuild": "",
       "postFlash": ""
@@ -138,7 +138,7 @@
       "args": []
     },
     "tasks": {
-      "preBuild": "",
+      "preBuild": "python3 tools/gen_variant.py --variant C5DevKitUSB && python3 tools/ensure_variant.py --variant C5DevKitUSB",
       "preFlash": "",
       "postBuild": "",
       "postFlash": ""

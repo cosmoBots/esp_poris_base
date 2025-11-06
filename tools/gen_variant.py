@@ -32,7 +32,7 @@ def concat_files(paths):
     return "".join(out)
 
 def main():
-    ap = argparse.ArgumentParser(description="Combina overlays en buildcfg/sdkconfig.<variant>.defaults")
+    ap = argparse.ArgumentParser(description="Combina overlays en buildcfg/sdkconfig.<variant>.defaults y crea env por variante")
     ap.add_argument("--variant", required=True, help="ID de la variante (definida en variants.yml)")
     ap.add_argument("--variants-yml", help="Ruta al YAML (opcional). Por defecto busca en variants/variants.yml")
     args = ap.parse_args()
@@ -79,6 +79,15 @@ def main():
     cache = out_dir / f"{var['id']}.cmakecache.cmake"
     target = var.get("target")
     cache.write_text((f"set(IDF_TARGET {target})\n" if target else "# no target in YAML\n"), encoding="utf-8")
+
+    # 3) ENV de componentes (PORIS_ENABLE_<COMP>=1)
+    env = out_dir / f"{var['id']}.env"
+    lines = []
+    for comp in var.get("components", []):
+        key = "PORIS_ENABLE_" + "".join(ch if ch.isalnum() else "_" for ch in comp).upper()
+        key = "_".join(filter(None, key.split("_")))
+        lines.append(f"{key}=1")
+    env.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
 
     print(str(out_path))
 

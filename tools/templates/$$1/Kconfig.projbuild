@@ -1,0 +1,10 @@
+menu "PORIS components"
+
+config PORIS_ENABLE_$$1
+    bool "Enable component $$1"
+    default y
+    help
+      Enable or disable component $$1 at Kconfig level.
+      This is independent from the build-time variant gating by environment.
+
+endmenu

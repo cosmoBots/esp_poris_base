@@ -1,23 +1,28 @@
-defaults_dir: "sdkcfg"     # o como la llames (no "sdkconfig" para evitar choque con kconfgen)
+defaults_dir: "sdkcfg"
 out_dir: "buildcfg"
 
 variants:
   - id: S3WifiLCD
     target: esp32s3
     overlays: ["target_esp32s3.defaults","feat_lcd_1p47.defaults"]
+    components: []
 
   - id: C6Devkit
     target: esp32c6
     overlays: ["target_esp32c6.defaults"]
+    components: ["OtCoap",]
 
   - id: C6DevKitUSB
     target: esp32c6
     overlays: ["target_esp32c6.defaults","feat_usb.defaults"]
+    components: ["OtCoap"]
 
   - id: C5Devkit
     target: esp32c5
     overlays: ["target_esp32c5.defaults"]
+    components: ["OtCoap"]
 
   - id: C5DevKitUSB
     target: esp32c5
     overlays: ["target_esp32c5.defaults","feat_usb.defaults"]
+    components: ["OtCoap"]
