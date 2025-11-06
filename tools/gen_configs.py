@@ -44,12 +44,6 @@ def main():
             "VARIANT": vid,
             "VAR_SUFFIX": suffix,
         }
-        # añade las PORIS_ENABLE_* para los componentes de esa variante
-        for comp in v.get("components", []):
-            key = "PORIS_ENABLE_" + "".join(ch if ch.isalnum() else "_" for ch in comp).upper()
-            key = "_".join(filter(None, key.split("_")))
-            env_map[key] = "1"
-
         out_obj[vid] = {
             "build": {
                 "compileArgs": [],
