@@ -631,6 +631,12 @@ CONFIG_PARTITION_TABLE_MD5=y
 #
 # PORIS components
 #
+CONFIG_PORIS_ENABLE_HELLOWORLD=y
+# end of PORIS components
+
+#
+# PORIS components
+#
 CONFIG_PORIS_ENABLE_OTCOAP=y
 # end of PORIS components
 

@@ -99,19 +99,22 @@ def main():
     comp_list = var.get("components", [])
 
     cmklines = []
-    # 4.1) la lista global para que el main la use en PRIV_REQUIRES
+    # 4.1) lista para CMake y espejo en CACHE/ENV
     cmklines.append("set(PORIS_COMPONENTS " + " ".join(comp_list) + ")")
-    cmklines.append("set(ENV{PORIS_COMPONENTS_LIST} " + " ".join(comp_list) + ")")
+    # NEW: lista cacheada (útil si quieres leerla como var normal en CMake)
+    cmklines.append('set(PORIS_COMPONENTS_LIST "' + ";".join(comp_list) + '" CACHE STRING "PORIS components" FORCE)')
+    # NEW: ENV con comillas y ';' (evita el warning y mantiene la lista)
+    cmklines.append('set(ENV{PORIS_COMPONENTS_LIST} "' + ";".join(comp_list) + '")')
 
-    # 4.2) flags individuales ON (útil si algún componente también las mira)
+    # 4.2) flags individuales ON en CACHE (clave para CLI sin sourcear env)
     for comp in comp_list:
         u = "".join(ch if ch.isalnum() else "_" for ch in comp).upper()
-        cmklines.append(f"set(PORIS_ENABLE_{u} ON)")
+        cmklines.append(f'set(PORIS_ENABLE_{u} ON CACHE BOOL "Enable {u}" FORCE)')
 
-    # 4.3) extra_env: exporta a entorno (para kconfgen) y opcionalmente a CMake
+    # 4.3) extra_env: exporta a entorno y refleja en var CMake (opcional)
     for k, v in (var.get("extra_env") or {}).items():
-        cmklines.append(f"set(ENV{{{k}}} \"{v}\")")
-        cmklines.append(f"set(PORIS_EXTRA_{k} \"{v}\")")
+        cmklines.append(f'set(ENV{{{k}}} "{v}")')
+        cmklines.append(f'set(PORIS_EXTRA_{k} "{v}")')
 
     # 4.4) escribir una sola vez
     cmk.write_text("\n".join(cmklines) + "\n", encoding="utf-8")
