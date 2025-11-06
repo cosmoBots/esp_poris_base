@@ -1,5 +1,58 @@
 cmake_minimum_required(VERSION 3.16)
 
+# --- PORIS bootstrap: inferir VARIANT y autogenerar buildcfg si falta -------
+# Si no viene VARIANT por CLI/ENV, intenta deducirla de CMAKE_BINARY_DIR = build_<slug>
+if(NOT DEFINED VARIANT OR "${VARIANT}" STREQUAL "")
+  get_filename_component(_bin_name "${CMAKE_BINARY_DIR}" NAME)
+  if(_bin_name MATCHES "^build_([a-z0-9]+)$")
+    set(_slug "${CMAKE_MATCH_1}")
+    set(_variants_yml "${CMAKE_SOURCE_DIR}/variants/variants.yml")
+    if(EXISTS "${_variants_yml}")
+      file(STRINGS "${_variants_yml}" _id_lines REGEX "^[ \t-]*id:[ \t]*.+$")
+      foreach(_L IN LISTS _id_lines)
+        string(REGEX REPLACE ".*id:[ \t]*\"?([A-Za-z0-9_\\-]+)\"?.*" "\\1" _id "${_L}")
+        string(TOLOWER "${_id}" _low)
+        string(REGEX REPLACE "[^a-z0-9]" "" _id_slug "${_low}")
+        if(_id_slug STREQUAL _slug)
+          set(VARIANT "${_id}" CACHE STRING "PORIS variant inferred from build dir" FORCE)
+          break()
+        endif()
+      endforeach()
+    endif()
+  endif()
+endif()
+
+# Si tenemos VARIANT pero faltan artefactos, genéralos (para VSCode Configure/confserver)
+if(DEFINED VARIANT AND NOT VARIANT STREQUAL "")
+  set(_VAR_COMP   "${CMAKE_SOURCE_DIR}/buildcfg/${VARIANT}.components.cmake")
+  set(_VAR_CACHE  "${CMAKE_SOURCE_DIR}/buildcfg/${VARIANT}.cmakecache.cmake")
+  set(_VAR_DEFS   "${CMAKE_SOURCE_DIR}/buildcfg/sdkconfig.${VARIANT}.defaults")
+
+  if(NOT (EXISTS "${_VAR_COMP}" AND EXISTS "${_VAR_CACHE}" AND EXISTS "${_VAR_DEFS}"))
+    message(STATUS "PORIS bootstrap: generando artefactos para '${VARIANT}'")
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+    execute_process(
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/gen_variant.py --variant ${VARIANT}
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      RESULT_VARIABLE _rv1
+    )
+    if(NOT _rv1 EQUAL 0)
+      message(FATAL_ERROR "gen_variant.py falló con código ${_rv1}")
+    endif()
+
+    execute_process(
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/ensure_variant.py --variant ${VARIANT}
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      RESULT_VARIABLE _rv2
+    )
+    if(NOT _rv2 EQUAL 0)
+      message(FATAL_ERROR "ensure_variant.py falló con código ${_rv2}")
+    endif()
+  endif()
+endif()
+# ---------------------------------------------------------------------------
+
 # --- Entrada de usuario (opcional por CLI o variables de entorno) ---
 #   -DVARIANT=NombreDeVariante   (p.ej., S3LCDWifi)
 #   -DIDF_TARGET=esp32s3         (normalmente NO hace falta si usas gen_variant.py)
@@ -97,7 +150,7 @@ message(STATUS "PORIS_COMPONENTS_LIST global = ${PORIS_COMPONENTS_LIST}")
 set(PORIS_COMPONENTS_LIST "${PORIS_COMPONENTS_LIST}"
     CACHE STRING "PORIS components list for this variant" FORCE)
 
-set(PORIS_COMPONENTS_FILE "${_VARCOMP}"
+set(PORIS_COMPONENTS_FILE "${VAR_COMP}"
     CACHE FILEPATH "CMake include file that defines PORIS_COMPONENTS" FORCE)
 
 message(STATUS "PORIS_COMPONENTS_LIST inicial = ${PORIS_COMPONENTS_LIST}")
@@ -147,7 +200,6 @@ if(DEFINED VARIANT AND NOT VARIANT STREQUAL "")
   endif()
 endif()
 
-
 # --- PORIS: auto-cargar enables desde config.env del build dir --------------
 # Deduce build dir (igual que el wrapper)
 if(DEFINED VARIANT)
@@ -180,23 +232,22 @@ if(NOT EXISTS "${_poris_env_file}")
   execute_process(
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/gen_variant.py --variant ${VARIANT}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    RESULT_VARIABLE _rv1
+    RESULT_VARIABLE _rv1b
   )
-  if(NOT _rv1 EQUAL 0)
-    message(FATAL_ERROR "gen_variant.py falló con código ${_rv1}")
+  if(NOT _rv1b EQUAL 0)
+    message(FATAL_ERROR "gen_variant.py (late) falló con código ${_rv1b}")
   endif()
 
   execute_process(
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/ensure_variant.py --variant ${VARIANT}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    RESULT_VARIABLE _rv2
+    RESULT_VARIABLE _rv2b
   )
-  if(NOT _rv2 EQUAL 0)
-    message(FATAL_ERROR "ensure_variant.py falló con código ${_rv2}")
+  if(NOT _rv2b EQUAL 0)
+    message(FATAL_ERROR "ensure_variant.py (late) falló con código ${_rv2b}")
   endif()
 endif()
 # ---------------------------------------------------------------------------
-
 
 set(_poris_env_file "${_poris_build_dir}/config.env")
 if(EXISTS "${_poris_env_file}")
@@ -213,15 +264,13 @@ if(EXISTS "${_poris_env_file}")
       # Exporta a ENV de este proceso CMake (por si algún script lo mira)
       set(ENV{${_k}} "${_v}")
       # Si es un PORIS_ENABLE_*, crea TAMBIÉN variable CMake (BOOL) para gating por CMake
-      if(_k MATCHES "^PORIS_ENABLE_[A-Z0-9_]+$")
-        # CMake trata "1", "ON", "TRUE" como verdadero
+      if(_line MATCHES "^PORIS_ENABLE_[A-Z0-9_]+=.*")
         set(${_k} ON CACHE BOOL "Enable ${_k} from config.env" FORCE)
       endif()
     endif()
   endforeach()
 endif()
 # ---------------------------------------------------------------------------
-
 
 # --- IDF project.cmake + nombre de proyecto --------------------------------
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)

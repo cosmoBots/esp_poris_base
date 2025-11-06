@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # tools/build.sh
 set -euo pipefail
+shopt -s nullglob
 
 usage() {
   echo "uso: $0 <VariantId|any-case> [idf.py args...]" >&2
@@ -51,5 +52,26 @@ if [ -f "${BUILD_DIR}/config.env" ]; then
   set +a
 fi
 
+# 2b) Alinear IDF_TARGET con la variante (si el YAML lo fija)
+#     Lee buildcfg/<Var>.cmakecache.cmake: 'set(IDF_TARGET esp32cX)'
+CACHE_FILE="${ROOT}/buildcfg/${CANON_ID}.cmakecache.cmake"
+if [ -f "${CACHE_FILE}" ]; then
+  # Extrae el segundo token de la línea 'set(IDF_TARGET <valor>)'
+  TGT="$(awk -F'[ )]+' '/^set\(IDF_TARGET/{print $2}' "${CACHE_FILE}" || true)"
+  if [ -n "${TGT:-}" ]; then
+    export IDF_TARGET="${TGT}"
+  fi
+fi
+
+# 2c) Rutas de sdkconfig: fuerza a usar SIEMPRE el del build dir + defaults de la variante
+SDKCONFIG_PATH="${BUILD_DIR}/sdkconfig"
+SDKDEFAULTS_PATH="${ROOT}/buildcfg/sdkconfig.${CANON_ID}.defaults"
+
+if [ ! -f "${SDKDEFAULTS_PATH}" ]; then
+  echo "No encuentro defaults de la variante: ${SDKDEFAULTS_PATH}" >&2
+  echo "¿Has ejecutado prebuild? (tools/prebuild.sh ${CANON_ID})" >&2
+  exit 5
+fi
+
 # 3) Llama a idf.py con el build dir y la variante; propaga args extra
-exec idf.py -B "${BUILD_DIR}" -DVARIANT="${CANON_ID}" "$@"
+exec idf.py -B "${BUILD_DIR}" -DVARIANT="${CANON_ID}" -DSDKCONFIG="${SDKCONFIG_PATH}" -DSDKCONFIG_DEFAULTS="${SDKDEFAULTS_PATH}" "$@"
