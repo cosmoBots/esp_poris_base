@@ -8,3 +8,48 @@ config PORIS_ENABLE_HELLOWORLD
       Variant gating is handled by environment variables (PORIS_ENABLE_HELLOWORLD).
 
 endmenu
+
+menu "HelloWorld settings"
+
+config HELLOWORLD_USE_THREAD
+    bool "HelloWorld starts its own thread (HelloWorld starts its own thread)"
+    default n
+    help
+      If enabled, HelloWorld will create a FreeRTOS task and call spin()
+      periodically. If disabled, call HelloWorld_spin() yourself from
+      your scheduler.
+    depends on PORIS_ENABLE_HELLOWORLD
+
+config HELLOWORLD_PERIOD_MS
+    int "HelloWorld period (ms)"
+    range 10 600000
+    default 1000
+    depends on HELLOWORLD_USE_THREAD
+
+choice HELLOWORLD_PIN_CORE
+    prompt "Pin task to core"
+    default HELLOWORLD_PIN_CORE_ANY
+    depends on HELLOWORLD_USE_THREAD
+    help
+      Choose which core to pin the task to (or none).
+config HELLOWORLD_PIN_CORE_ANY
+    bool "Any core (no affinity)"
+config HELLOWORLD_PIN_CORE_0
+    bool "Core 0"
+config HELLOWORLD_PIN_CORE_1
+    bool "Core 1"
+endchoice
+
+config HELLOWORLD_TASK_STACK
+    int "Task stack size (bytes)"
+    range 2048 65536
+    default 4096
+    depends on HELLOWORLD_USE_THREAD
+
+config HELLOWORLD_TASK_PRIO
+    int "Task priority"
+    range 1 24
+    default 5
+    depends on HELLOWORLD_USE_THREAD
+
+endmenu

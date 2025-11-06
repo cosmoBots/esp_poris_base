@@ -148,6 +148,81 @@ if(DEFINED VARIANT AND NOT VARIANT STREQUAL "")
 endif()
 
 
+# --- PORIS: auto-cargar enables desde config.env del build dir --------------
+# Deduce build dir (igual que el wrapper)
+if(DEFINED VARIANT)
+  string(TOLOWER "${VARIANT}" _var_suf)
+  set(_poris_build_dir "${CMAKE_SOURCE_DIR}/build_${_var_suf}")
+else()
+  set(_poris_build_dir "${CMAKE_BINARY_DIR}")
+endif()
+
+# --- PORIS bootstrap para VSCode Configure ---------------------------------
+# Si VSCode lanza "Configure" sin prebuild y aún no existe config.env,
+# generamos la variante aquí para que Opción B tenga algo que cargar.
+if(NOT DEFINED VARIANT AND DEFINED ENV{VARIANT})
+  set(VARIANT "$ENV{VARIANT}")
+endif()
+
+if(DEFINED VARIANT)
+  string(TOLOWER "${VARIANT}" _var_suf)
+  set(_poris_build_dir "${CMAKE_SOURCE_DIR}/build_${_var_suf}")
+else()
+  # Último recurso: usa el binario actual
+  set(_poris_build_dir "${CMAKE_BINARY_DIR}")
+endif()
+
+set(_poris_env_file "${_poris_build_dir}/config.env")
+if(NOT EXISTS "${_poris_env_file}")
+  message(STATUS "PORIS bootstrap: generando artefactos de variante para '${VARIANT}'")
+  find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+  execute_process(
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/gen_variant.py --variant ${VARIANT}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    RESULT_VARIABLE _rv1
+  )
+  if(NOT _rv1 EQUAL 0)
+    message(FATAL_ERROR "gen_variant.py falló con código ${_rv1}")
+  endif()
+
+  execute_process(
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/ensure_variant.py --variant ${VARIANT}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    RESULT_VARIABLE _rv2
+  )
+  if(NOT _rv2 EQUAL 0)
+    message(FATAL_ERROR "ensure_variant.py falló con código ${_rv2}")
+  endif()
+endif()
+# ---------------------------------------------------------------------------
+
+
+set(_poris_env_file "${_poris_build_dir}/config.env")
+if(EXISTS "${_poris_env_file}")
+  message(STATUS "PORIS: cargado entorno de ${_poris_env_file}")
+
+  file(READ "${_poris_env_file}" _poris_env_txt)
+  string(REPLACE "\r\n" "\n" _poris_env_txt "${_poris_env_txt}")
+  separate_arguments(_poris_env_lines UNIX_COMMAND "${_poris_env_txt}")
+
+  foreach(_line IN LISTS _poris_env_lines)
+    if(_line MATCHES "^([A-Za-z0-9_]+)=(.*)$")
+      set(_k "${CMAKE_MATCH_1}")
+      set(_v "${CMAKE_MATCH_2}")
+      # Exporta a ENV de este proceso CMake (por si algún script lo mira)
+      set(ENV{${_k}} "${_v}")
+      # Si es un PORIS_ENABLE_*, crea TAMBIÉN variable CMake (BOOL) para gating por CMake
+      if(_k MATCHES "^PORIS_ENABLE_[A-Z0-9_]+$")
+        # CMake trata "1", "ON", "TRUE" como verdadero
+        set(${_k} ON CACHE BOOL "Enable ${_k} from config.env" FORCE)
+      endif()
+    endif()
+  endforeach()
+endif()
+# ---------------------------------------------------------------------------
+
+
 # --- IDF project.cmake + nombre de proyecto --------------------------------
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(poris_base)

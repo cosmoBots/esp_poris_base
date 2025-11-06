@@ -1,4 +1,4 @@
-menu "PORIS components"
+menu "$$1 component"
 
 config PORIS_ENABLE_$#1
     bool "Enable component $$1"

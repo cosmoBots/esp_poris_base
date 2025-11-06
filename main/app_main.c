@@ -19,6 +19,9 @@
 #ifdef CONFIG_PORIS_ENABLE_OTCOAP
 #include <OtCoap.h>
 #endif
+#ifdef CONFIG_PORIS_ENABLE_HELLOWORLD
+#include <HelloWorld.h>
+#endif
 
 typedef enum {
     app_main_ret_error = -1,
@@ -32,14 +35,23 @@ app_main_return_code init_components(void)
     app_main_return_code ret = app_main_ret_error;
     if (PrjCfg_setup() == PrjCfg_ret_ok)
     {
-        #ifdef CONFIG_PORIS_ENABLE_OTCOAP
-        if (PrjCfg_setup() == PrjCfg_ret_ok)
+#ifdef CONFIG_PORIS_ENABLE_OTCOAP
+        if (OtCoap_setup() == OtCoap_ret_ok)
         {
             ret = app_main_ret_ok;
         }
-        #else
+#else
             ret = app_main_ret_ok;
-        #endif        
+#endif
+#ifdef CONFIG_PORIS_ENABLE_HELLOWORLD
+        if (ret == app_main_ret_ok)
+        {
+            if (HelloWorld_setup() != HelloWorld_ret_ok)
+            {
+                ret = app_main_ret_error;
+            }
+        }
+#endif
     }
     return ret;
 }
@@ -73,14 +85,33 @@ void app_main(void)
 
     printf("Minimum free heap size: %" PRIu32 " bytes\n", esp_get_minimum_free_heap_size());
 
+    bool shall_execute = true;
     if (init_components() != app_main_ret_ok)
     {
         ESP_LOGE(TAG,"Cannot init components!!!");
+        shall_execute = false;
+    }
+    if (shall_execute)
+    {
+#ifdef CONFIG_PORIS_ENABLE_HELLOWORLD
+        HelloWorld_enable();
+#ifdef CONFIG_HELLOWORLD_USE_THREAD
+        HelloWorld_start();
+#endif
+#endif        
     }
     while (true)
     {
         ESP_LOGI(TAG,"app_main spinning");
         vTaskDelay(1000 / portTICK_PERIOD_MS);
+        if (shall_execute)
+        {
+#ifdef CONFIG_PORIS_ENABLE_HELLOWORLD
+#ifndef CONFIG_HELLOWORLD_USE_THREAD
+            HelloWorld_spin();
+#endif
+#endif
+        }
     }
 
 }
