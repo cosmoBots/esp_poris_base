@@ -11,7 +11,7 @@
  */
 OtCoap_return_code OtCoap_setup(void)
 {
-#error "Unimplemented"
+//#error "Unimplemented"
     return OtCoap_ret_error;
 }
 
@@ -20,7 +20,7 @@ OtCoap_return_code OtCoap_setup(void)
  */
 OtCoap_return_code OtCoap_spin(void)
 {
-#error "Unimplemented"
+//#error "Unimplemented"
     return OtCoap_ret_error;
 }
 
@@ -29,7 +29,7 @@ OtCoap_return_code OtCoap_spin(void)
  */
 OtCoap_return_code OtCoap_start(void)
 {
-#error "Unimplemented"
+//#error "Unimplemented"
     return OtCoap_ret_error;
 }
 
@@ -38,7 +38,7 @@ OtCoap_return_code OtCoap_start(void)
  */
 OtCoap_return_code OtCoap_get_dre_clone(OtCoap_dre *OtCoap_dre_destination)
 {
-#error "Unimplemented"
+//#error "Unimplemented"
     return OtCoap_ret_error;
 }
 
@@ -47,7 +47,7 @@ OtCoap_return_code OtCoap_get_dre_clone(OtCoap_dre *OtCoap_dre_destination)
  */
 OtCoap_return_code OtCoap_enable(void)
 {
-#error "Unimplemented"
+//#error "Unimplemented"
     return OtCoap_ret_error;
 }
 
@@ -56,7 +56,7 @@ OtCoap_return_code OtCoap_enable(void)
  */
 OtCoap_return_code OtCoap_disable(void)
 {
-#error "Unimplemented"
+//#error "Unimplemented"
     return OtCoap_ret_error;
 }
 

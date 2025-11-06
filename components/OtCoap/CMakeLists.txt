@@ -10,6 +10,7 @@ endif()
 idf_component_register(
   SRCS "OtCoap.c"
   INCLUDE_DIRS "include"
+  PRIV_REQUIRES PrjCfg
 )
 
 # --- Optional: tie to Kconfig switch (symbol is uppercase) ------------------

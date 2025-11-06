@@ -5,24 +5,39 @@ variants:
   - id: S3WifiLCD
     target: esp32s3
     overlays: ["target_esp32s3.defaults","feat_lcd_1p47.defaults"]
-    components: []
+    components: ["PrjCfg", "HelloWorld"]
+    extra_env:
+      LOG_LEVEL: "debug"
+      FOO: "bar"
 
   - id: C6Devkit
     target: esp32c6
     overlays: ["target_esp32c6.defaults"]
-    components: ["OtCoap",]
+    components: ["PrjCfg", "OtCoap", "HelloWorld"]
+    extra_env:
+      LOG_LEVEL: "debug"
+      FOO: "bar"
 
   - id: C6DevKitUSB
     target: esp32c6
     overlays: ["target_esp32c6.defaults","feat_usb.defaults"]
-    components: ["OtCoap"]
+    components: ["PrjCfg", "OtCoap", "HelloWorld"]
+    extra_env:
+      LOG_LEVEL: "debug"
+      FOO: "bar"
 
   - id: C5Devkit
     target: esp32c5
     overlays: ["target_esp32c5.defaults"]
-    components: ["OtCoap"]
+    components: ["PrjCfg", "OtCoap", "HelloWorld"]
+    extra_env:
+      LOG_LEVEL: "debug"
+      FOO: "bar"
 
   - id: C5DevKitUSB
     target: esp32c5
     overlays: ["target_esp32c5.defaults","feat_usb.defaults"]
-    components: ["OtCoap"]
+    components: ["PrjCfg", "OtCoap", "HelloWorld"]
+    extra_env:
+      LOG_LEVEL: "debug"
+      FOO: "bar"

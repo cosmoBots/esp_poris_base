@@ -87,7 +87,34 @@ def main():
         key = "PORIS_ENABLE_" + "".join(ch if ch.isalnum() else "_" for ch in comp).upper()
         key = "_".join(filter(None, key.split("_")))
         lines.append(f"{key}=1")
+
+    # extra_env opcional del YAML
+    for k, v in (var.get("extra_env") or {}).items():
+        lines.append(f"{k}={v}")
+
     env.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
+
+    # 4) componentes para CMake
+    cmk = out_dir / f"{var['id']}.components.cmake"
+    comp_list = var.get("components", [])
+
+    cmklines = []
+    # 4.1) la lista global para que el main la use en PRIV_REQUIRES
+    cmklines.append("set(PORIS_COMPONENTS " + " ".join(comp_list) + ")")
+    cmklines.append("set(ENV{PORIS_COMPONENTS_LIST} " + " ".join(comp_list) + ")")
+
+    # 4.2) flags individuales ON (útil si algún componente también las mira)
+    for comp in comp_list:
+        u = "".join(ch if ch.isalnum() else "_" for ch in comp).upper()
+        cmklines.append(f"set(PORIS_ENABLE_{u} ON)")
+
+    # 4.3) extra_env: exporta a entorno (para kconfgen) y opcionalmente a CMake
+    for k, v in (var.get("extra_env") or {}).items():
+        cmklines.append(f"set(ENV{{{k}}} \"{v}\")")
+        cmklines.append(f"set(PORIS_EXTRA_{k} \"{v}\")")
+
+    # 4.4) escribir una sola vez
+    cmk.write_text("\n".join(cmklines) + "\n", encoding="utf-8")
 
     print(str(out_path))
 

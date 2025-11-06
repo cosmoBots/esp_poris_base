@@ -7,18 +7,26 @@ if(NOT DEFINED VARIANT AND DEFINED ENV{VARIANT})
   set(VARIANT "$ENV{VARIANT}")
 endif()
 
-# Ruta raíz y utilidades
+# Rutas base
 set(PROJECT_ROOT "${CMAKE_SOURCE_DIR}")
 set(BUILDCFG_DIR  "${PROJECT_ROOT}/buildcfg")
 
-# --- Cargar cache de la variante (si se ha pasado VARIANT) ---
+# --- Cargar cache/flags de la variante -------------------------------------
 if(VARIANT)
-  set(VAR_CACHE    "${BUILDCFG_DIR}/${VARIANT}.cmakecache.cmake")
-  set(VAR_SDKDEFS  "${BUILDCFG_DIR}/sdkconfig.${VARIANT}.defaults")
+  set(VAR_CACHE   "${BUILDCFG_DIR}/${VARIANT}.cmakecache.cmake")
+  set(VAR_SDKDEFS "${BUILDCFG_DIR}/sdkconfig.${VARIANT}.defaults")
+  set(VAR_COMP    "${BUILDCFG_DIR}/${VARIANT}.components.cmake")
+
+  if(EXISTS "${VAR_COMP}")
+    message(STATUS "Incluyendo flags de componentes: ${VAR_COMP}")
+    include("${VAR_COMP}")    # define: set(PORIS_COMPONENTS PrjCfg OtCoap) + PORIS_ENABLE_*
+  else()
+    set(PORIS_COMPONENTS "")  # sin componentes declarados
+  endif()
 
   if(EXISTS "${VAR_CACHE}")
     message(STATUS "Incluyendo cache de variante: ${VAR_CACHE}")
-    include("${VAR_CACHE}")  # esto hace set(IDF_TARGET ...)
+    include("${VAR_CACHE}")   # suele fijar IDF_TARGET, etc.
   else()
     message(FATAL_ERROR
       "No existe ${VAR_CACHE}.\n"
@@ -26,7 +34,7 @@ if(VARIANT)
   endif()
 
   if(EXISTS "${VAR_SDKDEFS}")
-    # IMPORTANTE: IDF acepta lista separada por ';' en SDKCONFIG_DEFAULTS; aquí sólo uno.
+    # IDF admite una lista (separada por ';'), aquí 1 fichero.
     set(SDKCONFIG_DEFAULTS "${VAR_SDKDEFS}" CACHE STRING "sdkconfig defaults for variant" FORCE)
     message(STATUS "Usando SDKCONFIG_DEFAULTS=${SDKCONFIG_DEFAULTS}")
   else()
@@ -36,10 +44,9 @@ if(VARIANT)
   endif()
 else()
   message(STATUS "VARIANT no establecido. Usaré sdkconfig.defaults (si existe).")
-  # si no hay variante, dejamos que IDF use sdkconfig.defaults por defecto.
 endif()
 
-# --- IDF target ---
+# --- IDF target -------------------------------------------------------------
 # Prioridad: cache de variante -> CLI/ENV -> existente
 if(NOT DEFINED IDF_TARGET AND DEFINED ENV{IDF_TARGET})
   set(IDF_TARGET "$ENV{IDF_TARGET}")
@@ -52,11 +59,67 @@ else()
     "considera pasar -DIDF_TARGET=esp32c6|esp32c5|esp32s3, o añade 'target' al YAML.")
 endif()
 
-# --- IDF project.cmake + nombre de proyecto ---
+# --- Normalización de componentes y override opcional -----------------------
+#   Fuente de verdad: PORIS_COMPONENTS desde buildcfg/<Var>.components.cmake
+#   Override opcional: ENV{PORIS_COMPONENTS_OVERRIDE} (formato "A,B" o "A;B")
+set(_raw "${PORIS_COMPONENTS}")
+
+if(DEFINED ENV{PORIS_COMPONENTS_OVERRIDE} AND NOT "$ENV{PORIS_COMPONENTS_OVERRIDE}" STREQUAL "")
+  set(_ovr "$ENV{PORIS_COMPONENTS_OVERRIDE}")
+  string(REPLACE "," ";" _ovr "${_ovr}")      # admite comas
+  if(_raw)
+    list(APPEND _raw ${_ovr})
+  else()
+    set(_raw "${_ovr}")
+  endif()
+endif()
+
+# Convierte cualquier string potencial a LISTA real (sin cachearla como STRING)
+# 1) espacios -> ';' (por si alguien mete "A B")
+string(REPLACE " " ";" _raw "${_raw}")
+# 2) tokeniza respetando ';' como separador de lista
+separate_arguments(PORIS_COMPONENTS_LIST UNIX_COMMAND "${_raw}")
+list(REMOVE_DUPLICATES PORIS_COMPONENTS_LIST)
+
+message(STATUS "PORIS_COMPONENTS_LIST inicial = ${PORIS_COMPONENTS_LIST}")
+
+# --- Exporta la lista para TODAS las pasadas/directorios ---
+# a) Cache: persiste entre re-configures
+set(PORIS_COMPONENTS_LIST "${PORIS_COMPONENTS_LIST}"
+    CACHE STRING "PORIS components list for this variant" FORCE)
+
+# b) Propiedad GLOBAL: accesible desde subdirectorios aunque la var normal esté vacía
+set_property(GLOBAL PROPERTY PORIS_COMPONENTS_LIST "${PORIS_COMPONENTS_LIST}")
+
+message(STATUS "PORIS_COMPONENTS_LIST global = ${PORIS_COMPONENTS_LIST}")
+
+# Exporta a caché la lista y el fichero para que main pueda “rehidratarse”
+set(PORIS_COMPONENTS_LIST "${PORIS_COMPONENTS_LIST}"
+    CACHE STRING "PORIS components list for this variant" FORCE)
+
+set(PORIS_COMPONENTS_FILE "${_VARCOMP}"
+    CACHE FILEPATH "CMake include file that defines PORIS_COMPONENTS" FORCE)
+
+message(STATUS "PORIS_COMPONENTS_LIST inicial = ${PORIS_COMPONENTS_LIST}")
+message(STATUS "PORIS_COMPONENTS_FILE = ${PORIS_COMPONENTS_FILE}")
+
+# Normaliza la lista a formato con ';'
+set(_raw_list "${PORIS_COMPONENTS_LIST}")
+string(REPLACE "," ";" _raw_list "${_raw_list}")
+
+# Exporta al entorno para TODAS las pasadas
+set(ENV{PORIS_COMPONENTS_LIST} "${_raw_list}")
+
+# (Opcional) también a caché por si quieres inspeccionarla desde cmake-gui/ninja reconfigure
+set(PORIS_COMPONENTS_LIST "${_raw_list}" CACHE STRING "PORIS components list for this variant" FORCE)
+
+message(STATUS "PORIS_COMPONENTS_LIST (env)='${_raw_list}'")
+
+# --- IDF project.cmake + nombre de proyecto --------------------------------
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(poris_base)
 
-# --- Mensajería útil post-config ---
+# --- Mensajería útil post-config -------------------------------------------
 message(STATUS "================ poris_base build context ================")
 message(STATUS "  VARIANT            : ${VARIANT}")
 message(STATUS "  IDF_TARGET         : ${IDF_TARGET}")

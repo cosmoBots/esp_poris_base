@@ -22,7 +22,7 @@
       "args": []
     },
     "tasks": {
-      "preBuild": "python3 tools/gen_variant.py --variant S3WifiLCD && python3 tools/ensure_variant.py --variant S3WifiLCD",
+      "preBuild": "bash tools/prebuild.sh S3WifiLCD",
       "preFlash": "",
       "postBuild": "",
       "postFlash": ""
@@ -40,8 +40,7 @@
     },
     "env": {
       "VARIANT": "C6Devkit",
-      "VAR_SUFFIX": "c6devkit",
-      "PORIS_ENABLE_OTCOAP": "1"
+      "VAR_SUFFIX": "c6devkit"
     },
     "idfTarget": "esp32c6",
     "flashBaudRate": "",
@@ -52,7 +51,7 @@
       "args": []
     },
     "tasks": {
-      "preBuild": "python3 tools/gen_variant.py --variant C6Devkit && python3 tools/ensure_variant.py --variant C6Devkit",
+      "preBuild": "bash tools/prebuild.sh C6Devkit",
       "preFlash": "",
       "postBuild": "",
       "postFlash": ""
@@ -70,8 +69,7 @@
     },
     "env": {
       "VARIANT": "C6DevKitUSB",
-      "VAR_SUFFIX": "c6devkitusb",
-      "PORIS_ENABLE_OTCOAP": "1"
+      "VAR_SUFFIX": "c6devkitusb"
     },
     "idfTarget": "esp32c6",
     "flashBaudRate": "",
@@ -82,7 +80,7 @@
       "args": []
     },
     "tasks": {
-      "preBuild": "python3 tools/gen_variant.py --variant C6DevKitUSB && python3 tools/ensure_variant.py --variant C6DevKitUSB",
+      "preBuild": "bash tools/prebuild.sh C6DevKitUSB",
       "preFlash": "",
       "postBuild": "",
       "postFlash": ""
@@ -100,8 +98,7 @@
     },
     "env": {
       "VARIANT": "C5Devkit",
-      "VAR_SUFFIX": "c5devkit",
-      "PORIS_ENABLE_OTCOAP": "1"
+      "VAR_SUFFIX": "c5devkit"
     },
     "idfTarget": "esp32c5",
     "flashBaudRate": "",
@@ -112,7 +109,7 @@
       "args": []
     },
     "tasks": {
-      "preBuild": "python3 tools/gen_variant.py --variant C5Devkit && python3 tools/ensure_variant.py --variant C5Devkit",
+      "preBuild": "bash tools/prebuild.sh C5Devkit",
       "preFlash": "",
       "postBuild": "",
       "postFlash": ""
@@ -130,8 +127,7 @@
     },
     "env": {
       "VARIANT": "C5DevKitUSB",
-      "VAR_SUFFIX": "c5devkitusb",
-      "PORIS_ENABLE_OTCOAP": "1"
+      "VAR_SUFFIX": "c5devkitusb"
     },
     "idfTarget": "esp32c5",
     "flashBaudRate": "",
@@ -142,7 +138,7 @@
       "args": []
     },
     "tasks": {
-      "preBuild": "python3 tools/gen_variant.py --variant C5DevKitUSB && python3 tools/ensure_variant.py --variant C5DevKitUSB",
+      "preBuild": "bash tools/prebuild.sh C5DevKitUSB",
       "preFlash": "",
       "postBuild": "",
       "postFlash": ""

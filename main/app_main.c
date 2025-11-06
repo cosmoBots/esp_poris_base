@@ -12,6 +12,37 @@
 #include "esp_chip_info.h"
 #include "esp_flash.h"
 #include "esp_system.h"
+#include <esp_log.h>
+
+
+#include <PrjCfg.h>
+#ifdef CONFIG_PORIS_ENABLE_OTCOAP
+#include <OtCoap.h>
+#endif
+
+typedef enum {
+    app_main_ret_error = -1,
+    app_main_ret_ok = 0
+}app_main_return_code;
+
+static char TAG[] = "main";
+
+app_main_return_code init_components(void)
+{
+    app_main_return_code ret = app_main_ret_error;
+    if (PrjCfg_setup() == PrjCfg_ret_ok)
+    {
+        #ifdef CONFIG_PORIS_ENABLE_OTCOAP
+        if (PrjCfg_setup() == PrjCfg_ret_ok)
+        {
+            ret = app_main_ret_ok;
+        }
+        #else
+            ret = app_main_ret_ok;
+        #endif        
+    }
+    return ret;
+}
 
 void app_main(void)
 {
@@ -42,11 +73,14 @@ void app_main(void)
 
     printf("Minimum free heap size: %" PRIu32 " bytes\n", esp_get_minimum_free_heap_size());
 
-    for (int i = 10; i >= 0; i--) {
-        printf("Restarting in %d seconds...\n", i);
+    if (init_components() != app_main_ret_ok)
+    {
+        ESP_LOGE(TAG,"Cannot init components!!!");
+    }
+    while (true)
+    {
+        ESP_LOGI(TAG,"app_main spinning");
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
-    printf("Restarting now.\n");
-    fflush(stdout);
-    esp_restart();
+
 }

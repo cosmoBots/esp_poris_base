@@ -1,0 +1,10 @@
+menu "PORIS components"
+
+config PORIS_ENABLE_PRJCFG
+    bool "Enable component PrjCfg"
+    default y
+    help
+      Enable/disable component PrjCfg at Kconfig level.
+      Variant gating is handled by environment variables (PORIS_ENABLE_PRJCFG).
+
+endmenu

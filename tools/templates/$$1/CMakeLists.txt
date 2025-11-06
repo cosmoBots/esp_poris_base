@@ -1,15 +1,17 @@
 # CMakeLists.txt template for $$1
 
-# --- Variant gating via environment variable (from variants.yml) ------------
-# Expect PORIS_ENABLE_$#1=1 in the environment/CMake include.
-if(NOT DEFINED ENV{PORIS_ENABLE_$#1})
-  message(STATUS "[ $$1 ] disabled by variant (PORIS_ENABLE_$#1 not set)")
+# Señales de activación:
+# - CMake var: PORIS_ENABLE_$#1 (preferida, desde buildcfg/<Var>.components.cmake)
+# - Env var  : PORIS_ENABLE_$#1 (compat para casos donde exportes env manualmente)
+if(NOT (PORIS_ENABLE_$#1 OR DEFINED ENV{PORIS_ENABLE_$#1}))
+  message(STATUS "[ $$1 ] disabled (no PORIS_ENABLE_$#1)")
   return()
 endif()
 
 idf_component_register(
   SRCS "$$1.c"
   INCLUDE_DIRS "include"
+  PRIV_REQUIRES PrjCfg
 )
 
 # --- Optional: tie to Kconfig switch (symbol is uppercase) ------------------

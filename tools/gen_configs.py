@@ -68,10 +68,10 @@ def main():
                 "args": []
             },
             "tasks": {
-                "preBuild": f"python3 tools/gen_variant.py --variant {vid} && python3 tools/ensure_variant.py --variant {vid}",
-                "preFlash": "",
-                "postBuild": "",
-                "postFlash": ""
+            "preBuild": f"bash tools/prebuild.sh {vid}",
+            "preFlash": "",
+            "postBuild": "",
+            "postFlash": ""
             }
         }
 

@@ -4,6 +4,8 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
 typedef enum {
     OtCoap_ret_error = -1,
     OtCoap_ret_ok = 0

@@ -4,6 +4,8 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
 typedef enum {
     $$1_ret_error = -1,
     $$1_ret_ok = 0
