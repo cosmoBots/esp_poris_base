@@ -40,6 +40,16 @@ def main():
         sdkconfig_path = f"{build_dir}/sdkconfig"
         idf_target = v.get("target", "")
 
+        env_map = {
+            "VARIANT": vid,
+            "VAR_SUFFIX": suffix,
+        }
+        # añade las PORIS_ENABLE_* para los componentes de esa variante
+        for comp in v.get("components", []):
+            key = "PORIS_ENABLE_" + "".join(ch if ch.isalnum() else "_" for ch in comp).upper()
+            key = "_".join(filter(None, key.split("_")))
+            env_map[key] = "1"
+
         out_obj[vid] = {
             "build": {
                 "compileArgs": [],
@@ -48,10 +58,7 @@ def main():
                 "sdkconfigDefaults": [ combined_defaults ],
                 "sdkconfigFilePath": sdkconfig_path
             },
-            "env": {
-                "VARIANT": vid,
-                "VAR_SUFFIX": suffix
-            },
+            "env": env_map,
             "idfTarget": idf_target,
             "flashBaudRate": "",
             "monitorBaudRate": "",

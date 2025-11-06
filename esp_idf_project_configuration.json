@@ -40,7 +40,8 @@
     },
     "env": {
       "VARIANT": "C6Devkit",
-      "VAR_SUFFIX": "c6devkit"
+      "VAR_SUFFIX": "c6devkit",
+      "PORIS_ENABLE_OTCOAP": "1"
     },
     "idfTarget": "esp32c6",
     "flashBaudRate": "",
@@ -69,7 +70,8 @@
     },
     "env": {
       "VARIANT": "C6DevKitUSB",
-      "VAR_SUFFIX": "c6devkitusb"
+      "VAR_SUFFIX": "c6devkitusb",
+      "PORIS_ENABLE_OTCOAP": "1"
     },
     "idfTarget": "esp32c6",
     "flashBaudRate": "",
@@ -98,7 +100,8 @@
     },
     "env": {
       "VARIANT": "C5Devkit",
-      "VAR_SUFFIX": "c5devkit"
+      "VAR_SUFFIX": "c5devkit",
+      "PORIS_ENABLE_OTCOAP": "1"
     },
     "idfTarget": "esp32c5",
     "flashBaudRate": "",
@@ -127,7 +130,8 @@
     },
     "env": {
       "VARIANT": "C5DevKitUSB",
-      "VAR_SUFFIX": "c5devkitusb"
+      "VAR_SUFFIX": "c5devkitusb",
+      "PORIS_ENABLE_OTCOAP": "1"
     },
     "idfTarget": "esp32c5",
     "flashBaudRate": "",

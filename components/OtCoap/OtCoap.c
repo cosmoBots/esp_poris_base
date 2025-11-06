@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <PrjCfg.h>
 
 #include "include/OtCoap.h"

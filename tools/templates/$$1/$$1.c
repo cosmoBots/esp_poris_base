@@ -11,7 +11,7 @@
  */
 $$1_return_code $$1_setup(void)
 {
-
+#error "Unimplemented"
     return $$1_ret_error;
 }
 
@@ -20,6 +20,7 @@ $$1_return_code $$1_setup(void)
  */
 $$1_return_code $$1_spin(void)
 {
+#error "Unimplemented"
     return $$1_ret_error;
 }
 
@@ -28,6 +29,7 @@ $$1_return_code $$1_spin(void)
  */
 $$1_return_code $$1_start(void)
 {
+#error "Unimplemented"
     return $$1_ret_error;
 }
 
@@ -36,6 +38,7 @@ $$1_return_code $$1_start(void)
  */
 $$1_return_code $$1_get_dre_clone($$1_dre *$$1_dre_destination)
 {
+#error "Unimplemented"
     return $$1_ret_error;
 }
 
@@ -44,6 +47,7 @@ $$1_return_code $$1_get_dre_clone($$1_dre *$$1_dre_destination)
  */
 $$1_return_code $$1_enable(void)
 {
+#error "Unimplemented"
     return $$1_ret_error;
 }
 
@@ -52,6 +56,7 @@ $$1_return_code $$1_enable(void)
  */
 $$1_return_code $$1_disable(void)
 {
+#error "Unimplemented"
     return $$1_ret_error;
 }
 
