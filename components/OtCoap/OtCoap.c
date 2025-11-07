@@ -64,6 +64,8 @@ static SemaphoreHandle_t s_mutex = NULL;
 static inline void _lock(void)   { if (s_mutex) xSemaphoreTake(s_mutex, portMAX_DELAY); }
 static inline void _unlock(void) { if (s_mutex) xSemaphoreGive(s_mutex); }
 
+static OtCoap_return_code_t OtCoap_spin(void);  // In case we are using a thread, this function should not be part of the public API
+
 static inline BaseType_t _create_mutex_once(void)
 {
     if (!s_mutex) {
@@ -91,7 +93,11 @@ static void OtCoap_task(void *arg)
     (void)arg;
     ESP_LOGI(TAG, "task started (period=%u ms)", (unsigned)s_period_ms);
     while (s_run) {
-        (void)OtCoap_spin();
+        OtCoap_return_code_t ret = OtCoap_spin();
+        if (ret != OtCoap_ret_ok)
+        {
+            ESP_LOGW(TAG, "Error in spin");
+        }
         vTaskDelay(pdMS_TO_TICKS(s_period_ms));
     }
     ESP_LOGI(TAG, "task exit");
