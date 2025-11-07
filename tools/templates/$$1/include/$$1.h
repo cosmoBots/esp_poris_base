@@ -23,6 +23,8 @@ typedef struct {
     bool enabled;
     $$1_return_code_t last_return_code;
 } $$1_dre_t;
+
+extern $$1_dre_t $$1_dre;
 // ------------------ END   DRE ------------------
 
 // ------------------ BEGIN Public API (MULTITASKING)--------------------
@@ -54,6 +56,11 @@ $$1_return_code_t $$1_set_period_ms(uint32_t period_ms);
  *  Get current period in ms.
  */
 uint32_t $$1_get_period_ms(void);
+
+/**
+ *  Execute a function wrapped with locks so you can access the DRE variables in thread-safe mode
+*/
+void $$1_execute_function_safemode(void (*callback)());
 
 
 // ------------------ END   Public API (MULTITASKING)--------------------

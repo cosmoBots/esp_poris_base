@@ -96,6 +96,15 @@ app_main_return_code start_components(void)
     return ret;
 }
 
+#ifdef CONFIG_PORIS_ENABLE_HELLOWORLD
+#ifdef CONFIG_HELLOWORLD_USE_THREAD
+static void hw_safe()
+{
+    ESP_LOGI(TAG, "Safe calling hw is enabled? %d", HelloWorld_dre.enabled);
+}
+#endif
+#endif
+
 app_main_return_code run_components(void)
 {
     app_main_return_code ret = app_main_ret_ok;
@@ -110,6 +119,8 @@ app_main_return_code run_components(void)
 #ifdef CONFIG_PORIS_ENABLE_HELLOWORLD
 #ifndef CONFIG_HELLOWORLD_USE_THREAD
     error_accumulator |= (HelloWorld_spin() != HelloWorld_ret_ok);
+#else
+    HelloWorld_execute_function_safemode(hw_safe);
 #endif
 #endif
 

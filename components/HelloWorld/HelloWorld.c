@@ -41,7 +41,7 @@ static const char *TAG = "HelloWorld";
 // END --- Logging related variables
 
 // BEGIN --- Internal variables (DRE)
-static HelloWorld_dre_t s_dre = {
+HelloWorld_dre_t HelloWorld_dre = {
     .enabled = true,
     .last_return_code = HelloWorld_ret_ok
 };
@@ -164,7 +164,7 @@ HelloWorld_return_code_t HelloWorld_get_dre_clone(HelloWorld_dre_t *dst)
 {
     if (!dst) return HelloWorld_ret_error;
     _lock();
-    *dst = s_dre;
+    *dst = HelloWorld_dre;
     _unlock();
     return HelloWorld_ret_ok;
 }
@@ -187,6 +187,16 @@ uint32_t HelloWorld_get_period_ms(void)
     return v;
 }
 
+/**
+ *  Execute a function wrapped with locks so you can access the DRE variables in thread-safe mode
+*/
+void HelloWorld_execute_function_safemode(void (*callback)())
+{
+    _lock();
+    callback();
+    _unlock();
+}
+
 #endif // CONFIG_HELLOWORLD_USE_THREAD
 
 // END   ------------------ Public API (MULTITASKING)------------------
@@ -203,7 +213,7 @@ HelloWorld_return_code_t HelloWorld_setup(void)
         return HelloWorld_ret_error;
     }
 #endif
-    s_dre.last_return_code = HelloWorld_ret_ok;
+    HelloWorld_dre.last_return_code = HelloWorld_ret_ok;
     return HelloWorld_ret_ok;
 }
 
@@ -215,7 +225,7 @@ HelloWorld_return_code_t HelloWorld_spin(void)
 #if CONFIG_HELLOWORLD_USE_THREAD
     _lock();
 #endif
-    bool en = s_dre.enabled;
+    bool en = HelloWorld_dre.enabled;
 #if CONFIG_HELLOWORLD_USE_THREAD
     _unlock();
 #endif
@@ -230,8 +240,8 @@ HelloWorld_return_code_t HelloWorld_enable(void)
 #if CONFIG_HELLOWORLD_USE_THREAD
     _lock();
 #endif
-    s_dre.enabled = true;
-    s_dre.last_return_code = HelloWorld_ret_ok;
+    HelloWorld_dre.enabled = true;
+    HelloWorld_dre.last_return_code = HelloWorld_ret_ok;
 #if CONFIG_HELLOWORLD_USE_THREAD
     _unlock();
 #endif
@@ -243,8 +253,8 @@ HelloWorld_return_code_t HelloWorld_disable(void)
 #if CONFIG_HELLOWORLD_USE_THREAD
     _lock();
 #endif
-    s_dre.enabled = false;
-    s_dre.last_return_code = HelloWorld_ret_ok;
+    HelloWorld_dre.enabled = false;
+    HelloWorld_dre.last_return_code = HelloWorld_ret_ok;
 #if CONFIG_HELLOWORLD_USE_THREAD
     _unlock();
 #endif

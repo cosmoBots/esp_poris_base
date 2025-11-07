@@ -41,7 +41,7 @@ static const char *TAG = "$$1";
 // END --- Logging related variables
 
 // BEGIN --- Internal variables (DRE)
-static $$1_dre_t s_dre = {
+$$1_dre_t $$1_dre = {
     .enabled = true,
     .last_return_code = $$1_ret_ok
 };
@@ -164,7 +164,7 @@ $$1_return_code_t $$1_get_dre_clone($$1_dre_t *dst)
 {
     if (!dst) return $$1_ret_error;
     _lock();
-    *dst = s_dre;
+    *dst = $$1_dre;
     _unlock();
     return $$1_ret_ok;
 }
@@ -187,6 +187,16 @@ uint32_t $$1_get_period_ms(void)
     return v;
 }
 
+/**
+ *  Execute a function wrapped with locks so you can access the DRE variables in thread-safe mode
+*/
+void $$1_execute_function_safemode(void (*callback)())
+{
+    _lock();
+    callback();
+    _unlock();
+}
+
 #endif // CONFIG_$#1_USE_THREAD
 
 // END   ------------------ Public API (MULTITASKING)------------------
@@ -203,7 +213,7 @@ $$1_return_code_t $$1_setup(void)
         return $$1_ret_error;
     }
 #endif
-    s_dre.last_return_code = $$1_ret_ok;
+    $$1_dre.last_return_code = $$1_ret_ok;
     return $$1_ret_ok;
 }
 
@@ -215,7 +225,7 @@ $$1_return_code_t $$1_spin(void)
 #if CONFIG_$#1_USE_THREAD
     _lock();
 #endif
-    bool en = s_dre.enabled;
+    bool en = $$1_dre.enabled;
 #if CONFIG_$#1_USE_THREAD
     _unlock();
 #endif
@@ -230,8 +240,8 @@ $$1_return_code_t $$1_enable(void)
 #if CONFIG_$#1_USE_THREAD
     _lock();
 #endif
-    s_dre.enabled = true;
-    s_dre.last_return_code = $$1_ret_ok;
+    $$1_dre.enabled = true;
+    $$1_dre.last_return_code = $$1_ret_ok;
 #if CONFIG_$#1_USE_THREAD
     _unlock();
 #endif
@@ -243,8 +253,8 @@ $$1_return_code_t $$1_disable(void)
 #if CONFIG_$#1_USE_THREAD
     _lock();
 #endif
-    s_dre.enabled = false;
-    s_dre.last_return_code = $$1_ret_ok;
+    $$1_dre.enabled = false;
+    $$1_dre.last_return_code = $$1_ret_ok;
 #if CONFIG_$#1_USE_THREAD
     _unlock();
 #endif

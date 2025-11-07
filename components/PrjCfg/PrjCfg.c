@@ -41,7 +41,7 @@ static const char *TAG = "PrjCfg";
 // END --- Logging related variables
 
 // BEGIN --- Internal variables (DRE)
-static PrjCfg_dre_t s_dre = {
+PrjCfg_dre_t PrjCfg_dre = {
     .enabled = true,
     .last_return_code = PrjCfg_ret_ok
 };
@@ -164,7 +164,7 @@ PrjCfg_return_code_t PrjCfg_get_dre_clone(PrjCfg_dre_t *dst)
 {
     if (!dst) return PrjCfg_ret_error;
     _lock();
-    *dst = s_dre;
+    *dst = PrjCfg_dre;
     _unlock();
     return PrjCfg_ret_ok;
 }
@@ -187,6 +187,16 @@ uint32_t PrjCfg_get_period_ms(void)
     return v;
 }
 
+/**
+ *  Execute a function wrapped with locks so you can access the DRE variables in thread-safe mode
+*/
+void PrjCfg_execute_function_safemode(void (*callback)())
+{
+    _lock();
+    callback();
+    _unlock();
+}
+
 #endif // CONFIG_PRJCFG_USE_THREAD
 
 // END   ------------------ Public API (MULTITASKING)------------------
@@ -203,7 +213,7 @@ PrjCfg_return_code_t PrjCfg_setup(void)
         return PrjCfg_ret_error;
     }
 #endif
-    s_dre.last_return_code = PrjCfg_ret_ok;
+    PrjCfg_dre.last_return_code = PrjCfg_ret_ok;
     return PrjCfg_ret_ok;
 }
 
@@ -215,7 +225,7 @@ PrjCfg_return_code_t PrjCfg_spin(void)
 #if CONFIG_PRJCFG_USE_THREAD
     _lock();
 #endif
-    bool en = s_dre.enabled;
+    bool en = PrjCfg_dre.enabled;
 #if CONFIG_PRJCFG_USE_THREAD
     _unlock();
 #endif
@@ -230,8 +240,8 @@ PrjCfg_return_code_t PrjCfg_enable(void)
 #if CONFIG_PRJCFG_USE_THREAD
     _lock();
 #endif
-    s_dre.enabled = true;
-    s_dre.last_return_code = PrjCfg_ret_ok;
+    PrjCfg_dre.enabled = true;
+    PrjCfg_dre.last_return_code = PrjCfg_ret_ok;
 #if CONFIG_PRJCFG_USE_THREAD
     _unlock();
 #endif
@@ -243,8 +253,8 @@ PrjCfg_return_code_t PrjCfg_disable(void)
 #if CONFIG_PRJCFG_USE_THREAD
     _lock();
 #endif
-    s_dre.enabled = false;
-    s_dre.last_return_code = PrjCfg_ret_ok;
+    PrjCfg_dre.enabled = false;
+    PrjCfg_dre.last_return_code = PrjCfg_ret_ok;
 #if CONFIG_PRJCFG_USE_THREAD
     _unlock();
 #endif

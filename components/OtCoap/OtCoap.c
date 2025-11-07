@@ -41,7 +41,7 @@ static const char *TAG = "OtCoap";
 // END --- Logging related variables
 
 // BEGIN --- Internal variables (DRE)
-static OtCoap_dre_t s_dre = {
+OtCoap_dre_t OtCoap_dre = {
     .enabled = true,
     .last_return_code = OtCoap_ret_ok
 };
@@ -164,7 +164,7 @@ OtCoap_return_code_t OtCoap_get_dre_clone(OtCoap_dre_t *dst)
 {
     if (!dst) return OtCoap_ret_error;
     _lock();
-    *dst = s_dre;
+    *dst = OtCoap_dre;
     _unlock();
     return OtCoap_ret_ok;
 }
@@ -187,6 +187,16 @@ uint32_t OtCoap_get_period_ms(void)
     return v;
 }
 
+/**
+ *  Execute a function wrapped with locks so you can access the DRE variables in thread-safe mode
+*/
+void OtCoap_execute_function_safemode(void (*callback)())
+{
+    _lock();
+    callback();
+    _unlock();
+}
+
 #endif // CONFIG_OTCOAP_USE_THREAD
 
 // END   ------------------ Public API (MULTITASKING)------------------
@@ -203,7 +213,7 @@ OtCoap_return_code_t OtCoap_setup(void)
         return OtCoap_ret_error;
     }
 #endif
-    s_dre.last_return_code = OtCoap_ret_ok;
+    OtCoap_dre.last_return_code = OtCoap_ret_ok;
     return OtCoap_ret_ok;
 }
 
@@ -215,7 +225,7 @@ OtCoap_return_code_t OtCoap_spin(void)
 #if CONFIG_OTCOAP_USE_THREAD
     _lock();
 #endif
-    bool en = s_dre.enabled;
+    bool en = OtCoap_dre.enabled;
 #if CONFIG_OTCOAP_USE_THREAD
     _unlock();
 #endif
@@ -230,8 +240,8 @@ OtCoap_return_code_t OtCoap_enable(void)
 #if CONFIG_OTCOAP_USE_THREAD
     _lock();
 #endif
-    s_dre.enabled = true;
-    s_dre.last_return_code = OtCoap_ret_ok;
+    OtCoap_dre.enabled = true;
+    OtCoap_dre.last_return_code = OtCoap_ret_ok;
 #if CONFIG_OTCOAP_USE_THREAD
     _unlock();
 #endif
@@ -243,8 +253,8 @@ OtCoap_return_code_t OtCoap_disable(void)
 #if CONFIG_OTCOAP_USE_THREAD
     _lock();
 #endif
-    s_dre.enabled = false;
-    s_dre.last_return_code = OtCoap_ret_ok;
+    OtCoap_dre.enabled = false;
+    OtCoap_dre.last_return_code = OtCoap_ret_ok;
 #if CONFIG_OTCOAP_USE_THREAD
     _unlock();
 #endif

@@ -23,6 +23,8 @@ typedef struct {
     bool enabled;
     OtCoap_return_code_t last_return_code;
 } OtCoap_dre_t;
+
+extern OtCoap_dre_t OtCoap_dre;
 // ------------------ END   DRE ------------------
 
 // ------------------ BEGIN Public API (MULTITASKING)--------------------
@@ -54,6 +56,11 @@ OtCoap_return_code_t OtCoap_set_period_ms(uint32_t period_ms);
  *  Get current period in ms.
  */
 uint32_t OtCoap_get_period_ms(void);
+
+/**
+ *  Execute a function wrapped with locks so you can access the DRE variables in thread-safe mode
+*/
+void OtCoap_execute_function_safemode(void (*callback)());
 
 
 // ------------------ END   Public API (MULTITASKING)--------------------

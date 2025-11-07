@@ -23,6 +23,8 @@ typedef struct {
     bool enabled;
     HelloWorld_return_code_t last_return_code;
 } HelloWorld_dre_t;
+
+extern HelloWorld_dre_t HelloWorld_dre;
 // ------------------ END   DRE ------------------
 
 // ------------------ BEGIN Public API (MULTITASKING)--------------------
@@ -54,6 +56,11 @@ HelloWorld_return_code_t HelloWorld_set_period_ms(uint32_t period_ms);
  *  Get current period in ms.
  */
 uint32_t HelloWorld_get_period_ms(void);
+
+/**
+ *  Execute a function wrapped with locks so you can access the DRE variables in thread-safe mode
+*/
+void HelloWorld_execute_function_safemode(void (*callback)());
 
 
 // ------------------ END   Public API (MULTITASKING)--------------------
