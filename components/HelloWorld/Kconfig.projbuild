@@ -1,4 +1,4 @@
-menu "PORIS components"
+menu "HelloWorld settings"
 
 config PORIS_ENABLE_HELLOWORLD
     bool "Enable component HelloWorld"
@@ -6,10 +6,6 @@ config PORIS_ENABLE_HELLOWORLD
     help
       Enable/disable component HelloWorld at Kconfig level.
       Variant gating is handled by environment variables (PORIS_ENABLE_HELLOWORLD).
-
-endmenu
-
-menu "HelloWorld settings"
 
 config HELLOWORLD_USE_THREAD
     bool "HelloWorld starts its own thread (HelloWorld starts its own thread)"

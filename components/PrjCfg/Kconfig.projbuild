@@ -1,4 +1,4 @@
-menu "PORIS components"
+menu "PrjConfig settings"
 
 config PORIS_ENABLE_PRJCFG
     bool "Enable component PrjCfg"

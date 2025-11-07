@@ -1,4 +1,4 @@
-menu "PORIS components"
+menu "OtCoap settings"
 
 config PORIS_ENABLE_OTCOAP
     bool "Enable component OtCoap"
