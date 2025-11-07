@@ -14,7 +14,6 @@
 #include "esp_system.h"
 #include <esp_log.h>
 
-
 #include <PrjCfg.h>
 #ifdef CONFIG_PORIS_ENABLE_OTCOAP
 #include <OtCoap.h>
@@ -23,10 +22,11 @@
 #include <HelloWorld.h>
 #endif
 
-typedef enum {
+typedef enum
+{
     app_main_ret_error = -1,
     app_main_ret_ok = 0
-}app_main_return_code;
+} app_main_return_code;
 
 static char TAG[] = "main";
 
@@ -41,7 +41,7 @@ app_main_return_code init_components(void)
             ret = app_main_ret_ok;
         }
 #else
-            ret = app_main_ret_ok;
+        ret = app_main_ret_ok;
 #endif
 #ifdef CONFIG_PORIS_ENABLE_HELLOWORLD
         if (ret == app_main_ret_ok)
@@ -52,6 +52,75 @@ app_main_return_code init_components(void)
             }
         }
 #endif
+    }
+    return ret;
+}
+
+app_main_return_code start_components(void)
+{
+    app_main_return_code ret = app_main_ret_ok;
+    bool error_occurred = false;
+    bool error_accumulator = false;
+
+#ifdef CONFIG_PORIS_ENABLE_PRJCFG
+    error_occurred = (PrjCfg_enable() != PrjCfg_ret_ok);
+#ifdef CONFIG_PRJCFG_USE_THREAD
+    if (!error_occurred)
+    {
+        error_occurred |= (PrjCfg_start() != PrjCfg_ret_ok);
+    }
+#endif
+#endif
+
+    error_accumulator |= error_occurred;
+
+#ifdef CONFIG_PORIS_ENABLE_HELLOWORLD
+    error_occurred = (HelloWorld_enable() != HelloWorld_ret_ok);
+#ifdef CONFIG_HELLOWORLD_USE_THREAD
+    error_occurred |= (HelloWorld_start() != HelloWorld_ret_ok);
+#endif
+#endif
+
+    error_accumulator |= error_occurred;
+
+#ifdef CONFIG_PORIS_ENABLE_OTCOAP
+    error_occurred = (OtCoap_enable() != OtCoap_ret_ok);
+#ifdef CONFIG_OTCOAP_USE_THREAD
+    error_occurred |= (OtCoap_start() != OtCoap_ret_ok);
+#endif
+#endif
+    if (error_accumulator)
+    {
+        ret = app_main_ret_error;
+    }
+    return ret;
+}
+
+app_main_return_code run_components(void)
+{
+    app_main_return_code ret = app_main_ret_ok;
+    bool error_accumulator = false;
+
+#ifdef CONFIG_PORIS_ENABLE_PRJCFG
+#ifndef CONFIG_PRJCFG_USE_THREAD
+    error_accumulator |= (PrjCfg_spin() != PrjCfg_ret_ok);
+#endif
+#endif
+
+#ifdef CONFIG_PORIS_ENABLE_HELLOWORLD
+#ifndef CONFIG_HELLOWORLD_USE_THREAD
+    error_accumulator |= (HelloWorld_spin() != HelloWorld_ret_ok);
+#endif
+#endif
+
+#ifdef CONFIG_PORIS_ENABLE_OTCOAP
+#ifndef CONFIG_OTCOAP_USE_THREAD
+    error_accumulator |= (OtCoap_spin() != OtCoap_ret_ok);
+#endif
+#endif
+    if (error_accumulator)
+    {
+        ret = app_main_ret_error;
     }
     return ret;
 }
@@ -75,7 +144,8 @@ void app_main(void)
     unsigned major_rev = chip_info.revision / 100;
     unsigned minor_rev = chip_info.revision % 100;
     printf("silicon revision v%d.%d, ", major_rev, minor_rev);
-    if(esp_flash_get_size(NULL, &flash_size) != ESP_OK) {
+    if (esp_flash_get_size(NULL, &flash_size) != ESP_OK)
+    {
         printf("Get flash size failed");
         return;
     }
@@ -88,30 +158,27 @@ void app_main(void)
     bool shall_execute = true;
     if (init_components() != app_main_ret_ok)
     {
-        ESP_LOGE(TAG,"Cannot init components!!!");
+        ESP_LOGE(TAG, "Cannot init components!!!");
         shall_execute = false;
     }
     if (shall_execute)
     {
-#ifdef CONFIG_PORIS_ENABLE_HELLOWORLD
-        HelloWorld_enable();
-#ifdef CONFIG_HELLOWORLD_USE_THREAD
-        HelloWorld_start();
-#endif
-#endif        
+        if (start_components() != app_main_ret_ok)
+        {
+            ESP_LOGE(TAG, "Cannot start components!!!");
+            shall_execute = false;
+        }
     }
     while (true)
     {
-        ESP_LOGI(TAG,"app_main spinning");
+        ESP_LOGI(TAG, "app_main spinning");
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         if (shall_execute)
         {
-#ifdef CONFIG_PORIS_ENABLE_HELLOWORLD
-#ifndef CONFIG_HELLOWORLD_USE_THREAD
-            HelloWorld_spin();
-#endif
-#endif
+            if (run_components() != app_main_ret_ok)
+            {
+                ESP_LOGW(TAG, "Could not run all  components!!!");
+            }
         }
     }
-
 }

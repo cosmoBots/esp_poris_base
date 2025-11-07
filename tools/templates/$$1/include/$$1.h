@@ -5,47 +5,83 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include <stdint.h>
 
+// ------------------ BEGIN Return code ------------------
 typedef enum {
     $$1_ret_error = -1,
-    $$1_ret_ok = 0
-}$$1_return_code;
+    $$1_ret_ok    = 0
+} $$1_return_code_t;
+// ------------------ END   Return code ------------------
 
+// ------------------ BEGIN Datatypes ------------------
+
+// ------------------ END   Datatypes ------------------
+
+// ------------------ BEGIN DRE ------------------
 typedef struct {
     bool enabled;
-    $$1_return_code last_return_code;
-}$$1_dre;
+    $$1_return_code_t last_return_code;
+} $$1_dre_t;
+// ------------------ END   DRE ------------------
+
+// ------------------ BEGIN Public API (MULTITASKING)--------------------
+#if CONFIG_$#1_USE_THREAD
+/**
+ *  Start background task that calls spin() every period.
+ *  Idempotent. Returns error if task creation fails.
+ */
+$$1_return_code_t $$1_start(void);
 
 /**
- *  This is to be called on initialization
+ *  Stop background task gracefully.
+ *  Idempotent. Safe to call if not running.
  */
-$$1_return_code $$1_setup(void);
+$$1_return_code_t $$1_stop(void);
 
 /**
- * This is not blocking, an execution step for this module
+ *  Thread-safe clone of current DRE state.
  */
-$$1_return_code $$1_spin(void);
+$$1_return_code_t $$1_get_dre_clone($$1_dre_t *dst);
 
 /**
- * In case you want to use a separate thread, use this function
+ *  Change the periodic interval at runtime (ms).
+ *  Clamped internamente a >= 10 ms.
  */
-$$1_return_code $$1_start(void);
+$$1_return_code_t $$1_set_period_ms(uint32_t period_ms);
 
 /**
- * This is a thread-safe function to get a clone of the $$1_dre.
+ *  Get current period in ms.
  */
-$$1_return_code $$1_get_dre_clone($$1_dre *$$1_dre_destination);
+uint32_t $$1_get_period_ms(void);
+
+
+// ------------------ END   Public API (MULTITASKING)--------------------
+#else
+// ------------------ BEGIN Public API (SPIN)--------------------
+/**
+ *  Non-blocking step of this module (call it from your scheduler when
+ *  CONFIG_$#1_USE_THREAD = n).
+ */
+$$1_return_code_t $$1_spin(void);
+
+// ------------------ END   Public API (SPIN)--------------------
+#endif // CONFIG_$#1_USE_THREAD
+
+// ------------------ BEGIN Public API (COMMON)--------------------
 
 /**
- * This is a thread-safe function to enable $$1.
+ *  Called at initialization time. Does minimal setup.
  */
-$$1_return_code $$1_enable(void);
+$$1_return_code_t $$1_setup(void);
 
 /**
- * This is a thread-safe function to disable $$1.
+ *  Enable/disable from user code (thread-safe if internal thread is enabled).
  */
-$$1_return_code $$1_disable(void);
+$$1_return_code_t $$1_enable(void);
+$$1_return_code_t $$1_disable(void);
 
+// ------------------ BEGIN Public API (COMMON)--------------------
 
 #ifdef __cplusplus
 }

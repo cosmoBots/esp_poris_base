@@ -1,24 +1,53 @@
+// BEGIN --- Standard C headers section ---
 #include <stdio.h>
 #include <string.h>
-#include "PrjCfg.h"             // tu cabecera de proyecto
-#include "HelloWorld.h"
 
-#include "esp_log.h"
-#include "sdkconfig.h"
+// END   --- Standard C headers section ---
 
+// BEGIN --- SDK config section---
+#include <sdkconfig.h>
+// END   --- SDK config section---
+
+// BEGIN --- FreeRTOS headers section ---
 #if CONFIG_HELLOWORLD_USE_THREAD
-  #include "freertos/FreeRTOS.h"
-  #include "freertos/task.h"
-  #include "freertos/semphr.h"
+  #include <freertos/FreeRTOS.h>
+  #include <freertos/task.h>
+  #include <freertos/semphr.h>
 #endif
 
-// ------------------ Internals ------------------
-static const char *TAG = "HelloWorld";
+// END   --- FreeRTOS headers section ---
 
-static HelloWorld_dre s_dre = {
+
+// BEGIN --- ESP-IDF headers section ---
+#include <esp_log.h>
+
+// END   --- ESP-IDF headers section ---
+
+// BEGIN --- Project configuration section ---
+#include <PrjCfg.h> // Including project configuration module 
+// END   --- Project configuration section ---
+
+// BEGIN --- Project configuration section ---
+
+// end   --- Project configuration section ---
+
+// BEGIN --- Self-includes section ---
+#include "HelloWorld.h"
+
+// END --- Self-includes section ---
+
+// BEGIN --- Logging related variables
+static const char *TAG = "HelloWorld";
+// END --- Logging related variables
+
+// BEGIN --- Internal variables (DRE)
+static HelloWorld_dre_t s_dre = {
     .enabled = true,
     .last_return_code = HelloWorld_ret_ok
 };
+// END   --- Internal variables (DRE)
+
+// BEGIN --- Multitasking variables and handlers
 
 #if CONFIG_HELLOWORLD_USE_THREAD
 static TaskHandle_t s_task = NULL;
@@ -34,6 +63,8 @@ static SemaphoreHandle_t s_mutex = NULL;
 
 static inline void _lock(void)   { if (s_mutex) xSemaphoreTake(s_mutex, portMAX_DELAY); }
 static inline void _unlock(void) { if (s_mutex) xSemaphoreGive(s_mutex); }
+
+static HelloWorld_return_code_t HelloWorld_spin(void);  // In case we are using a thread, this function should not be part of the public API
 
 static inline BaseType_t _create_mutex_once(void)
 {
@@ -56,82 +87,33 @@ static inline BaseType_t _get_core_affinity(void)
         return tskNO_AFFINITY;
     #endif
 }
-#endif // CONFIG_HELLOWORLD_USE_THREAD
 
-// ------------------ Public API ------------------
-
-HelloWorld_return_code HelloWorld_setup(void)
-{
-    // Init liviano; no arranca tarea.
-    ESP_LOGD(TAG, "setup()");
-#if CONFIG_HELLOWORLD_USE_THREAD
-    if (_create_mutex_once() != pdPASS) {
-        ESP_LOGE(TAG, "mutex creation failed");
-        return HelloWorld_ret_error;
-    }
-#endif
-    s_dre.last_return_code = HelloWorld_ret_ok;
-    return HelloWorld_ret_ok;
-}
-
-HelloWorld_return_code HelloWorld_spin(void)
-{
-    // Si está deshabilitado, no hace nada (pero retorna OK para no romper pipelines)
-#if CONFIG_HELLOWORLD_USE_THREAD
-    _lock();
-#endif
-    bool en = s_dre.enabled;
-#if CONFIG_HELLOWORLD_USE_THREAD
-    _unlock();
-#endif
-    if (!en) return HelloWorld_ret_ok;
-
-    ESP_LOGI(TAG, "Hello world!");
-    return HelloWorld_ret_ok;
-}
-
-HelloWorld_return_code HelloWorld_enable(void)
-{
-#if CONFIG_HELLOWORLD_USE_THREAD
-    _lock();
-#endif
-    s_dre.enabled = true;
-    s_dre.last_return_code = HelloWorld_ret_ok;
-#if CONFIG_HELLOWORLD_USE_THREAD
-    _unlock();
-#endif
-    return HelloWorld_ret_ok;
-}
-
-HelloWorld_return_code HelloWorld_disable(void)
-{
-#if CONFIG_HELLOWORLD_USE_THREAD
-    _lock();
-#endif
-    s_dre.enabled = false;
-    s_dre.last_return_code = HelloWorld_ret_ok;
-#if CONFIG_HELLOWORLD_USE_THREAD
-    _unlock();
-#endif
-    return HelloWorld_ret_ok;
-}
-
-#if CONFIG_HELLOWORLD_USE_THREAD
-// ------------------ Threaded mode ------------------
-
-static void helloworld_task(void *arg)
+static void HelloWorld_task(void *arg)
 {
     (void)arg;
     ESP_LOGI(TAG, "task started (period=%u ms)", (unsigned)s_period_ms);
     while (s_run) {
-        (void)HelloWorld_spin();
+        HelloWorld_return_code_t ret = HelloWorld_spin();
+        if (ret != HelloWorld_ret_ok)
+        {
+            ESP_LOGW(TAG, "Error in spin");
+        }
         vTaskDelay(pdMS_TO_TICKS(s_period_ms));
     }
     ESP_LOGI(TAG, "task exit");
     vTaskDelete(NULL);
 }
 
-HelloWorld_return_code HelloWorld_start(void)
+#endif // CONFIG_HELLOWORLD_USE_THREAD
+
+// END   --- Multitasking variables and handlers
+
+// BEGIN ------------------ Public API (MULTITASKING)------------------
+
+
+#if CONFIG_HELLOWORLD_USE_THREAD
+
+HelloWorld_return_code_t HelloWorld_start(void)
 {
     if (_create_mutex_once() != pdPASS) {
         ESP_LOGE(TAG, "mutex creation failed");
@@ -145,8 +127,8 @@ HelloWorld_return_code HelloWorld_start(void)
 
     BaseType_t core = _get_core_affinity();
     BaseType_t ok = xTaskCreatePinnedToCore(
-        helloworld_task,
-        "helloworld",
+        HelloWorld_task,
+        "HelloWorld",
         CONFIG_HELLOWORLD_TASK_STACK,
         NULL,
         CONFIG_HELLOWORLD_TASK_PRIO,
@@ -162,7 +144,7 @@ HelloWorld_return_code HelloWorld_start(void)
     return HelloWorld_ret_ok;
 }
 
-HelloWorld_return_code HelloWorld_stop(void)
+HelloWorld_return_code_t HelloWorld_stop(void)
 {
     if (!s_task) return HelloWorld_ret_ok; // idempotente
     s_run = false;
@@ -178,7 +160,7 @@ HelloWorld_return_code HelloWorld_stop(void)
     return HelloWorld_ret_ok;
 }
 
-HelloWorld_return_code HelloWorld_get_dre_clone(HelloWorld_dre *dst)
+HelloWorld_return_code_t HelloWorld_get_dre_clone(HelloWorld_dre_t *dst)
 {
     if (!dst) return HelloWorld_ret_error;
     _lock();
@@ -187,7 +169,7 @@ HelloWorld_return_code HelloWorld_get_dre_clone(HelloWorld_dre *dst)
     return HelloWorld_ret_ok;
 }
 
-HelloWorld_return_code HelloWorld_set_period_ms(uint32_t period_ms)
+HelloWorld_return_code_t HelloWorld_set_period_ms(uint32_t period_ms)
 {
     if (period_ms < 10) period_ms = 10;
     _lock();
@@ -204,4 +186,69 @@ uint32_t HelloWorld_get_period_ms(void)
     _unlock();
     return v;
 }
+
 #endif // CONFIG_HELLOWORLD_USE_THREAD
+
+// END   ------------------ Public API (MULTITASKING)------------------
+
+// BEGIN ------------------ Public API (COMMON + SPIN)------------------
+
+HelloWorld_return_code_t HelloWorld_setup(void)
+{
+    // Init liviano; no arranca tarea.
+    ESP_LOGD(TAG, "setup()");
+#if CONFIG_HELLOWORLD_USE_THREAD
+    if (_create_mutex_once() != pdPASS) {
+        ESP_LOGE(TAG, "mutex creation failed");
+        return HelloWorld_ret_error;
+    }
+#endif
+    s_dre.last_return_code = HelloWorld_ret_ok;
+    return HelloWorld_ret_ok;
+}
+
+#if CONFIG_HELLOWORLD_USE_THREAD
+static  // In case we are using a thread, this function should not be part of the public API
+#endif
+HelloWorld_return_code_t HelloWorld_spin(void)
+{
+#if CONFIG_HELLOWORLD_USE_THREAD
+    _lock();
+#endif
+    bool en = s_dre.enabled;
+#if CONFIG_HELLOWORLD_USE_THREAD
+    _unlock();
+#endif
+    if (!en) return HelloWorld_ret_ok;
+
+    ESP_LOGI(TAG, "Hello world!");
+    return HelloWorld_ret_ok;
+}
+
+HelloWorld_return_code_t HelloWorld_enable(void)
+{
+#if CONFIG_HELLOWORLD_USE_THREAD
+    _lock();
+#endif
+    s_dre.enabled = true;
+    s_dre.last_return_code = HelloWorld_ret_ok;
+#if CONFIG_HELLOWORLD_USE_THREAD
+    _unlock();
+#endif
+    return HelloWorld_ret_ok;
+}
+
+HelloWorld_return_code_t HelloWorld_disable(void)
+{
+#if CONFIG_HELLOWORLD_USE_THREAD
+    _lock();
+#endif
+    s_dre.enabled = false;
+    s_dre.last_return_code = HelloWorld_ret_ok;
+#if CONFIG_HELLOWORLD_USE_THREAD
+    _unlock();
+#endif
+    return HelloWorld_ret_ok;
+}
+
+// BEGIN ------------------ Public API (COMMON)------------------

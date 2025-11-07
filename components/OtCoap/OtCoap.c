@@ -1,63 +1,248 @@
+// BEGIN --- Standard C headers section ---
 #include <stdio.h>
-#include <PrjCfg.h>
+#include <string.h>
 
-#include "include/OtCoap.h"
+// END   --- Standard C headers section ---
 
-#ifdef CONFIG_PORIS_ENABLE_OTCOAP
-// Optional: code that depends on Kconfig switch
+// BEGIN --- SDK config section---
+#include <sdkconfig.h>
+// END   --- SDK config section---
 
-/**
- *  This is to be called on initialization
- */
-OtCoap_return_code OtCoap_setup(void)
-{
-//#error "Unimplemented"
-    return OtCoap_ret_error;
-}
-
-/**
- * This is not blocking, an execution step for this module
- */
-OtCoap_return_code OtCoap_spin(void)
-{
-//#error "Unimplemented"
-    return OtCoap_ret_error;
-}
-
-/**
- * In case you want to use a separate thread, use this function
- */
-OtCoap_return_code OtCoap_start(void)
-{
-//#error "Unimplemented"
-    return OtCoap_ret_error;
-}
-
-/**
- * This is a thread-safe function to get a clone of the OtCoap_dre.
- */
-OtCoap_return_code OtCoap_get_dre_clone(OtCoap_dre *OtCoap_dre_destination)
-{
-//#error "Unimplemented"
-    return OtCoap_ret_error;
-}
-
-/**
- * This is a thread-safe function to enable OtCoap.
- */
-OtCoap_return_code OtCoap_enable(void)
-{
-//#error "Unimplemented"
-    return OtCoap_ret_error;
-}
-
-/**
- * This is a thread-safe function to disable OtCoap.
- */
-OtCoap_return_code OtCoap_disable(void)
-{
-//#error "Unimplemented"
-    return OtCoap_ret_error;
-}
-
+// BEGIN --- FreeRTOS headers section ---
+#if CONFIG_OTCOAP_USE_THREAD
+  #include <freertos/FreeRTOS.h>
+  #include <freertos/task.h>
+  #include <freertos/semphr.h>
 #endif
+
+// END   --- FreeRTOS headers section ---
+
+
+// BEGIN --- ESP-IDF headers section ---
+#include <esp_log.h>
+
+// END   --- ESP-IDF headers section ---
+
+// BEGIN --- Project configuration section ---
+#include <PrjCfg.h> // Including project configuration module 
+// END   --- Project configuration section ---
+
+// BEGIN --- Project configuration section ---
+
+// end   --- Project configuration section ---
+
+// BEGIN --- Self-includes section ---
+#include "OtCoap.h"
+
+// END --- Self-includes section ---
+
+// BEGIN --- Logging related variables
+static const char *TAG = "OtCoap";
+// END --- Logging related variables
+
+// BEGIN --- Internal variables (DRE)
+static OtCoap_dre_t s_dre = {
+    .enabled = true,
+    .last_return_code = OtCoap_ret_ok
+};
+// END   --- Internal variables (DRE)
+
+// BEGIN --- Multitasking variables and handlers
+
+#if CONFIG_OTCOAP_USE_THREAD
+static TaskHandle_t s_task = NULL;
+static volatile bool s_run = false;
+static uint32_t s_period_ms =
+    #ifdef CONFIG_OTCOAP_PERIOD_MS
+      CONFIG_OTCOAP_PERIOD_MS
+    #else
+      1000
+    #endif
+;
+static SemaphoreHandle_t s_mutex = NULL;
+
+static inline void _lock(void)   { if (s_mutex) xSemaphoreTake(s_mutex, portMAX_DELAY); }
+static inline void _unlock(void) { if (s_mutex) xSemaphoreGive(s_mutex); }
+
+static inline BaseType_t _create_mutex_once(void)
+{
+    if (!s_mutex) {
+        s_mutex = xSemaphoreCreateMutex();
+        if (!s_mutex) return pdFAIL;
+    }
+    return pdPASS;
+}
+
+static inline BaseType_t _get_core_affinity(void)
+{
+    #if CONFIG_OTCOAP_PIN_CORE_ANY
+        return tskNO_AFFINITY;
+    #elif CONFIG_OTCOAP_PIN_CORE_0
+        return 0;
+    #elif CONFIG_OTCOAP_PIN_CORE_1
+        return 1;
+    #else
+        return tskNO_AFFINITY;
+    #endif
+}
+
+static void OtCoap_task(void *arg)
+{
+    (void)arg;
+    ESP_LOGI(TAG, "task started (period=%u ms)", (unsigned)s_period_ms);
+    while (s_run) {
+        (void)OtCoap_spin();
+        vTaskDelay(pdMS_TO_TICKS(s_period_ms));
+    }
+    ESP_LOGI(TAG, "task exit");
+    vTaskDelete(NULL);
+}
+
+#endif // CONFIG_OTCOAP_USE_THREAD
+
+// END   --- Multitasking variables and handlers
+
+// BEGIN ------------------ Public API (MULTITASKING)------------------
+
+
+#if CONFIG_OTCOAP_USE_THREAD
+
+OtCoap_return_code_t OtCoap_start(void)
+{
+    if (_create_mutex_once() != pdPASS) {
+        ESP_LOGE(TAG, "mutex creation failed");
+        return OtCoap_ret_error;
+    }
+    if (s_task) {
+        // idempotente
+        return OtCoap_ret_ok;
+    }
+    s_run = true;
+
+    BaseType_t core = _get_core_affinity();
+    BaseType_t ok = xTaskCreatePinnedToCore(
+        OtCoap_task,
+        "OtCoap",
+        CONFIG_OTCOAP_TASK_STACK,
+        NULL,
+        CONFIG_OTCOAP_TASK_PRIO,
+        &s_task,
+        core
+    );
+    if (ok != pdPASS) {
+        s_task = NULL;
+        s_run = false;
+        ESP_LOGE(TAG, "xTaskCreatePinnedToCore failed");
+        return OtCoap_ret_error;
+    }
+    return OtCoap_ret_ok;
+}
+
+OtCoap_return_code_t OtCoap_stop(void)
+{
+    if (!s_task) return OtCoap_ret_ok; // idempotente
+    s_run = false;
+    // Espera una vuelta de scheduler para que el loop salga y se autodelete
+    vTaskDelay(pdMS_TO_TICKS(1));
+    // Si aún vive por cualquier motivo, fuerza delete
+    if (s_task) {
+        TaskHandle_t t = s_task;
+        s_task = NULL;
+        vTaskDelete(t);
+    }
+    ESP_LOGI(TAG, "stopped");
+    return OtCoap_ret_ok;
+}
+
+OtCoap_return_code_t OtCoap_get_dre_clone(OtCoap_dre_t *dst)
+{
+    if (!dst) return OtCoap_ret_error;
+    _lock();
+    *dst = s_dre;
+    _unlock();
+    return OtCoap_ret_ok;
+}
+
+OtCoap_return_code_t OtCoap_set_period_ms(uint32_t period_ms)
+{
+    if (period_ms < 10) period_ms = 10;
+    _lock();
+    s_period_ms = period_ms;
+    _unlock();
+    ESP_LOGI(TAG, "period set to %u ms", (unsigned)period_ms);
+    return OtCoap_ret_ok;
+}
+
+uint32_t OtCoap_get_period_ms(void)
+{
+    _lock();
+    uint32_t v = s_period_ms;
+    _unlock();
+    return v;
+}
+
+#endif // CONFIG_OTCOAP_USE_THREAD
+
+// END   ------------------ Public API (MULTITASKING)------------------
+
+// BEGIN ------------------ Public API (COMMON + SPIN)------------------
+
+OtCoap_return_code_t OtCoap_setup(void)
+{
+    // Init liviano; no arranca tarea.
+    ESP_LOGD(TAG, "setup()");
+#if CONFIG_OTCOAP_USE_THREAD
+    if (_create_mutex_once() != pdPASS) {
+        ESP_LOGE(TAG, "mutex creation failed");
+        return OtCoap_ret_error;
+    }
+#endif
+    s_dre.last_return_code = OtCoap_ret_ok;
+    return OtCoap_ret_ok;
+}
+
+#if CONFIG_OTCOAP_USE_THREAD
+static  // In case we are using a thread, this function should not be part of the public API
+#endif
+OtCoap_return_code_t OtCoap_spin(void)
+{
+#if CONFIG_OTCOAP_USE_THREAD
+    _lock();
+#endif
+    bool en = s_dre.enabled;
+#if CONFIG_OTCOAP_USE_THREAD
+    _unlock();
+#endif
+    if (!en) return OtCoap_ret_ok;
+
+    ESP_LOGI(TAG, "Hello world!");
+    return OtCoap_ret_ok;
+}
+
+OtCoap_return_code_t OtCoap_enable(void)
+{
+#if CONFIG_OTCOAP_USE_THREAD
+    _lock();
+#endif
+    s_dre.enabled = true;
+    s_dre.last_return_code = OtCoap_ret_ok;
+#if CONFIG_OTCOAP_USE_THREAD
+    _unlock();
+#endif
+    return OtCoap_ret_ok;
+}
+
+OtCoap_return_code_t OtCoap_disable(void)
+{
+#if CONFIG_OTCOAP_USE_THREAD
+    _lock();
+#endif
+    s_dre.enabled = false;
+    s_dre.last_return_code = OtCoap_ret_ok;
+#if CONFIG_OTCOAP_USE_THREAD
+    _unlock();
+#endif
+    return OtCoap_ret_ok;
+}
+
+// BEGIN ------------------ Public API (COMMON)------------------

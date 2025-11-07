@@ -7,4 +7,45 @@ config PORIS_ENABLE_OTCOAP
       Enable/disable component OtCoap at Kconfig level.
       Variant gating is handled by environment variables (PORIS_ENABLE_OTCOAP).
 
+config OTCOAP_USE_THREAD
+    bool "OtCoap starts its own thread (OtCoap starts its own thread)"
+    default n
+    help
+      If enabled, OtCoap will create a FreeRTOS task and call spin()
+      periodically. If disabled, call OtCoap_spin() yourself from
+      your scheduler.
+    depends on PORIS_ENABLE_OTCOAP
+
+config OTCOAP_PERIOD_MS
+    int "OtCoap period (ms)"
+    range 10 600000
+    default 1000
+    depends on OTCOAP_USE_THREAD
+
+choice OTCOAP_PIN_CORE
+    prompt "Pin task to core"
+    default OTCOAP_PIN_CORE_ANY
+    depends on OTCOAP_USE_THREAD
+    help
+      Choose which core to pin the task to (or none).
+config OTCOAP_PIN_CORE_ANY
+    bool "Any core (no affinity)"
+config OTCOAP_PIN_CORE_0
+    bool "Core 0"
+config OTCOAP_PIN_CORE_1
+    bool "Core 1"
+endchoice
+
+config OTCOAP_TASK_STACK
+    int "Task stack size (bytes)"
+    range 2048 65536
+    default 4096
+    depends on OTCOAP_USE_THREAD
+
+config OTCOAP_TASK_PRIO
+    int "Task priority"
+    range 1 24
+    default 5
+    depends on OTCOAP_USE_THREAD
+
 endmenu
