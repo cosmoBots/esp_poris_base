@@ -5,7 +5,7 @@ if [ $# -ne 1 ]; then
   exit 2
 fi
 VAR="$1"
-python3 tools/gen_variant.py --variant "$VAR"
-python3 tools/ensure_variant.py --variant "$VAR"
+python3 poris/gen_variant.py --variant "$VAR"
+python3 poris/ensure_variant.py --variant "$VAR"
 echo "[prebuild] Variant $VAR prepared."
 # echo "[prebuild] PORIS_COMPONENTS_LIST=${PORIS_COMPONENTS_LIST}"

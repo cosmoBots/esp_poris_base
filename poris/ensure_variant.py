@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# tools/ensure_variant.py
+# poris/ensure_variant.py
 import argparse, pathlib, re, sys, shutil
 
 def slug_lower(s: str) -> str:

@@ -9,9 +9,9 @@
 // END   --- SDK config section---
 
 // BEGIN --- FreeRTOS headers section ---
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #if CONFIG_OTCOAP_USE_THREAD
-  #include <freertos/FreeRTOS.h>
-  #include <freertos/task.h>
   #include <freertos/semphr.h>
 #endif
 
@@ -232,6 +232,7 @@ OtCoap_return_code_t OtCoap_spin(void)
     if (!en) return OtCoap_ret_ok;
 
     ESP_LOGI(TAG, "Hello world!");
+    vTaskDelay(pdMS_TO_TICKS(120));
     return OtCoap_ret_ok;
 }
 

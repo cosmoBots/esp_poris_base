@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# tools/gen_variant.py
+# poris/gen_variant.py
 import argparse, yaml, pathlib, sys
 
 def find_variants_yml(root: pathlib.Path, arg_path: str | None) -> pathlib.Path:

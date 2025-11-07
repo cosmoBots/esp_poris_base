@@ -22,6 +22,14 @@ config HELLOWORLD_PERIOD_MS
     default 1000
     depends on HELLOWORLD_USE_THREAD
 
+config HELLOWORLD_MINIMIZE_JITTER
+    bool "Enable jitter minimization for HelloWorld"
+    default y
+    help
+      If active, the delay between loops will use vTaskDelayUntil() to guarantee long cycles will not shift the period, minimizing jitter.
+      If deactivate, the component will use vTaskDelay() so the time it wait between cycles is the period.  Long cycles will introduce a shift in the period.
+    depends on HELLOWORLD_USE_THREAD
+
 choice HELLOWORLD_PIN_CORE
     prompt "Pin task to core"
     default HELLOWORLD_PIN_CORE_ANY

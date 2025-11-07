@@ -22,7 +22,7 @@
       "args": []
     },
     "tasks": {
-      "preBuild": "bash tools/prebuild.sh S3WifiLCD",
+      "preBuild": "bash poris/prebuild.sh S3WifiLCD",
       "preFlash": "",
       "postBuild": "",
       "postFlash": ""
@@ -51,7 +51,7 @@
       "args": []
     },
     "tasks": {
-      "preBuild": "bash tools/prebuild.sh C6Devkit",
+      "preBuild": "bash poris/prebuild.sh C6Devkit",
       "preFlash": "",
       "postBuild": "",
       "postFlash": ""
@@ -80,7 +80,7 @@
       "args": []
     },
     "tasks": {
-      "preBuild": "bash tools/prebuild.sh C6DevKitUSB",
+      "preBuild": "bash poris/prebuild.sh C6DevKitUSB",
       "preFlash": "",
       "postBuild": "",
       "postFlash": ""
@@ -109,7 +109,7 @@
       "args": []
     },
     "tasks": {
-      "preBuild": "bash tools/prebuild.sh C5Devkit",
+      "preBuild": "bash poris/prebuild.sh C5Devkit",
       "preFlash": "",
       "postBuild": "",
       "postFlash": ""
@@ -138,7 +138,7 @@
       "args": []
     },
     "tasks": {
-      "preBuild": "bash tools/prebuild.sh C5DevKitUSB",
+      "preBuild": "bash poris/prebuild.sh C5DevKitUSB",
       "preFlash": "",
       "postBuild": "",
       "postFlash": ""

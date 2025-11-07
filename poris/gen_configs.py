@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# tools/gen_configs.py
+# poris/gen_configs.py
 import argparse, json, pathlib, sys, yaml, re
 
 def slug_lower(s: str) -> str:
@@ -62,7 +62,7 @@ def main():
                 "args": []
             },
             "tasks": {
-            "preBuild": f"bash tools/prebuild.sh {vid}",
+            "preBuild": f"bash poris/prebuild.sh {vid}",
             "preFlash": "",
             "postBuild": "",
             "postFlash": ""

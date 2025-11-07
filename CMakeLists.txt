@@ -33,7 +33,7 @@ if(DEFINED VARIANT AND NOT VARIANT STREQUAL "")
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
     execute_process(
-      COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/gen_variant.py --variant ${VARIANT}
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/poris/gen_variant.py --variant ${VARIANT}
       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
       RESULT_VARIABLE _rv1
     )
@@ -42,7 +42,7 @@ if(DEFINED VARIANT AND NOT VARIANT STREQUAL "")
     endif()
 
     execute_process(
-      COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/ensure_variant.py --variant ${VARIANT}
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/poris/ensure_variant.py --variant ${VARIANT}
       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
       RESULT_VARIABLE _rv2
     )
@@ -83,7 +83,7 @@ if(VARIANT)
   else()
     message(FATAL_ERROR
       "No existe ${VAR_CACHE}.\n"
-      "Genera la variante primero: python3 tools/gen_variant.py --variant ${VARIANT}")
+      "Genera la variante primero: python3 poris/gen_variant.py --variant ${VARIANT}")
   endif()
 
   if(EXISTS "${VAR_SDKDEFS}")
@@ -93,7 +93,7 @@ if(VARIANT)
   else()
     message(FATAL_ERROR
       "No existe ${VAR_SDKDEFS}.\n"
-      "Genera la variante: python3 tools/gen_variant.py --variant ${VARIANT}")
+      "Genera la variante: python3 poris/gen_variant.py --variant ${VARIANT}")
   endif()
 else()
   message(STATUS "VARIANT no establecido. Usaré sdkconfig.defaults (si existe).")
@@ -230,7 +230,7 @@ if(NOT EXISTS "${_poris_env_file}")
   find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
   execute_process(
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/gen_variant.py --variant ${VARIANT}
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/poris/gen_variant.py --variant ${VARIANT}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     RESULT_VARIABLE _rv1b
   )
@@ -239,7 +239,7 @@ if(NOT EXISTS "${_poris_env_file}")
   endif()
 
   execute_process(
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/ensure_variant.py --variant ${VARIANT}
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/poris/ensure_variant.py --variant ${VARIANT}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     RESULT_VARIABLE _rv2b
   )

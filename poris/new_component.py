@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# tools/new_component.py
+# poris/new_component.py
 import argparse, os, pathlib, re, shutil, sys
 
 PH_LOWER = "$$1"  # tal cual (OtCoap)
@@ -65,9 +65,9 @@ endif()
         cmake.write_text(t, encoding="utf-8")
 
 def main():
-    ap = argparse.ArgumentParser(description="Instancia un componente desde tools/templates/$$1 con placeholders $$1 y $#1")
+    ap = argparse.ArgumentParser(description="Instancia un componente desde poris/templates/$$1 con placeholders $$1 y $#1")
     ap.add_argument("--name", required=True, help="Nombre del componente (p.ej. OtCoap)")
-    ap.add_argument("--template", default="tools/templates/$$1", help="Ruta de plantilla con '$$1' y '$#1'")
+    ap.add_argument("--template", default="poris/templates/$$1", help="Ruta de plantilla con '$$1' y '$#1'")
     ap.add_argument("--dest", default="components", help="Directorio destino (components)")
     args = ap.parse_args()
 
@@ -78,7 +78,7 @@ def main():
     if not tmpl_dir.exists():
         print(f"No encuentro la plantilla: {tmpl_dir}", file=sys.stderr); sys.exit(2)
     if str(tmpl_dir).startswith(str(dest_parent)):
-        print("La plantilla no debe estar dentro de 'components/'. Usa tools/templates/$$1.", file=sys.stderr); sys.exit(3)
+        print("La plantilla no debe estar dentro de 'components/'. Usa poris/templates/$$1.", file=sys.stderr); sys.exit(3)
 
     name = args.name  # se mantiene tal cual para $$1
     dest_dir = dest_parent / name

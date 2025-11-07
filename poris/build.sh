@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tools/build.sh
+# poris/build.sh
 set -euo pipefail
 shopt -s nullglob
 
@@ -43,7 +43,7 @@ SLUG="$(echo "$CANON_ID" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+//g'
 BUILD_DIR="${ROOT}/build_${SLUG}"
 
 # 1) Prebuild (genera defaults/env/components cacheados)
-bash "${ROOT}/tools/prebuild.sh" "$CANON_ID"
+bash "${ROOT}/poris/prebuild.sh" "$CANON_ID"
 
 # 2) Carga config.env si existe (extra_env para kconfig, etc.)
 if [ -f "${BUILD_DIR}/config.env" ]; then
@@ -69,7 +69,7 @@ SDKDEFAULTS_PATH="${ROOT}/buildcfg/sdkconfig.${CANON_ID}.defaults"
 
 if [ ! -f "${SDKDEFAULTS_PATH}" ]; then
   echo "No encuentro defaults de la variante: ${SDKDEFAULTS_PATH}" >&2
-  echo "¿Has ejecutado prebuild? (tools/prebuild.sh ${CANON_ID})" >&2
+  echo "¿Has ejecutado prebuild? (poris/prebuild.sh ${CANON_ID})" >&2
   exit 5
 fi
 
