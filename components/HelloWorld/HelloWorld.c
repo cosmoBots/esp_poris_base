@@ -9,9 +9,9 @@
 // END   --- SDK config section---
 
 // BEGIN --- FreeRTOS headers section ---
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #if CONFIG_HELLOWORLD_USE_THREAD
-  #include <freertos/FreeRTOS.h>
-  #include <freertos/task.h>
   #include <freertos/semphr.h>
 #endif
 
@@ -97,7 +97,7 @@ static void HelloWorld_task(void *arg)
 {
     (void)arg;
     ESP_LOGI(TAG, "task started (period=%u ms)", (unsigned)s_period_ms);
-#ifdef CONFIG_HELLOWORLD_MINIMIZE_JITTER    
+#ifdef CONFIG_HELLOWORLD_MINIMIZE_JITTER
     xLastWakeTime = xTaskGetTickCount();
     xFrequency = (s_period_ms / portTICK_PERIOD_MS);
 #endif

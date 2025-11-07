@@ -9,9 +9,9 @@
 // END   --- SDK config section---
 
 // BEGIN --- FreeRTOS headers section ---
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #if CONFIG_$#1_USE_THREAD
-  #include <freertos/FreeRTOS.h>
-  #include <freertos/task.h>
   #include <freertos/semphr.h>
 #endif
 
@@ -100,7 +100,7 @@ static void $$1_task(void *arg)
 #ifdef CONFIG_$#1_MINIMIZE_JITTER
     xLastWakeTime = xTaskGetTickCount();
     xFrequency = (s_period_ms / portTICK_PERIOD_MS);
-#endif    
+#endif
     while (s_run) {
         $$1_return_code_t ret = $$1_spin();
         if (ret != $$1_ret_ok)
@@ -248,7 +248,7 @@ $$1_return_code_t $$1_spin(void)
     if (!en) return $$1_ret_ok;
 
     ESP_LOGI(TAG, "Hello world!");
-    vTaskDelay(pdMS_TO_TICKS(120));    
+    vTaskDelay(pdMS_TO_TICKS(120));
     return $$1_ret_ok;
 }
 

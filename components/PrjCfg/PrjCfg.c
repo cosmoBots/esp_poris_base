@@ -9,9 +9,9 @@
 // END   --- SDK config section---
 
 // BEGIN --- FreeRTOS headers section ---
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #if CONFIG_PRJCFG_USE_THREAD
-  #include <freertos/FreeRTOS.h>
-  #include <freertos/task.h>
   #include <freertos/semphr.h>
 #endif
 
@@ -64,6 +64,11 @@ static SemaphoreHandle_t s_mutex = NULL;
 static inline void _lock(void)   { if (s_mutex) xSemaphoreTake(s_mutex, portMAX_DELAY); }
 static inline void _unlock(void) { if (s_mutex) xSemaphoreGive(s_mutex); }
 
+#ifdef CONFIG_PRJCFG_MINIMIZE_JITTER
+    static TickType_t xLastWakeTime;
+    static TickType_t xFrequency;
+#endif
+
 static PrjCfg_return_code_t PrjCfg_spin(void);  // In case we are using a thread, this function should not be part of the public API
 
 static inline BaseType_t _create_mutex_once(void)
@@ -92,13 +97,21 @@ static void PrjCfg_task(void *arg)
 {
     (void)arg;
     ESP_LOGI(TAG, "task started (period=%u ms)", (unsigned)s_period_ms);
+#ifdef CONFIG_PRJCFG_MINIMIZE_JITTER
+    xLastWakeTime = xTaskGetTickCount();
+    xFrequency = (s_period_ms / portTICK_PERIOD_MS);
+#endif
     while (s_run) {
         PrjCfg_return_code_t ret = PrjCfg_spin();
         if (ret != PrjCfg_ret_ok)
         {
             ESP_LOGW(TAG, "Error in spin");
         }
+#ifdef CONFIG_PRJCFG_MINIMIZE_JITTER
+        vTaskDelayUntil(&xLastWakeTime, xFrequency);
+#else
         vTaskDelay(pdMS_TO_TICKS(s_period_ms));
+#endif
     }
     ESP_LOGI(TAG, "task exit");
     vTaskDelete(NULL);
@@ -174,6 +187,9 @@ PrjCfg_return_code_t PrjCfg_set_period_ms(uint32_t period_ms)
     if (period_ms < 10) period_ms = 10;
     _lock();
     s_period_ms = period_ms;
+#ifdef CONFIG_PRJCFG_MINIMIZE_JITTER    
+    xFrequency = (s_period_ms / portTICK_PERIOD_MS);
+#endif
     _unlock();
     ESP_LOGI(TAG, "period set to %u ms", (unsigned)period_ms);
     return PrjCfg_ret_ok;
@@ -232,6 +248,7 @@ PrjCfg_return_code_t PrjCfg_spin(void)
     if (!en) return PrjCfg_ret_ok;
 
     ESP_LOGI(TAG, "Hello world!");
+    vTaskDelay(pdMS_TO_TICKS(120));
     return PrjCfg_ret_ok;
 }
 

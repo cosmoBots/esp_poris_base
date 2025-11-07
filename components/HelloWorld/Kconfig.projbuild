@@ -23,7 +23,7 @@ config HELLOWORLD_PERIOD_MS
     depends on HELLOWORLD_USE_THREAD
 
 config HELLOWORLD_MINIMIZE_JITTER
-    bool "Enable jitter minimization for HelloWorld"
+    bool "Enable jitter minimization for execution cycles"
     default y
     help
       If active, the delay between loops will use vTaskDelayUntil() to guarantee long cycles will not shift the period, minimizing jitter.

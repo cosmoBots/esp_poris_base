@@ -30,7 +30,6 @@ config $#1_MINIMIZE_JITTER
       If deactivate, the component will use vTaskDelay() so the time it wait between cycles is the period.  Long cycles will introduce a shift in the period.
     depends on $#1_USE_THREAD
 
-
 choice $#1_PIN_CORE
     prompt "Pin task to core"
     default $#1_PIN_CORE_ANY

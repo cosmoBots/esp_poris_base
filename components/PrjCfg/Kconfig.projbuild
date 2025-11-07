@@ -22,6 +22,14 @@ config PRJCFG_PERIOD_MS
     default 1000
     depends on PRJCFG_USE_THREAD
 
+config PRJCFG_MINIMIZE_JITTER
+    bool "Enable jitter minimization for execution cycles"
+    default y
+    help
+      If active, the delay between loops will use vTaskDelayUntil() to guarantee long cycles will not shift the period, minimizing jitter.
+      If deactivate, the component will use vTaskDelay() so the time it wait between cycles is the period.  Long cycles will introduce a shift in the period.
+    depends on PRJCFG_USE_THREAD
+
 choice PRJCFG_PIN_CORE
     prompt "Pin task to core"
     default PRJCFG_PIN_CORE_ANY
