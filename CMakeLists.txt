@@ -72,7 +72,7 @@ if(VARIANT)
 
   if(EXISTS "${VAR_COMP}")
     message(STATUS "Incluyendo flags de componentes: ${VAR_COMP}")
-    include("${VAR_COMP}")    # define: set(PORIS_COMPONENTS PrjCfg OtCoap) + PORIS_ENABLE_*
+    include("${VAR_COMP}")    # define: set(PORIS_COMPONENTS PrjCfg ...) + PORIS_ENABLE_*
   else()
     set(PORIS_COMPONENTS "")  # sin componentes declarados
   endif()

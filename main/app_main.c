@@ -15,12 +15,6 @@
 #include <esp_log.h>
 
 #include <PrjCfg.h>
-#ifdef CONFIG_PORIS_ENABLE_OTCOAP
-#include <OtCoap.h>
-#endif
-#ifdef CONFIG_PORIS_ENABLE_HELLOWORLD
-#include <HelloWorld.h>
-#endif
 
 typedef enum
 {
@@ -33,26 +27,12 @@ static char TAG[] = "main";
 app_main_return_code init_components(void)
 {
     app_main_return_code ret = app_main_ret_error;
+#ifdef CONFIG_PORIS_ENABLE_PRJCFG
     if (PrjCfg_setup() == PrjCfg_ret_ok)
     {
-#ifdef CONFIG_PORIS_ENABLE_OTCOAP
-        if (OtCoap_setup() == OtCoap_ret_ok)
-        {
-            ret = app_main_ret_ok;
-        }
-#else
         ret = app_main_ret_ok;
-#endif
-#ifdef CONFIG_PORIS_ENABLE_HELLOWORLD
-        if (ret == app_main_ret_ok)
-        {
-            if (HelloWorld_setup() != HelloWorld_ret_ok)
-            {
-                ret = app_main_ret_error;
-            }
-        }
-#endif
     }
+#endif
     return ret;
 }
 
@@ -71,39 +51,15 @@ app_main_return_code start_components(void)
     }
 #endif
 #endif
-
     error_accumulator |= error_occurred;
 
-#ifdef CONFIG_PORIS_ENABLE_HELLOWORLD
-    error_occurred = (HelloWorld_enable() != HelloWorld_ret_ok);
-#ifdef CONFIG_HELLOWORLD_USE_THREAD
-    error_occurred |= (HelloWorld_start() != HelloWorld_ret_ok);
-#endif
-#endif
 
-    error_accumulator |= error_occurred;
-
-#ifdef CONFIG_PORIS_ENABLE_OTCOAP
-    error_occurred = (OtCoap_enable() != OtCoap_ret_ok);
-#ifdef CONFIG_OTCOAP_USE_THREAD
-    error_occurred |= (OtCoap_start() != OtCoap_ret_ok);
-#endif
-#endif
     if (error_accumulator)
     {
         ret = app_main_ret_error;
     }
     return ret;
 }
-
-#ifdef CONFIG_PORIS_ENABLE_HELLOWORLD
-#ifdef CONFIG_HELLOWORLD_USE_THREAD
-static void hw_safe()
-{
-    ESP_LOGI(TAG, "Safe calling hw is enabled? %d", HelloWorld_dre.enabled);
-}
-#endif
-#endif
 
 app_main_return_code run_components(void)
 {
@@ -116,19 +72,6 @@ app_main_return_code run_components(void)
 #endif
 #endif
 
-#ifdef CONFIG_PORIS_ENABLE_HELLOWORLD
-#ifndef CONFIG_HELLOWORLD_USE_THREAD
-    error_accumulator |= (HelloWorld_spin() != HelloWorld_ret_ok);
-#else
-    HelloWorld_execute_function_safemode(hw_safe);
-#endif
-#endif
-
-#ifdef CONFIG_PORIS_ENABLE_OTCOAP
-#ifndef CONFIG_OTCOAP_USE_THREAD
-    error_accumulator |= (OtCoap_spin() != OtCoap_ret_ok);
-#endif
-#endif
     if (error_accumulator)
     {
         ret = app_main_ret_error;

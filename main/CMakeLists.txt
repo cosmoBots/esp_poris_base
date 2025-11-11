@@ -1,11 +1,11 @@
-# --- Leer la lista desde el entorno y convertirla en LISTA real -------------
-set(_raw "$ENV{PORIS_COMPONENTS_LIST}")         # e.g. "PrjCfg;OtCoap;HelloWorld"
+# --- Reading the list from env variables and converting it on an actual list -------------
+set(_raw "$ENV{PORIS_COMPONENTS_LIST}")         # f.i. "PrjCfg;...;..."
 message(STATUS "[main] PORIS_COMPONENTS_LIST='${_raw}'")
-string(REPLACE "," ";" _raw "${_raw}")          # por si algún día viene con comas
-string(REPLACE " " ";" _raw "${_raw}")          # por si viniera con espacios
-separate_arguments(_PORIS_LIST UNIX_COMMAND "${_raw}")  # => lista real
+string(REPLACE "," ";" _raw "${_raw}")          # If using colons
+string(REPLACE " " ";" _raw "${_raw}")          # If using spaces
+separate_arguments(_PORIS_LIST UNIX_COMMAND "${_raw}")  # => actual list
 
-# --- Construir REQUIRES de forma segura -------------------------------------
+# --- Building REQUIRES in a safe way  -------------------------------------
 set(_reqs spi_flash)
 list(APPEND _reqs ${_PORIS_LIST})
 list(REMOVE_DUPLICATES _reqs)

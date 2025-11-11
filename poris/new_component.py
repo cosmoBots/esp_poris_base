@@ -2,8 +2,8 @@
 # poris/new_component.py
 import argparse, os, pathlib, re, shutil, sys
 
-PH_LOWER = "$$1"  # tal cual (OtCoap)
-PH_UPPER = "$#1"  # upper+sanitized (OTCOAP)
+PH_LOWER = "$$1"  # Normal module name (MyModule)
+PH_UPPER = "$#1"  # upper+sanitized module name (MYMODULE)
 
 def upper_sanitized(name: str) -> str:
     u = re.sub(r'[^A-Za-z0-9]', '_', name).upper()
@@ -65,10 +65,10 @@ endif()
         cmake.write_text(t, encoding="utf-8")
 
 def main():
-    ap = argparse.ArgumentParser(description="Instancia un componente desde poris/templates/$$1 con placeholders $$1 y $#1")
-    ap.add_argument("--name", required=True, help="Nombre del componente (p.ej. OtCoap)")
-    ap.add_argument("--template", default="poris/templates/$$1", help="Ruta de plantilla con '$$1' y '$#1'")
-    ap.add_argument("--dest", default="components", help="Directorio destino (components)")
+    ap = argparse.ArgumentParser(description="Creates a new component from poris/templates/$$1 with placeholders $$1 and $#1")
+    ap.add_argument("--name", required=True, help="Component name (f.i. MyComponent)")
+    ap.add_argument("--template", default="poris/templates/$$1", help="Template path")
+    ap.add_argument("--dest", default="components", help="Target folder (components)")
     args = ap.parse_args()
 
     root = pathlib.Path(__file__).resolve().parent.parent
