@@ -20,6 +20,9 @@
 
 // BEGIN --- ESP-IDF headers section ---
 #include <esp_log.h>
+#include <nvs_flash.h>
+#include <esp_mac.h>
+#include <cJSON.h>
 
 // END   --- ESP-IDF headers section ---
 
@@ -32,7 +35,7 @@
 // end   --- Project configuration section ---
 
 // BEGIN --- Self-includes section ---
-#include "PrjCfg.h"
+#include "PrjCfg_nvs.h"
 
 // END --- Self-includes section ---
 
@@ -43,9 +46,103 @@ static const char *TAG = "PrjCfg";
 // BEGIN --- Internal variables (DRE)
 PrjCfg_dre_t PrjCfg_dre = {
     .enabled = true,
-    .last_return_code = PrjCfg_ret_ok
+    .last_return_code = PrjCfg_ret_ok,
+
+    .eth_mac = {0,0,0,0,0,0},
+    .unique_id = "",
+    .ip_address = "",
+    .ip.addr = 0,
+    .ssid = "",
+    .wifi_connected = false,
+    
+#ifdef CONFIG_PORIS_ENABLE_BLECENTRAL
+    .central_role = false,
+#endif
+#ifdef CONFIG_PORIS_ENABLE_BLEPERIPHERAL
+    .peripheral_role = false,
+    .echo = false,
+#endif
+#ifdef CONFIG_PORIS_ENABLE_OTA
+    .skip_ota = true,
+#endif
+#ifdef CONFIG_PORIS_ENABLE_UARTBRIDGE
+    .uart_bridge = false,
+#endif
+
+#ifdef CONFIG_PORIS_ENABLE_UARTUSER
+    .uart_user_port = UART_PORT_TO_USER,                 // porn number
+    .uart_user_baudrate = UART_PORT_TO_USER_BAUDRATE,     // baud rate
+    .uart_user_stop_bits = UART_PORT_TO_USER_STOP_BITS,   /*!< UART stop bits*/
+    .uart_user_tx_io_num = UART_PORT_TO_USER_TXD,                // -1 for keeping hardware defaults
+    .uart_user_rx_io_num = UART_PORT_TO_USER_RXD,                // -1 for keeping hardware defaults
+#endif
+
+#ifdef CONFIG_PORIS_ENABLE_UARTPERIPH
+    // Uart to Peripheral configuration
+    .uart_periph_port = UART_PORT_TO_DEVICE,           // porn number
+    .uart_periph_baudrate = UART_PORT_TO_DEVICE_BAUDRATE,
+    .uart_periph_stop_bits = UART_PORT_TO_DEVICE_STOP_BITS, /*!< UART stop bits*/
+    .uart_periph_tx_io_num = UART_PORT_TO_DEVICE_TXD,              // -1 for keeping hardware defaults
+    .uart_periph_rx_io_num = UART_PORT_TO_DEVICE_RXD,            // -1 for keeping hardware defaults
+#endif
+
+#ifdef CONFIG_PORIS_ENABLE_BLINK
+    // Blink functionality
+    .blink_enabled = BLINK_DEFAULT_ENABLED,                     // true if blink shall execute
+    .blink_io_num = BLINK_DEFAULT_PIN,                       // pin number for blink pin
+    .blink_on_value = BLINK_DEFAULT_ON_VALUE,                    // LOW or HIGH for lighting the LED
+    .blink_on_ms = BLINK_DEFAULT_ON_MS,                        // blinking time in ON
+    .blink_off_ms = BLINK_DEFAULT_OFF_MS,                       // blinking time in OFF
+#endif
+
+#ifdef CONFIG_PORIS_ENABLE_BUTTON
+    // Button functionality
+    .button_enabled = BUTTON_DEFAULT_ENABLED,                    // true if button read shall execute
+    .button_io_num = BUTTON_DEFAULT_IO_NUM,                      // pin number for reading the button
+    .button_pullup = BUTTON_DEFAULT_PULLUP,                     // true if button read uses internal pullup
+    .button_filter_ms = BUTTON_DEFAULT_FILTER_MS,                   // debouncing time for button
+    .button_notification_io_num = BUTTON_DEFAULT_NOTIF_IO_NUM,              // pin number to notify when the button is pressed
+    .button_notification_value = BUTTON_DEFAULT_NOTIF_VALUE,         // LOW or HIGH for notifying button pressed
+#endif
+
+#ifdef CONFIG_PORIS_ENABLE_SERVO
+    // Servo driver functionality
+    .servo_enabled = false,                     // true if servo shall execute
+#endif
+
+#ifdef CONFIG_PORIS_ENABLE_HOVER
+    // HoverWheels driver functionality
+    .hover_enabled = HOVER_DEFAULT_ENABLED,                             // true if hoverwheels shall execute
+    .uart_hover_port = UART_PORT_TO_HOVER,                    // porn number
+    .uart_hover_tx_io_num = UART_PORT_TO_HOVER_TXD,                // -1 for keeping hardware defaults
+    .uart_hover_rx_io_num = UART_PORT_TO_HOVER_RXD,                // -1 for keeping hardware defaults
+#endif
+
 };
 // END   --- Internal variables (DRE)
+
+
+// BEGIN --- Static business logic functions
+
+
+
+
+
+
+
+
+
+
+
+static void get_identifiers(void)
+{
+    esp_read_mac(PrjCfg_dre.eth_mac, ESP_MAC_BASE);
+    sprintf(PrjCfg_dre.unique_id, "%02X%02X%02X%02X%02X%02X", PrjCfg_dre.eth_mac[0], PrjCfg_dre.eth_mac[1], 
+        PrjCfg_dre.eth_mac[2], PrjCfg_dre.eth_mac[3], PrjCfg_dre.eth_mac[4], PrjCfg_dre.eth_mac[5]);
+}
+
+// END --- Static business logic functions
+
 
 // BEGIN --- Multitasking variables and handlers
 
@@ -223,6 +320,17 @@ PrjCfg_return_code_t PrjCfg_setup(void)
 {
     // Init liviano; no arranca tarea.
     ESP_LOGD(TAG, "setup()");
+    // Loading values from NVS
+    PrjCfg_nvs_cfg_load();
+#ifdef CONFIG_FORCE_CENTRAL_ROLE
+    prjcfg.central_role = true;
+    PrjCfg_nvs_cfg_save();
+#endif
+#ifdef CONFIG_FORCE_PERIPHERAL_ROLE
+    prjcfg.peripheral_role = true;
+    PrjCfg_nvs_cfg_save();
+#endif
+    get_identifiers();    
 #if CONFIG_PRJCFG_USE_THREAD
     if (_create_mutex_once() != pdPASS) {
         ESP_LOGE(TAG, "mutex creation failed");
