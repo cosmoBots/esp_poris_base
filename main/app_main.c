@@ -16,10 +16,12 @@
 
 // Include project configuration
 #include <PrjCfg.h>
+#include <PrjCfg_cmd.h>
 
 // Include components
 #include <Wifi.h>
 #include <OTA.h>
+#include <MQTTComm.h>
 
 typedef enum
 {
@@ -98,6 +100,9 @@ app_main_return_code run_components(void)
 #ifdef CONFIG_PORIS_ENABLE_OTA
     // OTA does not use spin
 #endif
+#ifdef CONFIG_PORIS_ENABLE_MQTTCOMM
+    error_accumulator |= (MQTTComm_spin() != MQTTComm_ret_ok);
+#endif
     if (error_accumulator)
     {
         ret = app_main_ret_error;
@@ -157,6 +162,22 @@ void app_main(void)
         OTA_start();
         // If OTA has not rebooted, we should continue
         OTA_disable();
+
+        // Now let's setup the MQTT topics
+        mqtt_comm_cfg_t cfg;
+        
+        cfg.f_cfg_cb = prjcfg_parse_callback;
+        cfg.f_req_cb = prjcfg_req_parse_callback;
+        cfg.f_data_cb = prjcfg_compose_callback;
+
+        sprintf(cfg.cfg_topic, "cosmobots/%s/cfg", "1234");
+        sprintf(cfg.req_topic, "cosmobots/%s/req", "1234");
+        sprintf(cfg.data_topic, "cosmobots/%s/data", "1234");
+        cfg.cfg_client_id = "1234";
+        ESP_LOGI(TAG,"---> TOPICS RELATED TO %s", "1234");
+
+        MQTTComm_setup(&cfg);
+        MQTTComm_enable();
     }
     while (true)
     {
