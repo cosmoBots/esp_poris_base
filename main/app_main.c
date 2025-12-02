@@ -6,6 +6,8 @@
 
 #include <stdio.h>
 #include <inttypes.h>
+#include <cJSON.h>
+
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -177,9 +179,9 @@ void app_main(void)
         // Now let's setup the MQTT topics
         mqtt_comm_cfg_t cfg;
         
-        cfg.f_cfg_cb = prjcfg_parse_callback;
-        cfg.f_req_cb = prjcfg_req_parse_callback;
-        cfg.f_data_cb = prjcfg_compose_callback;
+        cfg.f_cfg_cb = main_parse_callback;
+        cfg.f_req_cb = main_req_parse_callback;
+        cfg.f_data_cb = main_compose_callback;
 
         sprintf(cfg.cfg_topic, "cosmobots/%s/cfg", "1234");
         sprintf(cfg.req_topic, "cosmobots/%s/req", "1234");

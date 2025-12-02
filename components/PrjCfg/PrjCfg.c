@@ -35,7 +35,7 @@
 // end   --- Project configuration section ---
 
 // BEGIN --- Self-includes section ---
-#include "PrjCfg_nvs.h"
+#include "PrjCfg_netvars.h"
 
 // END --- Self-includes section ---
 
@@ -125,20 +125,46 @@ PrjCfg_dre_t PrjCfg_dre = {
 // BEGIN --- Static business logic functions
 
 
-
-
-
-
-
-
-
-
-
 static void get_identifiers(void)
 {
     esp_read_mac(PrjCfg_dre.eth_mac, ESP_MAC_BASE);
     sprintf(PrjCfg_dre.unique_id, "%02X%02X%02X%02X%02X%02X", PrjCfg_dre.eth_mac[0], PrjCfg_dre.eth_mac[1], 
         PrjCfg_dre.eth_mac[2], PrjCfg_dre.eth_mac[3], PrjCfg_dre.eth_mac[4], PrjCfg_dre.eth_mac[5]);
+}
+
+void PrjCfg_init(void)
+{
+    // Setting values by default
+    PrjCfg_dre.central_role = false;
+    PrjCfg_dre.peripheral_role = false;
+    PrjCfg_dre.echo = false;
+    PrjCfg_dre.skip_ota = true;
+    PrjCfg_dre.ip_address[0] = '\0';
+    PrjCfg_dre.ip.addr = 0;
+    PrjCfg_dre.wifi_connected = false;
+
+    PrjCfg_dre.uart_user_port = UART_PORT_TO_USER;
+    PrjCfg_dre.uart_user_baudrate = UART_PORT_TO_USER_BAUDRATE;
+    PrjCfg_dre.uart_user_stop_bits = UART_PORT_TO_USER_STOP_BITS;
+    PrjCfg_dre.uart_user_rx_io_num = UART_PORT_TO_USER_RXD;
+    PrjCfg_dre.uart_user_tx_io_num = UART_PORT_TO_USER_TXD;
+
+    PrjCfg_dre.uart_periph_port = UART_PORT_TO_DEVICE;
+    PrjCfg_dre.uart_periph_baudrate = UART_PORT_TO_DEVICE_BAUDRATE;
+    PrjCfg_dre.uart_periph_stop_bits = UART_PORT_TO_DEVICE_STOP_BITS;
+    PrjCfg_dre.uart_periph_rx_io_num = UART_PORT_TO_DEVICE_RXD;
+    PrjCfg_dre.uart_periph_tx_io_num = UART_PORT_TO_DEVICE_TXD;
+
+    PrjCfg_dre.blink_enabled = BLINK_DEFAULT_ENABLED;
+    PrjCfg_dre.blink_io_num = BLINK_DEFAULT_PIN;
+    PrjCfg_dre.blink_on_ms = BLINK_DEFAULT_ON_MS;
+    PrjCfg_dre.blink_off_ms = BLINK_DEFAULT_OFF_MS;
+    PrjCfg_dre.blink_on_value = BLINK_DEFAULT_ON_VALUE;
+
+    PrjCfg_dre.hover_enabled = HOVER_DEFAULT_ENABLED;
+    PrjCfg_dre.uart_hover_port = UART_PORT_TO_HOVER;
+    PrjCfg_dre.uart_hover_rx_io_num = UART_PORT_TO_HOVER_RXD;
+    PrjCfg_dre.uart_hover_tx_io_num = UART_PORT_TO_HOVER_TXD;
 }
 
 // END --- Static business logic functions
@@ -320,17 +346,6 @@ PrjCfg_return_code_t PrjCfg_setup(void)
 {
     // Init liviano; no arranca tarea.
     ESP_LOGD(TAG, "setup()");
-    // Loading values from NVS
-    PrjCfg_nvs_cfg_load();
-#ifdef CONFIG_FORCE_CENTRAL_ROLE
-    prjcfg.central_role = true;
-    PrjCfg_nvs_cfg_save();
-#endif
-#ifdef CONFIG_FORCE_PERIPHERAL_ROLE
-    prjcfg.peripheral_role = true;
-    PrjCfg_nvs_cfg_save();
-#endif
-    get_identifiers();    
 #if CONFIG_PRJCFG_USE_THREAD
     if (_create_mutex_once() != pdPASS) {
         ESP_LOGE(TAG, "mutex creation failed");

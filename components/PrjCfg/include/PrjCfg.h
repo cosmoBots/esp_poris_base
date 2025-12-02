@@ -34,7 +34,8 @@ extern "C" {
 
 // BEGIN --- ESP-IDF headers section ---
 #include <esp_netif.h>
-
+#include <driver/uart.h>
+#include <driver/gpio.h>
 // END   --- ESP-IDF headers section ---
 
 
@@ -53,6 +54,94 @@ typedef enum {
 #define PRJCFG_IPADDRESS_MAX_LEN ((4 * 4) + 1)
 #define PRJCFG_SSID_MAX_LEN (32 + 1)
 
+#ifdef CONFIG_PRJCFG_VARIANT_KINCONY_BOARD 
+#define UART_PORT_TO_USER 0
+#define UART_PORT_TO_USER_RXD 3
+#define UART_PORT_TO_USER_TXD 1
+#define UART_PORT_TO_DEVICE 2
+#define UART_PORT_TO_DEVICE_RXD 16
+#define UART_PORT_TO_DEVICE_TXD 17
+#else
+#ifdef CFG_USE_FTDI_CENTRAL
+#define UART_PORT_TO_USER UART_NUM_1
+#define UART_PORT_TO_USER_RXD 22
+#define UART_PORT_TO_USER_TXD 23
+#else
+#define UART_PORT_TO_USER UART_NUM_0
+#define UART_PORT_TO_USER_RXD UART_PIN_NO_CHANGE
+#define UART_PORT_TO_USER_TXD UART_PIN_NO_CHANGE
+#endif
+#ifdef CFG_USE_FTDI_PERIPHERAL
+#define UART_PORT_TO_DEVICE UART_NUM_1
+#define UART_PORT_TO_DEVICE_RXD 22
+#define UART_PORT_TO_DEVICE_TXD 23
+#else
+#define UART_PORT_TO_DEVICE UART_NUM_1
+#define UART_PORT_TO_DEVICE_RXD 22
+#define UART_PORT_TO_DEVICE_TXD 23
+#endif
+#endif
+
+#define UART_BRIDGE_PORT_TO_USER UART_NUM_0
+#define UART_BRIDGE_PORT_TO_USER_RXD UART_PIN_NO_CHANGE
+#define UART_BRIDGE_PORT_TO_USER_TXD UART_PIN_NO_CHANGE
+
+#define UART_BRIDGE_PORT_TO_DEVICE UART_NUM_1
+#define UART_BRIDGE_PORT_TO_DEVICE_RXD 22
+#define UART_BRIDGE_PORT_TO_DEVICE_TXD 23
+
+#define UART_PORT_TO_USER_BAUDRATE 38400
+#define UART_PORT_TO_DEVICE_BAUDRATE 38400
+
+#define UART_PORT_TO_USER_STOP_BITS UART_STOP_BITS_2
+#define UART_PORT_TO_DEVICE_STOP_BITS UART_STOP_BITS_2
+
+#define UART_CFG_DATA_BITS UART_DATA_8_BITS
+#define UART_CFG_PARITY UART_PARITY_DISABLE
+#define UART_CFG_FLOWCTRL UART_HW_FLOWCTRL_DISABLE
+
+#define MQTT_DATA_PERIODICITY_MS 60000
+
+#define UDP_SERVER_PORT 3001
+
+#ifdef CONFIG_IDF_TARGET_ESP32C6
+#define PROV_FORGET_GPIO (9)
+#else
+#ifdef CONFIG_PRJCFG_VARIANT_ESP32S3_LCD_147
+#define PROV_FORGET_GPIO (0)
+#define CFG_USE_LCD1_47
+#else
+#ifdef CONFIG_IDF_TARGET_ESP32C5
+#define PROV_FORGET_GPIO (28)
+#else
+#error "Reprovisioning pin for this target has not been set"
+#endif
+#endif
+#endif
+
+#ifdef CFG_USE_LCD1_47
+//#define UART_BRIDGE_USE_TINYUSB
+#endif
+
+// Blink driver default values
+#define BLINK_DEFAULT_ENABLED false
+#define BLINK_DEFAULT_PIN 8
+#define BLINK_DEFAULT_ON_MS 500
+#define BLINK_DEFAULT_OFF_MS 1000
+#define BLINK_DEFAULT_ON_VALUE 1
+
+// HoverWheels driver default values
+#define HOVER_DEFAULT_ENABLED false
+#define UART_PORT_TO_HOVER UART_NUM_1
+#define UART_PORT_TO_HOVER_RXD 5
+#define UART_PORT_TO_HOVER_TXD 4
+
+// Func modules
+// #define CFG_FUNC_TEST_HOVER
+
+// Debug config
+// #define CONFIG_FORCE_CENTRAL_ROLE
+// #define CONFIG_FORCE_PERIPHERAL_ROLE
 // ------------------ END   Datatypes ------------------
 
 // ------------------ BEGIN DRE ------------------
@@ -62,74 +151,11 @@ typedef struct {
 
     uint8_t eth_mac[PRJCFG_MAC_LEN];
     char unique_id[PRJCFG_UNIQUEID_MAX_LEN];
-    char ip_address[PRJCFG_IPADDRESS_MAX_LEN];
     esp_ip4_addr_t ip;
     char ssid[PRJCFG_SSID_MAX_LEN];
     bool wifi_connected;
 
-#ifdef CONFIG_PORIS_ENABLE_BLECENTRAL
-    bool central_role;
-#endif
-#ifdef CONFIG_PORIS_ENABLE_BLEPERIPHERAL
-    bool peripheral_role;
-    bool echo;
-#endif
-#ifdef CONFIG_PORIS_ENABLE_OTA
-    bool skip_ota;
-#endif
-#ifdef CONFIG_PORIS_ENABLE_UARTBRIDGE
-    bool uart_bridge;
-#endif
-
-#ifdef CONFIG_PORIS_ENABLE_UARTUSER
-    // Uart to User configuration
-    uart_port_t uart_user_port;             // porn number
-    int uart_user_baudrate;                 // baud rate
-    uart_stop_bits_t uart_user_stop_bits;   /*!< UART stop bits*/
-    gpio_num_t uart_user_tx_io_num;                // -1 for keeping hardware defaults
-    gpio_num_t uart_user_rx_io_num;                // -1 for keeping hardware defaults
-#endif
-
-#ifdef CONFIG_PORIS_ENABLE_UARTPERIPH
-    // Uart to Peripheral configuration
-    uart_port_t uart_periph_port;           // porn number
-    int uart_periph_baudrate;
-    uart_stop_bits_t uart_periph_stop_bits; /*!< UART stop bits*/
-    gpio_num_t uart_periph_tx_io_num;              // -1 for keeping hardware defaults
-    gpio_num_t uart_periph_rx_io_num;              // -1 for keeping hardware defaults
-#endif
-
-#ifdef CONFIG_PORIS_ENABLE_BLINK
-    // Blink functionality
-    bool blink_enabled;                     // true if blink shall execute
-    gpio_num_t blink_io_num;                       // pin number for blink pin
-    bool blink_on_value;                    // LOW or HIGH for lighting the LED
-    uint32_t blink_on_ms;                        // blinking time in ON
-    uint32_t blink_off_ms;                       // blinking time in OFF
-#endif
-
-#ifdef CONFIG_PORIS_ENABLE_BUTTON
-    // Button functionality
-    bool button_enabled;                    // true if button read shall execute
-    gpio_num_t button_io_num;                      // pin number for reading the button
-    bool button_pullup;                     // true if button read uses internal pullup
-    uint32_t button_filter_ms;                   // debouncing time for button
-    gpio_num_t button_notification_io_num;              // pin number to notify when the button is pressed
-    bool button_notification_value;         // LOW or HIGH for notifying button pressed
-#endif
-
-#ifdef CONFIG_PORIS_ENABLE_SERVO
-    // Servo driver functionality
-    bool servo_enabled;                     // true if servo shall execute
-#endif
-
-#ifdef CONFIG_PORIS_ENABLE_HOVER
-    // HoverWheels driver functionality
-    bool hover_enabled;                             // true if hoverwheels shall execute
-    uart_port_t uart_hover_port;                    // porn number
-    gpio_num_t uart_hover_tx_io_num;                // -1 for keeping hardware defaults
-    gpio_num_t uart_hover_rx_io_num;                // -1 for keeping hardware defaults
-#endif
+#include "PrjCfg_netvar_types_fragment.h_"
 
 } PrjCfg_dre_t;
 

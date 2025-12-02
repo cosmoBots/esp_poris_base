@@ -1,0 +1,29 @@
+// Auto-generated fragment for PrjCfg netvars
+// Include this inside the definition of struct prjcfg_t
+// DO NOT EDIT MANUALLY; edit netvars.csv and regenerate.
+
+    bool central_role;
+    bool peripheral_role;
+    bool echo;
+    bool skip_ota;
+    bool uart_bridge;
+    char ip_address[PRJCFG_IPADDRESS_MAX_LEN];
+    uart_port_t uart_user_port;
+    int uart_user_baudrate;
+    uart_stop_bits_t uart_user_stop_bits;
+    gpio_num_t uart_user_tx_io_num;
+    gpio_num_t uart_user_rx_io_num;
+    uart_port_t uart_periph_port;
+    int uart_periph_baudrate;
+    uart_stop_bits_t uart_periph_stop_bits;
+    gpio_num_t uart_periph_tx_io_num;
+    gpio_num_t uart_periph_rx_io_num;
+    bool blink_enabled;
+    gpio_num_t blink_io_num;
+    bool blink_on_value;
+    uint32_t blink_on_ms;
+    uint32_t blink_off_ms;
+    bool hover_enabled;
+    uart_port_t uart_hover_port;
+    gpio_num_t uart_hover_rx_io_num;
+    gpio_num_t uart_hover_tx_io_num;
