@@ -76,7 +76,16 @@ app_main_return_code start_components(void)
     // OTA Should not be started with the rest of the components
     // only on-demand
 #endif
-
+#ifdef CONFIG_PORIS_ENABLE_MQTTCOMM
+    error_occurred = (MQTTComm_enable() != MQTTComm_ret_ok);
+#ifdef CONFIG_MQTTCOMM_USE_THREAD
+    if (!error_occurred)
+    {
+        error_occurred |= (MQTTComm_start() != MQTTComm_ret_ok);
+    }
+#endif
+    error_accumulator |= error_occurred;
+#endif
     if (error_accumulator)
     {
         ret = app_main_ret_error;
@@ -101,7 +110,9 @@ app_main_return_code run_components(void)
     // OTA does not use spin
 #endif
 #ifdef CONFIG_PORIS_ENABLE_MQTTCOMM
+#ifndef CONFIG_MQTTCOMM_USE_THREAD
     error_accumulator |= (MQTTComm_spin() != MQTTComm_ret_ok);
+#endif
 #endif
     if (error_accumulator)
     {
@@ -177,7 +188,9 @@ void app_main(void)
         ESP_LOGI(TAG,"---> TOPICS RELATED TO %s", "1234");
 
         MQTTComm_setup(&cfg);
+#ifndef CONFIG_MQTTCOMM_USE_THREAD
         MQTTComm_enable();
+#endif
     }
     while (true)
     {
