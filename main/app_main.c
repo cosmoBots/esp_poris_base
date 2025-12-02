@@ -14,7 +14,12 @@
 #include "esp_system.h"
 #include <esp_log.h>
 
+// Include project configuration
 #include <PrjCfg.h>
+
+// Include components
+#include <Wifi.h>
+#include <OTA.h>
 
 typedef enum
 {
@@ -26,12 +31,21 @@ static char TAG[] = "main";
 
 app_main_return_code init_components(void)
 {
-    app_main_return_code ret = app_main_ret_error;
+    app_main_return_code ret = app_main_ret_ok;
+    bool error_occurred = false;
+    bool error_accumulator = false;
+
 #ifdef CONFIG_PORIS_ENABLE_PRJCFG
-    if (PrjCfg_setup() == PrjCfg_ret_ok)
-    {
-        ret = app_main_ret_ok;
-    }
+    error_occurred = (PrjCfg_setup() != PrjCfg_ret_ok);
+    error_accumulator |= error_occurred;
+#endif
+#ifdef CONFIG_PORIS_ENABLE_WIFI
+    error_occurred = (Wifi_setup() != Wifi_ret_ok);
+    error_accumulator |= error_occurred;
+#endif
+#ifdef CONFIG_PORIS_ENABLE_OTA
+    error_occurred = (OTA_setup() != OTA_ret_ok);
+    error_accumulator |= error_occurred;
 #endif
     return ret;
 }
@@ -50,9 +64,16 @@ app_main_return_code start_components(void)
         error_occurred |= (PrjCfg_start() != PrjCfg_ret_ok);
     }
 #endif
-#endif
     error_accumulator |= error_occurred;
-
+#endif
+#ifdef CONFIG_PORIS_ENABLE_WIFI
+    // Wifi does not need starting, setup already did it
+    // only on-demand
+#endif
+#ifdef CONFIG_PORIS_ENABLE_OTA
+    // OTA Should not be started with the rest of the components
+    // only on-demand
+#endif
 
     if (error_accumulator)
     {
@@ -71,7 +92,12 @@ app_main_return_code run_components(void)
     error_accumulator |= (PrjCfg_spin() != PrjCfg_ret_ok);
 #endif
 #endif
-
+#ifdef CONFIG_PORIS_ENABLE_WIFI
+    error_accumulator |= (Wifi_spin() != Wifi_ret_ok);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_OTA
+    // OTA does not use spin
+#endif
     if (error_accumulator)
     {
         ret = app_main_ret_error;
@@ -122,6 +148,15 @@ void app_main(void)
             ESP_LOGE(TAG, "Cannot start components!!!");
             shall_execute = false;
         }
+    }
+    if (shall_execute)
+    {
+        // Boot-time actions
+        // Check OTA
+        OTA_enable();
+        OTA_start();
+        // If OTA has not rebooted, we should continue
+        OTA_disable();
     }
     while (true)
     {

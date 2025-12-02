@@ -5,7 +5,7 @@
   "idf.openOcdConfigs": [
     "board/esp32c5-builtin.cfg"
   ],
-  "idf.port": "/dev/ttyUSB0",
+  "idf.port": "/dev/ttyACM0",
   "idf.toolsPath": "/home/txinto/.espressif",
   "idf.customExtraVars": {
     "IDF_TARGET": "esp32c5"
@@ -14,13 +14,14 @@
   "clangd.arguments": [
     "--background-index",
     "--query-driver=/home/txinto/.espressif/tools/riscv32-esp-elf/esp-14.2.0_20241119/riscv32-esp-elf/bin/riscv32-esp-elf-gcc",
-    "--compile-commands-dir=/home/txinto/repos/cbots/poris_base/build_c5devkit"
+    "--compile-commands-dir=/home/txinto/repos/cbots/poris_base/build_c6devkitusb"
   ],
   "idf.flashType": "UART",
   "files.associations": {
     ".fantomasignore": "ignore",
     "nvs_flash.h": "c",
     "cjson.h": "c",
-    "string.h": "c"
+    "string.h": "c",
+    "inttypes.h": "c"
   }
 }

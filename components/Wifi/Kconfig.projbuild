@@ -1,0 +1,22 @@
+menu "Wifi settings"
+
+config PORIS_ENABLE_WIFI
+    bool "Enable component Wifi"
+    default y
+    help
+      Enable/disable component Wifi at Kconfig level.
+      Variant gating is handled by environment variables (PORIS_ENABLE_WIFI).
+
+config WIFI_CONN_SSID
+    string "WiFi SSID"
+    default "myssid"
+    help
+        SSID of the Wi-Fi network.
+
+config WIFI_CONN_PASSWORD
+    string "WiFi Password"
+    default "mypass"
+    help
+        Password for Wi-Fi network.
+
+endmenu
