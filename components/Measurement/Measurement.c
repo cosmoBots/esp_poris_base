@@ -223,6 +223,16 @@ Measurement_return_code_t Measurement_setup(void)
 {
     // Init liviano; no arranca tarea.
     ESP_LOGD(TAG, "setup()");
+    // Set the constant data
+    Measurement_dre.ai1_desc = AI1_DESC;
+    Measurement_dre.ai2_desc = AI2_DESC;
+    Measurement_dre.bi0_desc = BI0_DESC;
+
+    // Set the initial data values
+    Measurement_dre.ai1 = 15.0;
+    Measurement_dre.ai2 = 20.0;
+    Measurement_dre.bi0 = false;
+
 #if CONFIG_MEASUREMENT_USE_THREAD
     if (_create_mutex_once() != pdPASS) {
         ESP_LOGE(TAG, "mutex creation failed");
@@ -242,14 +252,30 @@ Measurement_return_code_t Measurement_spin(void)
     _lock();
 #endif
     bool en = Measurement_dre.enabled;
+    if (!en) 
+    {
 #if CONFIG_MEASUREMENT_USE_THREAD
-    _unlock();
+        _unlock();
 #endif
-    if (!en) return Measurement_ret_ok;
+        return Measurement_ret_ok;
+    }
+    else
+    {
+        // Implement your spin here
+        // this area is protected, so concentrate here
+        // the stuff which needs protection against
+        // concurrency issues
 
-    ESP_LOGI(TAG, "Hello world!");
-    //vTaskDelay(pdMS_TO_TICKS(120));
-    return Measurement_ret_ok;
+        ESP_LOGI(TAG, "Hello world! %d",Measurement_dre.enabled);
+#if CONFIG_MEASUREMENT_USE_THREAD
+        _unlock();
+#endif
+        // Communicate results, do stuff which 
+        // does not need protection
+        // ...
+        ESP_LOGI(TAG, "Finishing!");
+        return Measurement_ret_ok;
+    }
 }
 
 Measurement_return_code_t Measurement_enable(void)

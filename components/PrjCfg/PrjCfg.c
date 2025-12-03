@@ -350,14 +350,33 @@ PrjCfg_return_code_t PrjCfg_spin(void)
     _lock();
 #endif
     bool en = PrjCfg_dre.enabled;
+    if (!en)
+    {
 #if CONFIG_PRJCFG_USE_THREAD
-    _unlock();
+        _unlock();
 #endif
-    if (!en) return PrjCfg_ret_ok;
+        return PrjCfg_ret_ok;
+    }
+    else
+    {
+        // Implement your spin here
+        // this area is protected, so concentrate here
+        // the stuff which needs protection against
+        // concurrency issues
 
-    //ESP_LOGI(TAG, "Hello world!");
-    //vTaskDelay(pdMS_TO_TICKS(120));
-    return PrjCfg_ret_ok;
+        ESP_LOGI(TAG, "Hello world! %d", PrjCfg_dre.enabled);
+        //vTaskDelay(pdMS_TO_TICKS(120));
+
+#if CONFIG_PRJCFG_USE_THREAD
+        _unlock();
+#endif
+
+        // Communicate results, do stuff which 
+        // does not need protection
+        // ...
+        ESP_LOGI(TAG, "Finishing!");
+        return PrjCfg_ret_ok;
+    }
 }
 
 PrjCfg_return_code_t PrjCfg_enable(void)

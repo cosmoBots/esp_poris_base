@@ -15,13 +15,21 @@ typedef enum {
 // ------------------ END   Return code ------------------
 
 // ------------------ BEGIN Datatypes ------------------
-
+#define AI1_DESC "inlet temperature"
+#define AI2_DESC "outdoors temperature"
+#define BI0_DESC "heater status"
 // ------------------ END   Datatypes ------------------
 
 // ------------------ BEGIN DRE ------------------
 typedef struct {
     bool enabled;
     Measurement_return_code_t last_return_code;
+    float ai1;
+    char *ai1_desc;
+    float ai2;
+    char *ai2_desc;
+    bool bi0;
+    char *bi0_desc;
 } Measurement_dre_t;
 
 extern Measurement_dre_t Measurement_dre;

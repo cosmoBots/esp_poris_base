@@ -245,11 +245,34 @@ Provisioning_return_code_t Provisioning_spin(void)
 #if CONFIG_PROVISIONING_USE_THREAD
     _unlock();
 #endif
-    if (!en) return Provisioning_ret_ok;
 
-    ESP_LOGI(TAG, "Hello world!");
-    //vTaskDelay(pdMS_TO_TICKS(120));
-    return Provisioning_ret_ok;
+    if (!en)
+    {
+#if CONFIG_PROVISIONING_USE_THREAD        
+        _unlock();
+#endif
+        return Provisioning_ret_ok;
+    }
+    else
+    {
+        // Implement your spin here
+        // this area is protected, so concentrate here
+        // the stuff which needs protection against
+        // concurrency issues
+
+        ESP_LOGI(TAG, "Hello world! %d", Provisioning_dre.enabled);
+        //vTaskDelay(pdMS_TO_TICKS(120));
+
+#if CONFIG_PROVISIONING_USE_THREAD
+        _unlock();
+#endif
+
+        // Communicate results, do stuff which 
+        // does not need protection
+        // ...
+        ESP_LOGI(TAG, "Finishing!");
+        return Provisioning_ret_ok;
+    }
 }
 
 Provisioning_return_code_t Provisioning_enable(void)

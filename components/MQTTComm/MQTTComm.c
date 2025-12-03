@@ -12,11 +12,10 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #if CONFIG_MQTTCOMM_USE_THREAD
-  #include <freertos/semphr.h>
+#include <freertos/semphr.h>
 #endif
 
 // END   --- FreeRTOS headers section ---
-
 
 // BEGIN --- ESP-IDF headers section ---
 #include <esp_log.h>
@@ -24,7 +23,7 @@
 // END   --- ESP-IDF headers section ---
 
 // BEGIN --- Project configuration section ---
-#include <PrjCfg.h> // Including project configuration module 
+#include <PrjCfg.h> // Including project configuration module
 // END   --- Project configuration section ---
 
 // BEGIN --- Project configuration section ---
@@ -45,17 +44,15 @@ MQTTComm_dre_t MQTTComm_dre = {
     .enabled = false,
     .initialized = false,
     .started = false,
-    .last_return_code = MQTTComm_ret_ok
-};
+    .last_return_code = MQTTComm_ret_ok};
 // END   --- Internal variables (DRE)
 
 // BEGIN --- Functional variables and handlers
 
-
-
 static void log_error_if_nonzero(const char *message, int error_code)
 {
-    if (error_code != 0) {
+    if (error_code != 0)
+    {
         ESP_LOGE(TAG, "Last error %s: 0x%x", message, error_code);
     }
 }
@@ -76,7 +73,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     esp_mqtt_event_handle_t event = event_data;
     esp_mqtt_client_handle_t client = event->client;
     int msg_id;
-    switch ((esp_mqtt_event_id_t)event_id) {
+    switch ((esp_mqtt_event_id_t)event_id)
+    {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
 #ifdef CONFIG_DEBUG_SEND_DATA_ON_CONNECTION
@@ -110,8 +108,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
         printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
         printf("DATA=%.*s\r\n", event->data_len, event->data);
-        ESP_LOGD(TAG, "Compare %.*s =? %s",event->topic_len, event->topic, MQTTComm_dre.cfg.cfg_topic);
-        if (strncmp(event->topic, MQTTComm_dre.cfg.cfg_topic,event->topic_len) == 0)
+        ESP_LOGD(TAG, "Compare %.*s =? %s", event->topic_len, event->topic, MQTTComm_dre.cfg.cfg_topic);
+        if (strncmp(event->topic, MQTTComm_dre.cfg.cfg_topic, event->topic_len) == 0)
         {
             MQTTComm_dre.cfg.f_cfg_cb(event->data, event->data_len);
         }
@@ -125,12 +123,12 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         break;
     case MQTT_EVENT_ERROR:
         ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
-        if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
+        if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT)
+        {
             log_error_if_nonzero("reported from esp-tls", event->error_handle->esp_tls_last_esp_err);
             log_error_if_nonzero("reported from tls stack", event->error_handle->esp_tls_stack_err);
-            log_error_if_nonzero("captured as transport's socket errno",  event->error_handle->esp_transport_sock_errno);
+            log_error_if_nonzero("captured as transport's socket errno", event->error_handle->esp_transport_sock_errno);
             ESP_LOGI(TAG, "Last errno string (%s)", strerror(event->error_handle->esp_transport_sock_errno));
-
         }
         break;
     default:
@@ -148,21 +146,24 @@ void mqtt_app_start(void)
             .authentication = {
                 .password = MQTT_BROKER_PW,
             },
-            .client_id = MQTTComm_dre.cfg.cfg_client_id
-        }
-    };
+            .client_id = MQTTComm_dre.cfg.cfg_client_id}};
 #if CONFIG_BROKER_URL_FROM_STDIN
     char line[128];
 
-    if (strcmp(mqtt_cfg.broker.address.uri, "FROM_STDIN") == 0) {
+    if (strcmp(mqtt_cfg.broker.address.uri, "FROM_STDIN") == 0)
+    {
         int count = 0;
         printf("Please enter url of mqtt broker\n");
-        while (count < 128) {
+        while (count < 128)
+        {
             int c = fgetc(stdin);
-            if (c == '\n') {
+            if (c == '\n')
+            {
                 line[count] = '\0';
                 break;
-            } else if (c > 0 && c < 127) {
+            }
+            else if (c > 0 && c < 127)
+            {
                 line[count] = c;
                 ++count;
             }
@@ -170,7 +171,9 @@ void mqtt_app_start(void)
         }
         mqtt_cfg.broker.address.uri = line;
         printf("Broker url: %s\n", line);
-    } else {
+    }
+    else
+    {
         ESP_LOGE(TAG, "Configuration mismatch: wrong broker url");
         abort();
     }
@@ -182,7 +185,6 @@ void mqtt_app_start(void)
     esp_mqtt_client_start(MQTTComm_dre.main_client);
 }
 
-
 // END --- Functional variables and handlers
 
 // BEGIN --- Multitasking variables and handlers
@@ -191,44 +193,54 @@ void mqtt_app_start(void)
 static TaskHandle_t s_task = NULL;
 static volatile bool s_run = false;
 static uint32_t s_period_ms =
-    #ifdef CONFIG_MQTTCOMM_PERIOD_MS
-      CONFIG_MQTTCOMM_PERIOD_MS
-    #else
-      1000
-    #endif
-;
+#ifdef CONFIG_MQTTCOMM_PERIOD_MS
+    CONFIG_MQTTCOMM_PERIOD_MS
+#else
+    1000
+#endif
+    ;
 static SemaphoreHandle_t s_mutex = NULL;
 
-static inline void _lock(void)   { if (s_mutex) xSemaphoreTake(s_mutex, portMAX_DELAY); }
-static inline void _unlock(void) { if (s_mutex) xSemaphoreGive(s_mutex); }
+static inline void _lock(void)
+{
+    if (s_mutex)
+        xSemaphoreTake(s_mutex, portMAX_DELAY);
+}
+static inline void _unlock(void)
+{
+    if (s_mutex)
+        xSemaphoreGive(s_mutex);
+}
 
 #ifdef CONFIG_MQTTCOMM_MINIMIZE_JITTER
-    static TickType_t xLastWakeTime;
-    static TickType_t xFrequency;
+static TickType_t xLastWakeTime;
+static TickType_t xFrequency;
 #endif
 
-static MQTTComm_return_code_t MQTTComm_spin(void);  // In case we are using a thread, this function should not be part of the public API
+static MQTTComm_return_code_t MQTTComm_spin(void); // In case we are using a thread, this function should not be part of the public API
 
 static inline BaseType_t _create_mutex_once(void)
 {
-    if (!s_mutex) {
+    if (!s_mutex)
+    {
         s_mutex = xSemaphoreCreateMutex();
-        if (!s_mutex) return pdFAIL;
+        if (!s_mutex)
+            return pdFAIL;
     }
     return pdPASS;
 }
 
 static inline BaseType_t _get_core_affinity(void)
 {
-    #if CONFIG_MQTTCOMM_PIN_CORE_ANY
-        return tskNO_AFFINITY;
-    #elif CONFIG_MQTTCOMM_PIN_CORE_0
-        return 0;
-    #elif CONFIG_MQTTCOMM_PIN_CORE_1
-        return 1;
-    #else
-        return tskNO_AFFINITY;
-    #endif
+#if CONFIG_MQTTCOMM_PIN_CORE_ANY
+    return tskNO_AFFINITY;
+#elif CONFIG_MQTTCOMM_PIN_CORE_0
+    return 0;
+#elif CONFIG_MQTTCOMM_PIN_CORE_1
+    return 1;
+#else
+    return tskNO_AFFINITY;
+#endif
 }
 
 static void MQTTComm_task(void *arg)
@@ -239,7 +251,8 @@ static void MQTTComm_task(void *arg)
     xLastWakeTime = xTaskGetTickCount();
     xFrequency = (s_period_ms / portTICK_PERIOD_MS);
 #endif
-    while (s_run) {
+    while (s_run)
+    {
         MQTTComm_return_code_t ret = MQTTComm_spin();
         if (ret != MQTTComm_ret_ok)
         {
@@ -261,16 +274,17 @@ static void MQTTComm_task(void *arg)
 
 // BEGIN ------------------ Public API (MULTITASKING)------------------
 
-
 #if CONFIG_MQTTCOMM_USE_THREAD
 
 MQTTComm_return_code_t MQTTComm_start(void)
 {
-    if (_create_mutex_once() != pdPASS) {
+    if (_create_mutex_once() != pdPASS)
+    {
         ESP_LOGE(TAG, "mutex creation failed");
         return MQTTComm_ret_error;
     }
-    if (s_task) {
+    if (s_task)
+    {
         // idempotente
         return MQTTComm_ret_ok;
     }
@@ -284,9 +298,9 @@ MQTTComm_return_code_t MQTTComm_start(void)
         NULL,
         CONFIG_MQTTCOMM_TASK_PRIO,
         &s_task,
-        core
-    );
-    if (ok != pdPASS) {
+        core);
+    if (ok != pdPASS)
+    {
         s_task = NULL;
         s_run = false;
         ESP_LOGE(TAG, "xTaskCreatePinnedToCore failed");
@@ -297,12 +311,14 @@ MQTTComm_return_code_t MQTTComm_start(void)
 
 MQTTComm_return_code_t MQTTComm_stop(void)
 {
-    if (!s_task) return MQTTComm_ret_ok; // idempotente
+    if (!s_task)
+        return MQTTComm_ret_ok; // idempotente
     s_run = false;
     // Espera una vuelta de scheduler para que el loop salga y se autodelete
     vTaskDelay(pdMS_TO_TICKS(1));
     // Si aún vive por cualquier motivo, fuerza delete
-    if (s_task) {
+    if (s_task)
+    {
         TaskHandle_t t = s_task;
         s_task = NULL;
         vTaskDelete(t);
@@ -313,7 +329,8 @@ MQTTComm_return_code_t MQTTComm_stop(void)
 
 MQTTComm_return_code_t MQTTComm_get_dre_clone(MQTTComm_dre_t *dst)
 {
-    if (!dst) return MQTTComm_ret_error;
+    if (!dst)
+        return MQTTComm_ret_error;
     _lock();
     *dst = MQTTComm_dre;
     _unlock();
@@ -322,10 +339,11 @@ MQTTComm_return_code_t MQTTComm_get_dre_clone(MQTTComm_dre_t *dst)
 
 MQTTComm_return_code_t MQTTComm_set_period_ms(uint32_t period_ms)
 {
-    if (period_ms < 10) period_ms = 10;
+    if (period_ms < 10)
+        period_ms = 10;
     _lock();
     s_period_ms = period_ms;
-#ifdef CONFIG_MQTTCOMM_MINIMIZE_JITTER    
+#ifdef CONFIG_MQTTCOMM_MINIMIZE_JITTER
     xFrequency = (s_period_ms / portTICK_PERIOD_MS);
 #endif
     _unlock();
@@ -343,7 +361,7 @@ uint32_t MQTTComm_get_period_ms(void)
 
 /**
  *  Execute a function wrapped with locks so you can access the DRE variables in thread-safe mode
-*/
+ */
 void MQTTComm_execute_function_safemode(void (*callback)())
 {
     _lock();
@@ -369,14 +387,15 @@ MQTTComm_return_code_t MQTTComm_setup(mqtt_comm_cfg_t *cfg)
     else
     {
         MQTTComm_dre.cfg.f_cfg_cb = cfg->f_cfg_cb;
-        strcpy(MQTTComm_dre.cfg.cfg_topic,cfg->cfg_topic);
+        strcpy(MQTTComm_dre.cfg.cfg_topic, cfg->cfg_topic);
         MQTTComm_dre.cfg.f_req_cb = cfg->f_req_cb;
-        strcpy(MQTTComm_dre.cfg.req_topic,cfg->req_topic);
+        strcpy(MQTTComm_dre.cfg.req_topic, cfg->req_topic);
         MQTTComm_dre.cfg.f_data_cb = cfg->f_data_cb;
-        strcpy(MQTTComm_dre.cfg.data_topic,cfg->data_topic);
+        strcpy(MQTTComm_dre.cfg.data_topic, cfg->data_topic);
 
 #if CONFIG_MQTTCOMM_USE_THREAD
-        if (_create_mutex_once() != pdPASS) {
+        if (_create_mutex_once() != pdPASS)
+        {
             ESP_LOGE(TAG, "mutex creation failed");
             return MQTTComm_ret_error;
         }
@@ -389,11 +408,11 @@ MQTTComm_return_code_t MQTTComm_setup(mqtt_comm_cfg_t *cfg)
 }
 
 #if CONFIG_MQTTCOMM_USE_THREAD
-static  // In case we are using a thread, this function should not be part of the public API
+static // In case we are using a thread, this function should not be part of the public API
 #endif
-MQTTComm_return_code_t MQTTComm_spin(void)
+    MQTTComm_return_code_t MQTTComm_spin(void)
 {
-    ESP_LOGI(TAG,"Spinning");
+    ESP_LOGI(TAG, "Spinning");
 #if CONFIG_MQTTCOMM_USE_THREAD
     _lock();
 #endif
@@ -402,27 +421,36 @@ MQTTComm_return_code_t MQTTComm_spin(void)
 
     bool en = MQTTComm_dre.enabled;
 
-    if (!en) return MQTTComm_ret_ok;
-
-    // This is the periodic data publication loop
-    if (MQTTComm_dre.cfg.f_cfg_cb != NULL)
+    if (!en)
     {
-        MQTTComm_dre.cfg.f_data_cb(data_buffer,&len);
-        data_buffer[len] = '\0';
-        int msg_id = esp_mqtt_client_publish(MQTTComm_dre.main_client, MQTTComm_dre.cfg.data_topic, data_buffer, 0, 1, 0);
-#if CONFIG_MQTTCOMM_USE_THREAD
+#if CONFIG_MQTTCOMM_USE_THREAD        
         _unlock();
 #endif
-        ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
         return MQTTComm_ret_ok;
     }
     else
     {
+        // Do your stuff here
+        // This is the periodic data publication loop
+        if (MQTTComm_dre.cfg.f_cfg_cb != NULL)
+        {
+            MQTTComm_dre.cfg.f_data_cb(data_buffer, &len);
+            data_buffer[len] = '\0';
+            int msg_id = esp_mqtt_client_publish(MQTTComm_dre.main_client, MQTTComm_dre.cfg.data_topic, data_buffer, 0, 1, 0);
 #if CONFIG_MQTTCOMM_USE_THREAD
-    _unlock();
-#endif        
-        ESP_LOGW(TAG,"callback function for loading the data is not given");
-        return MQTTComm_ret_error;
+            _unlock();
+#endif
+            ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+            return MQTTComm_ret_ok;
+        }
+        else
+        {
+#if CONFIG_MQTTCOMM_USE_THREAD
+            _unlock();
+#endif
+            ESP_LOGW(TAG, "callback function for loading the data is not given");
+            return MQTTComm_ret_error;
+        }
     }
 }
 
