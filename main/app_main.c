@@ -18,13 +18,17 @@
 
 // Include project configuration
 #include <PrjCfg.h>
-#include <PrjCfg_cmd.h>
+
 
 // Include components
 #include <Wifi.h>
 #include <OTA.h>
 #include <MQTTComm.h>
 #include <Measurement.h>
+
+// Include comms callbacks
+#include <PrjCfg_cmd.h>
+#include <Measurement_cmd.h>
 
 typedef enum
 {
@@ -169,7 +173,8 @@ app_main_return_code run_components(void)
 void main_parse_callback(const char *data, int len)
 {
     ESP_LOGI(TAG, "Parsing the CFG payload %d %.*s", len, len, data);
-    prjcfg_parse_callback(data, len);
+    PrjCfg_parse_callback(data, len);
+    Measurement_parse_callback(data, len);
 }
 
 void main_req_parse_callback(const char *data, int len)
@@ -198,6 +203,7 @@ void main_compose_callback(char *data, int *len)
 
     cJSON *root = cJSON_CreateObject();
     PrjCfg_compose_json_payload(root);
+    Measurement_compose_json_payload(root);
 
     char *cPayload = cJSON_PrintUnformatted(root);
     if (cPayload != NULL)

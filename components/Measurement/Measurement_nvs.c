@@ -35,7 +35,7 @@
 // end   --- Project configuration section ---
 
 // BEGIN --- Self-includes section ---
-#include "PrjCfg.h"
+#include "Measurement.h"
 
 // END --- Self-includes section ---
 
@@ -43,7 +43,7 @@
 static const char *TAG = "PrjCfg_nvs";
 // END --- Logging related variables
 
-void PrjCfg_nvs_cfg_load(void)
+void Measurement_nvs_cfg_load(void)
 {
     esp_err_t err;
     // Open
@@ -65,7 +65,7 @@ void PrjCfg_nvs_cfg_load(void)
     }
 
 }
-void PrjCfg_nvs_cfg_save(void)
+void Measurement_nvs_cfg_save(void)
 {
     esp_err_t err;
     // Open

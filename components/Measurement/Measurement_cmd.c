@@ -6,13 +6,12 @@
 #include <esp_system.h>
 #include <esp_log.h>
 
-#include <PrjCfg.h>
+#include "PrjCfg.h"
 
-#include <OTA.h>
+#include "Measurement.h"
+#include "Measurement_nvs.h"
 
-#include "PrjCfg_nvs.h"
-
-static char TAG[] = "PrjCfg_cmd";
+static char TAG[] = "Measurement_cmd";
 
 static bool nvs_cfg_changed = false;
 
@@ -28,7 +27,7 @@ static void config_parse_json_dict(cJSON *root)
 
         bool found_key = false;
 
-        if (!found_key && strcmp(nvi->string, "prjcfgdumm") == 0)
+        if (!found_key && strcmp(nvi->string, "measdumm") == 0)
         {
             ESP_LOGI(TAG, "Recognized %s", nvi->string);
             bool value = cJSON_IsTrue(nvi);
@@ -61,37 +60,36 @@ static void config_parse_json(const char *data)
         cJSON_Delete(root);
         if (nvs_cfg_changed)
         {
-            PrjCfg_nvs_cfg_save();
+            Measurement_nvs_cfg_save();
         }
     }
 }
 
-void PrjCfg_compose_json_payload(cJSON *root)
+void Measurement_compose_json_payload(cJSON *root)
 {
-    cJSON_AddBoolToObject(root, "prjcfgdumm", true);
+    cJSON_AddBoolToObject(root, "measdumm", true);
 }
 
-
-void PrjCfg_parse_callback(const char *data, int len)
+void Measurement_parse_callback(const char *data, int len)
 {
     ESP_LOGI(TAG, "Parsing the CFG payload %d %.*s", len, len, data);
     config_parse_json(data);
 }
 
-void PrjCfg_req_parse_callback(const char *data, int len)
+void Measurement_req_parse_callback(const char *data, int len)
 {
     ESP_LOGI(TAG, "Parsing the REQ payload %d %.*s", len, len, data);
 }
 
 static uint32_t msg_counter = 0;
-void PrjCfg_compose_callback(char *data, int *len)
+void Measurement_compose_callback(char *data, int *len)
 {
     sprintf((char *)data, "this is a payload (%lu)", msg_counter++);
     *len = strlen((char *)data);
     ESP_LOGI(TAG, "Composing the DATA payload %d %.*s", *len, *len, data);
 
     cJSON *root = cJSON_CreateObject();
-    PrjCfg_compose_json_payload(root);
+    Measurement_compose_json_payload(root);
 
     char *cPayload = cJSON_PrintUnformatted(root);
     if (cPayload != NULL)
