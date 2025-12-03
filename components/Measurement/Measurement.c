@@ -223,15 +223,17 @@ Measurement_return_code_t Measurement_setup(void)
 {
     // Init liviano; no arranca tarea.
     ESP_LOGD(TAG, "setup()");
+#ifdef MEASUREMENT_ENABLE_SIMULATION
     // Set the constant data
     Measurement_dre.ai1_desc = AI1_DESC;
     Measurement_dre.ai2_desc = AI2_DESC;
     Measurement_dre.bi0_desc = BI0_DESC;
 
     // Set the initial data values
-    Measurement_dre.ai1 = 15.0;
-    Measurement_dre.ai2 = 20.0;
-    Measurement_dre.bi0 = false;
+    Measurement_dre.ai1 = 15.0;     // Outdoor temp is cooler
+    Measurement_dre.ai2 = 10.0;     // Indoor temp is warmer, getting cooler
+    Measurement_dre.bi0 = true;    // The heater will be switched off at the first iteration
+#endif
 
 #if CONFIG_MEASUREMENT_USE_THREAD
     if (_create_mutex_once() != pdPASS) {
@@ -242,6 +244,11 @@ Measurement_return_code_t Measurement_setup(void)
     Measurement_dre.last_return_code = Measurement_ret_ok;
     return Measurement_ret_ok;
 }
+
+#ifdef MEASUREMENT_ENABLE_SIMULATION
+#define MEASUREMENT_HEATER_CYCLE_LIMIT ((MEASUREMENT_HEATER_CYCLE_MS / MEASUREMENT_CYCLE_PERIOD_MS) - 1)
+static uint8_t heater_counter = 0;
+#endif
 
 #if CONFIG_MEASUREMENT_USE_THREAD
 static  // In case we are using a thread, this function should not be part of the public API
@@ -266,14 +273,42 @@ Measurement_return_code_t Measurement_spin(void)
         // the stuff which needs protection against
         // concurrency issues
 
-        ESP_LOGI(TAG, "Hello world! %d",Measurement_dre.enabled);
+        //ESP_LOGI(TAG, "Doing protected stuff %d",Measurement_dre.enabled);
+#ifdef MEASUREMENT_ENABLE_SIMULATION
+        // Computing the temperatures
+        if (Measurement_dre.bi0)
+        {
+            Measurement_dre.ai1 += 0.001;
+        }
+        else
+        {
+            float deltadiff = (Measurement_dre.ai2 - Measurement_dre.ai1)*0.001;
+            Measurement_dre.ai1 += deltadiff;
+        }
+        // Operating the heater
+        if (heater_counter <= 0)
+        {
+            Measurement_dre.bi0 = !Measurement_dre.bi0;
+            heater_counter = MEASUREMENT_HEATER_CYCLE_LIMIT;
+        }
+        else
+        {
+            heater_counter++;
+        }
+#endif
 #if CONFIG_MEASUREMENT_USE_THREAD
         _unlock();
 #endif
         // Communicate results, do stuff which 
         // does not need protection
         // ...
-        ESP_LOGI(TAG, "Finishing!");
+#ifdef MEASUREMENT_ENABLE_SIMULATION
+        ESP_LOGI(TAG, "ai1: %f ai2: %f bi0: %d",
+            Measurement_dre.ai1,
+            Measurement_dre.ai2,
+            Measurement_dre.bi0
+        );
+#endif
         return Measurement_ret_ok;
     }
 }

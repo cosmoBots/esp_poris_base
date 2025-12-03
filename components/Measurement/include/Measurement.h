@@ -7,6 +7,8 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <PrjCfg.h>
+
 // ------------------ BEGIN Return code ------------------
 typedef enum {
     Measurement_ret_error = -1,
@@ -15,21 +17,26 @@ typedef enum {
 // ------------------ END   Return code ------------------
 
 // ------------------ BEGIN Datatypes ------------------
+
+#ifdef MEASUREMENT_ENABLE_SIMULATION
 #define AI1_DESC "inlet temperature"
 #define AI2_DESC "outdoors temperature"
 #define BI0_DESC "heater status"
+#endif
 // ------------------ END   Datatypes ------------------
 
 // ------------------ BEGIN DRE ------------------
 typedef struct {
     bool enabled;
     Measurement_return_code_t last_return_code;
+#ifdef MEASUREMENT_ENABLE_SIMULATION
     float ai1;
     char *ai1_desc;
     float ai2;
     char *ai2_desc;
     bool bi0;
     char *bi0_desc;
+#endif
 } Measurement_dre_t;
 
 extern Measurement_dre_t Measurement_dre;

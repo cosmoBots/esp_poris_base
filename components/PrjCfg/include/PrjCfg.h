@@ -62,7 +62,11 @@ typedef enum {
 #define MQTTCOMM_CYCLE_PERIOD_MS 30000
 
 #define MEASUREMENT_CYCLE_PERIOD_MS 5000
+
+#define MEASUREMENT_ENABLE_SIMULATION
+#ifdef MEASUREMENT_ENABLE_SIMULATION
 #define MEASUREMENT_HEATER_CYCLE_MS (5*60*1000)
+#endif
 
 // ------------------ END   Project configuration constants ------------------
 
