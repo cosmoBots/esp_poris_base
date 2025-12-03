@@ -248,7 +248,7 @@ Provisioning_return_code_t Provisioning_spin(void)
     if (!en) return Provisioning_ret_ok;
 
     ESP_LOGI(TAG, "Hello world!");
-    vTaskDelay(pdMS_TO_TICKS(120));
+    //vTaskDelay(pdMS_TO_TICKS(120));
     return Provisioning_ret_ok;
 }
 

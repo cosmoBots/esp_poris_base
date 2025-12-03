@@ -155,8 +155,8 @@ Wifi_return_code_t Wifi_spin(void)
     bool en = Wifi_dre.enabled;
     if (!en) return Wifi_ret_ok;
 
-    ESP_LOGI(TAG, "Hello world!");
-    vTaskDelay(pdMS_TO_TICKS(120));
+    //ESP_LOGI(TAG, "Hello world!");
+    //vTaskDelay(pdMS_TO_TICKS(120));
     return Wifi_ret_ok;
 }
 

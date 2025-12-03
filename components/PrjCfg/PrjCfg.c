@@ -355,8 +355,8 @@ PrjCfg_return_code_t PrjCfg_spin(void)
 #endif
     if (!en) return PrjCfg_ret_ok;
 
-    ESP_LOGI(TAG, "Hello world!");
-    vTaskDelay(pdMS_TO_TICKS(120));
+    //ESP_LOGI(TAG, "Hello world!");
+    //vTaskDelay(pdMS_TO_TICKS(120));
     return PrjCfg_ret_ok;
 }
 

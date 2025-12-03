@@ -248,7 +248,7 @@ $$1_return_code_t $$1_spin(void)
     if (!en) return $$1_ret_ok;
 
     ESP_LOGI(TAG, "Hello world!");
-    vTaskDelay(pdMS_TO_TICKS(120));
+    //vTaskDelay(pdMS_TO_TICKS(120));
     return $$1_ret_ok;
 }
 
