@@ -6,6 +6,8 @@
 
 #include <stdio.h>
 #include <inttypes.h>
+#include <cJSON.h>
+
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -93,6 +95,12 @@ app_main_return_code start_components(void)
     return ret;
 }
 
+#define MAIN_CYCLE_PERIOD_MS 1000
+#define MQTTCOMM_DATA_PERIOD_MS 30000
+#define MQTTCOMM_DATA_CYCLE_LIMIT (MQTTCOMM_DATA_PERIOD_MS / MAIN_CYCLE_PERIOD_MS)
+
+static uint8_t mqtt_data_cycle_counter = 0;
+
 app_main_return_code run_components(void)
 {
     app_main_return_code ret = app_main_ret_ok;
@@ -111,7 +119,15 @@ app_main_return_code run_components(void)
 #endif
 #ifdef CONFIG_PORIS_ENABLE_MQTTCOMM
 #ifndef CONFIG_MQTTCOMM_USE_THREAD
-    error_accumulator |= (MQTTComm_spin() != MQTTComm_ret_ok);
+    if (mqtt_data_cycle_counter <= 0)
+    {
+        error_accumulator |= (MQTTComm_spin() != MQTTComm_ret_ok);
+        mqtt_data_cycle_counter = MQTTCOMM_DATA_CYCLE_LIMIT;
+    }
+    else
+    {
+        mqtt_data_cycle_counter--;
+    }
 #endif
 #endif
     if (error_accumulator)
@@ -120,6 +136,61 @@ app_main_return_code run_components(void)
     }
     return ret;
 }
+
+
+void main_parse_callback(const char *data, int len)
+{
+    ESP_LOGI(TAG, "Parsing the CFG payload %d %.*s", len, len, data);
+    prjcfg_parse_callback(data, len);
+}
+
+void main_req_parse_callback(const char *data, int len)
+{
+    ESP_LOGI(TAG, "Parsing the REQ payload %d %.*s", len, len, data);
+    if (len == 1)
+    {
+        if (data[0] == 'r')
+        {
+            esp_restart();
+        }
+        if (data[0] == 'u')
+        {
+            OTA_enable();
+            OTA_start();
+        }
+    }
+}
+
+static uint32_t msg_counter = 0;
+void main_compose_callback(char *data, int *len)
+{
+    sprintf((char *)data, "this is a payload (%lu)", msg_counter++);
+    *len = strlen((char *)data);
+    ESP_LOGI(TAG, "Composing the DATA payload %d %.*s", *len, *len, data);
+
+    cJSON *root = cJSON_CreateObject();
+    PrjCfg_compose_json_payload(root);
+
+    char *cPayload = cJSON_PrintUnformatted(root);
+    if (cPayload != NULL)
+    {
+        size_t length = strlen(cPayload);
+        *len = (int)length;
+        ESP_LOGI(TAG, "LEN %d", length);
+        ESP_LOGI(TAG, "Payload %s", cPayload);
+        strncpy(data, cPayload, length);
+        free(cPayload);
+    }
+    else
+    {
+        data[0] = 'a';
+        data[1] = '\0';
+        *len = 1;
+    }
+    cJSON_Delete(root);
+}
+
+
 
 void app_main(void)
 {
@@ -177,9 +248,9 @@ void app_main(void)
         // Now let's setup the MQTT topics
         mqtt_comm_cfg_t cfg;
         
-        cfg.f_cfg_cb = prjcfg_parse_callback;
-        cfg.f_req_cb = prjcfg_req_parse_callback;
-        cfg.f_data_cb = prjcfg_compose_callback;
+        cfg.f_cfg_cb = main_parse_callback;
+        cfg.f_req_cb = main_req_parse_callback;
+        cfg.f_data_cb = main_compose_callback;
 
         sprintf(cfg.cfg_topic, "cosmobots/%s/cfg", "1234");
         sprintf(cfg.req_topic, "cosmobots/%s/req", "1234");
@@ -195,7 +266,7 @@ void app_main(void)
     while (true)
     {
         ESP_LOGI(TAG, "app_main spinning");
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(MAIN_CYCLE_PERIOD_MS / portTICK_PERIOD_MS);
         if (shall_execute)
         {
             if (run_components() != app_main_ret_ok)

@@ -675,7 +675,7 @@ void config_parse_json(const char *data)
     }
 }
 
-void append_config_data(cJSON *root)
+void PrjCfg_compose_json_payload(cJSON *root)
 {
     cJSON_AddBoolToObject(root, "dummy", true);
 #if 0
@@ -721,29 +721,17 @@ void prjcfg_parse_callback(const char *data, int len)
 void prjcfg_req_parse_callback(const char *data, int len)
 {
     ESP_LOGI(TAG, "Parsing the REQ payload %d %.*s", len, len, data);
-    if (len == 1)
-    {
-        if (data[0] == 'r')
-        {
-            esp_restart();
-        }
-        if (data[0] == 'u')
-        {
-            OTA_enable();
-            OTA_start();
-        }
-    }
 }
 
-uint32_t counter = 0;
+static uint32_t msg_counter = 0;
 void prjcfg_compose_callback(char *data, int *len)
 {
-    sprintf((char *)data, "this is a payload (%lu)", counter++);
+    sprintf((char *)data, "this is a payload (%lu)", msg_counter++);
     *len = strlen((char *)data);
     ESP_LOGI(TAG, "Composing the DATA payload %d %.*s", *len, *len, data);
 
     cJSON *root = cJSON_CreateObject();
-    append_config_data(root);
+    PrjCfg_compose_json_payload(root);
 
     char *cPayload = cJSON_PrintUnformatted(root);
     if (cPayload != NULL)
