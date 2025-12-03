@@ -24,6 +24,7 @@
 #include <Wifi.h>
 #include <OTA.h>
 #include <MQTTComm.h>
+#include <Measurement.h>
 
 typedef enum
 {
@@ -49,6 +50,10 @@ app_main_return_code init_components(void)
 #endif
 #ifdef CONFIG_PORIS_ENABLE_OTA
     error_occurred = (OTA_setup() != OTA_ret_ok);
+    error_accumulator |= error_occurred;
+#endif
+#ifdef CONFIG_PORIS_ENABLE_MEASUREMENT
+    error_occurred = (Measurement_setup() != Measurement_ret_ok);
     error_accumulator |= error_occurred;
 #endif
     return ret;
@@ -88,6 +93,16 @@ app_main_return_code start_components(void)
 #endif
     error_accumulator |= error_occurred;
 #endif
+#ifdef CONFIG_PORIS_ENABLE_MEASUREMENT
+    error_occurred = (Measurement_enable() != Measurement_ret_ok);
+#ifdef CONFIG_MEASUREMENT_USE_THREAD
+    if (!error_occurred)
+    {
+        error_occurred |= (Measurement_start() != Measurement_ret_ok);
+    }
+#endif
+    error_accumulator |= error_occurred;
+#endif
     if (error_accumulator)
     {
         ret = app_main_ret_error;
@@ -96,10 +111,13 @@ app_main_return_code start_components(void)
 }
 
 #define MAIN_CYCLE_PERIOD_MS 1000
-#define MQTTCOMM_DATA_PERIOD_MS 30000
-#define MQTTCOMM_DATA_CYCLE_LIMIT (MQTTCOMM_DATA_PERIOD_MS / MAIN_CYCLE_PERIOD_MS)
+#define MQTTCOMM_CYCLE_PERIOD_MS 30000
+#define MQTTCOMM_CYCLE_LIMIT ((MQTTCOMM_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
+#define MEASUREMENT_CYCLE_PERIOD_MS 5000
+#define MEASUREMENT_CYCLE_LIMIT ((MEASUREMENT_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
 
-static uint8_t mqtt_data_cycle_counter = 0;
+static uint8_t mqttcomm_cycle_counter = 0;
+static uint8_t measurement_cycle_counter = 0;
 
 app_main_return_code run_components(void)
 {
@@ -119,14 +137,27 @@ app_main_return_code run_components(void)
 #endif
 #ifdef CONFIG_PORIS_ENABLE_MQTTCOMM
 #ifndef CONFIG_MQTTCOMM_USE_THREAD
-    if (mqtt_data_cycle_counter <= 0)
+    if (mqttcomm_cycle_counter <= 0)
     {
         error_accumulator |= (MQTTComm_spin() != MQTTComm_ret_ok);
-        mqtt_data_cycle_counter = MQTTCOMM_DATA_CYCLE_LIMIT;
+        mqttcomm_cycle_counter = MQTTCOMM_CYCLE_LIMIT;
     }
     else
     {
-        mqtt_data_cycle_counter--;
+        mqttcomm_cycle_counter--;
+    }
+#endif
+#endif
+#ifdef CONFIG_PORIS_ENABLE_MEASUREMENT
+#ifndef CONFIG_MEASUREMENT_USE_THREAD
+    if (measurement_cycle_counter <= 0)
+    {
+        error_accumulator |= (Measurement_spin() != Measurement_ret_ok);
+        measurement_cycle_counter = MEASUREMENT_CYCLE_LIMIT;
+    }
+    else
+    {
+        measurement_cycle_counter--;
     }
 #endif
 #endif
