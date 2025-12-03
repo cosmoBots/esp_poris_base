@@ -224,7 +224,8 @@ void main_compose_callback(char *data, int *len)
     cJSON_Delete(root);
 }
 
-
+#define MQTT_TOPIC_SITE "Pete'sHouse"
+#define MQTT_TOPIC_DEVICE "HVAC-4"
 
 void app_main(void)
 {
@@ -286,11 +287,12 @@ void app_main(void)
         cfg.f_req_cb = main_req_parse_callback;
         cfg.f_data_cb = main_compose_callback;
 
-        sprintf(cfg.cfg_topic, "cosmobots/%s/cfg", "1234");
-        sprintf(cfg.req_topic, "cosmobots/%s/req", "1234");
-        sprintf(cfg.data_topic, "cosmobots/%s/data", "1234");
-        cfg.cfg_client_id = "1234";
-        ESP_LOGI(TAG,"---> TOPICS RELATED TO %s", "1234");
+        cfg.cfg_client_id = MQTT_TOPIC_DEVICE;
+        sprintf(cfg.cfg_topic, "IceEnergy/v1/%s/%s/configuration", MQTT_TOPIC_SITE, MQTT_TOPIC_DEVICE);
+        sprintf(cfg.req_topic, "IceEnergy/v1/%s/%s/commands", MQTT_TOPIC_SITE, MQTT_TOPIC_DEVICE);
+        sprintf(cfg.data_topic, "IceEnergy/v1/%s/%s/measurement", MQTT_TOPIC_SITE, MQTT_TOPIC_DEVICE);
+
+        ESP_LOGI(TAG,"---> TOPICS RELATED TO %s", cfg.cfg_client_id);
 
         MQTTComm_setup(&cfg);
 #ifndef CONFIG_MQTTCOMM_USE_THREAD
