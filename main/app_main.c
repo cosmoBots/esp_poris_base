@@ -110,11 +110,8 @@ app_main_return_code start_components(void)
     return ret;
 }
 
-#define MAIN_CYCLE_PERIOD_MS 1000
-#define MQTTCOMM_CYCLE_PERIOD_MS 30000
-#define MQTTCOMM_CYCLE_LIMIT ((MQTTCOMM_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
-#define MEASUREMENT_CYCLE_PERIOD_MS 5000
 #define MEASUREMENT_CYCLE_LIMIT ((MEASUREMENT_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
+#define MQTTCOMM_CYCLE_LIMIT ((MQTTCOMM_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
 
 static uint8_t mqttcomm_cycle_counter = 0;
 static uint8_t measurement_cycle_counter = 0;
