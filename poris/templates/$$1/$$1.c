@@ -260,7 +260,7 @@ $$1_return_code_t $$1_spin(void)
         // the stuff which needs protection against
         // concurrency issues
 
-        ESP_LOGI(TAG, "Hello world! %d", $$1_dre.enabled);
+        ESP_LOGI(TAG, "Doing protected stuff %d", $$1_dre.enabled);
         //vTaskDelay(pdMS_TO_TICKS(120));
 
 #if CONFIG_$#1_USE_THREAD
@@ -270,7 +270,7 @@ $$1_return_code_t $$1_spin(void)
         // Communicate results, do stuff which 
         // does not need protection
         // ...
-        ESP_LOGI(TAG, "Finishing!");
+        ESP_LOGI(TAG, "Hello world!");
         return $$1_ret_ok;
     }
 }

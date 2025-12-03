@@ -364,7 +364,7 @@ PrjCfg_return_code_t PrjCfg_spin(void)
         // the stuff which needs protection against
         // concurrency issues
 
-        ESP_LOGI(TAG, "Hello world! %d", PrjCfg_dre.enabled);
+        //ESP_LOGI(TAG, "Doing protected stuff %d", PrjCfg_dre.enabled);
         //vTaskDelay(pdMS_TO_TICKS(120));
 
 #if CONFIG_PRJCFG_USE_THREAD
@@ -374,7 +374,7 @@ PrjCfg_return_code_t PrjCfg_spin(void)
         // Communicate results, do stuff which 
         // does not need protection
         // ...
-        ESP_LOGI(TAG, "Finishing!");
+        //ESP_LOGI(TAG, "Hello world!");
         return PrjCfg_ret_ok;
     }
 }

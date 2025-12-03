@@ -260,7 +260,7 @@ Provisioning_return_code_t Provisioning_spin(void)
         // the stuff which needs protection against
         // concurrency issues
 
-        ESP_LOGI(TAG, "Hello world! %d", Provisioning_dre.enabled);
+        ESP_LOGI(TAG, "Doing protected stuff %d", Provisioning_dre.enabled);
         //vTaskDelay(pdMS_TO_TICKS(120));
 
 #if CONFIG_PROVISIONING_USE_THREAD
@@ -270,7 +270,7 @@ Provisioning_return_code_t Provisioning_spin(void)
         // Communicate results, do stuff which 
         // does not need protection
         // ...
-        ESP_LOGI(TAG, "Finishing!");
+        ESP_LOGI(TAG, "Hello world!");
         return Provisioning_ret_ok;
     }
 }
