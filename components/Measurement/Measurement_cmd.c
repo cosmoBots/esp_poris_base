@@ -15,6 +15,13 @@ static char TAG[] = "Measurement_cmd";
 
 static bool nvs_cfg_changed = false;
 
+#if CONFIG_MEASUREMENT_USE_THREAD
+static Measurement_dre_t comm_dre;
+static Measurement_dre_t *cdre = &comm_dre;
+#else
+static Measurement_dre_t *cdre = &Measurement_dre;
+#endif
+
 static void config_parse_json_dict(cJSON *root)
 {
     cJSON *nvi = NULL;
@@ -67,7 +74,18 @@ static void config_parse_json(const char *data)
 
 void Measurement_compose_json_payload(cJSON *root)
 {
-    cJSON_AddBoolToObject(root, "measdumm", true);
+#if CONFIG_MEASUREMENT_USE_THREAD
+    if (Measurement_get_dre_clone(cdre) != Measurement_ret_ok)
+    {
+        ESP_LOGE(TAG, "Could not obtain a DRE clone to compose the JSON payload");
+    }
+    else
+#endif
+    {
+        cJSON_AddNumberToObject(root, "ai-1", cdre->ai1);
+        cJSON_AddNumberToObject(root, "ai-2", cdre->ai2);
+        cJSON_AddBoolToObject(root, "bi-0", cdre->bi0);
+    }
 }
 
 void Measurement_parse_callback(const char *data, int len)

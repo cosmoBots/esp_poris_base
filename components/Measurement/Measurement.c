@@ -219,6 +219,20 @@ void Measurement_execute_function_safemode(void (*callback)())
 
 // BEGIN ------------------ Public API (COMMON + SPIN)------------------
 
+#ifdef MEASUREMENT_ENABLE_SIMULATION
+#if CONFIG_MEASUREMENT_USE_THREAD
+// If we wish to communicate some results, or do
+// time consuming products from the DRE we need to
+// obtain a copy of it which stays stable until
+// next spin
+static Measurement_dre_t comm_dre;
+static Measurement_dre_t *cdre = &comm_dre;
+#else
+// Without concurrency we need no copy
+static Measurement_dre_t *cdre = &Measurement_dre;
+#endif
+#endif
+
 Measurement_return_code_t Measurement_setup(void)
 {
     // Init liviano; no arranca tarea.
@@ -297,18 +311,19 @@ Measurement_return_code_t Measurement_spin(void)
         }
 #endif
 #if CONFIG_MEASUREMENT_USE_THREAD
+        // Make a copy to cdre before unlocking
+        // to allow printing results, etc
+        memcpy(cdre, &Measurement_dre, sizeof(Measurement_dre);)
         _unlock();
 #endif
         // Communicate results, do stuff which 
         // does not need protection
         // ...
-#ifdef MEASUREMENT_ENABLE_SIMULATION
         ESP_LOGI(TAG, "ai1: %f ai2: %f bi0: %d",
-            Measurement_dre.ai1,
-            Measurement_dre.ai2,
-            Measurement_dre.bi0
+            cdre->ai1,
+            cdre->ai2,
+            cdre->bi0
         );
-#endif
         return Measurement_ret_ok;
     }
 }

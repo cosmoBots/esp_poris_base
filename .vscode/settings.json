@@ -22,6 +22,7 @@
     "nvs_flash.h": "c",
     "cjson.h": "c",
     "string.h": "c",
-    "inttypes.h": "c"
+    "inttypes.h": "c",
+    "measurement.h": "c"
   }
 }

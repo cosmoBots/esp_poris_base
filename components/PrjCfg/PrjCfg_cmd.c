@@ -68,7 +68,7 @@ static void config_parse_json(const char *data)
 
 void PrjCfg_compose_json_payload(cJSON *root)
 {
-    cJSON_AddBoolToObject(root, "prjcfgdumm", true);
+    //cJSON_AddBoolToObject(root, "prjcfgdumm", true);
 }
 
 
