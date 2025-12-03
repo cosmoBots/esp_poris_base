@@ -23,6 +23,18 @@
     "cjson.h": "c",
     "string.h": "c",
     "inttypes.h": "c",
-    "measurement.h": "c"
+    "measurement.h": "c",
+    "charconv": "c",
+    "chrono": "c",
+    "optional": "c",
+    "format": "c",
+    "ratio": "c",
+    "system_error": "c",
+    "array": "c",
+    "functional": "c",
+    "regex": "c",
+    "tuple": "c",
+    "type_traits": "c",
+    "utility": "c"
   }
 }

@@ -16,6 +16,13 @@ static char TAG[] = "PrjCfg_cmd";
 
 static bool nvs_cfg_changed = false;
 
+#if CONFIG_PRJCFG_USE_THREAD
+static PrjCfg_dre_t comm_dre;
+static PrjCfg_dre_t *cdre = &comm_dre;
+#else
+static PrjCfg_dre_t *cdre = &PrjCfg_dre;
+#endif
+
 static void config_parse_json_dict(cJSON *root)
 {
     cJSON *nvi = NULL;
@@ -68,7 +75,18 @@ static void config_parse_json(const char *data)
 
 void PrjCfg_compose_json_payload(cJSON *root)
 {
-    //cJSON_AddBoolToObject(root, "prjcfgdumm", true);
+    #if CONFIG_PRJCFG_USE_THREAD
+    if (PrjCfg_get_dre_clone(cdre) != PrjCfg_ret_ok)
+    {
+        ESP_LOGE(TAG, "Could not obtain a DRE clone to compose the JSON payload");
+    }
+    else
+#endif
+    {
+#ifdef PRJCFG_ENABLE_SIMULATION
+            //cJSON_AddBoolToObject(root, "prjcfgdumm", cdre->enabled);
+#endif
+    }
 }
 
 

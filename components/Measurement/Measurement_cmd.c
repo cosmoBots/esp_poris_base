@@ -23,6 +23,12 @@ static Measurement_dre_t *cdre = &comm_dre;
 static Measurement_dre_t *cdre = &Measurement_dre;
 #endif
 
+static float new_setpoint_received;
+static void setTempSetpoint(void)
+{
+    Measurement_dre.setpoint = new_setpoint_received;
+}
+
 static void config_parse_json_dict(cJSON *root)
 {
     cJSON *nvi = NULL;
@@ -35,12 +41,24 @@ static void config_parse_json_dict(cJSON *root)
 
         bool found_key = false;
 
-        if (!found_key && strcmp(nvi->string, "measdumm") == 0)
+        if (!found_key && strcmp(nvi->string, "Temp-Setpoint") == 0)
         {
             ESP_LOGI(TAG, "Recognized %s", nvi->string);
-            bool value = cJSON_IsTrue(nvi);
-            ESP_LOGI(TAG, "Parsed value: %hu", value);
+            new_setpoint_received = cJSON_GetNumberValue(nvi);
+            ESP_LOGI(TAG, "Parsed value: %f", new_setpoint_received);
             found_key = true;
+            if (new_setpoint_received != (double)NAN)
+            {
+#if CONFIG_MEASUREMENT_USE_THREAD
+                Measurement_execute_function_safemode(setTempSetpoint());
+#else
+                setTempSetpoint();
+#endif
+            }
+            else
+            {
+                ESP_LOGW(TAG,"Temp-Setpoint value is wrong, could not apply");
+            }  
         }
     }
 }
@@ -92,6 +110,7 @@ void Measurement_compose_json_payload(cJSON *root)
     else
 #endif
     {
+        cjson_add_number_dec(root, "Temp-Setpoint", cdre->setpoint, 2);
         cjson_add_number_dec(root, "ai-1", cdre->ai1, 2);
         cjson_add_number_dec(root, "ai-2", cdre->ai2, 2);
         cJSON_AddBoolToObject(root, "bi-0", cdre->bi0);

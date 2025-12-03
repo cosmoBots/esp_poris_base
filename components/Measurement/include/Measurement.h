@@ -19,6 +19,7 @@ typedef enum {
 // ------------------ BEGIN Datatypes ------------------
 
 #ifdef MEASUREMENT_ENABLE_SIMULATION
+#define SETP_DESC "Temperature setpoint"
 #define AI1_DESC "inlet temperature"
 #define AI2_DESC "outdoors temperature"
 #define BI0_DESC "heater status"
@@ -30,6 +31,8 @@ typedef struct {
     bool enabled;
     Measurement_return_code_t last_return_code;
 #ifdef MEASUREMENT_ENABLE_SIMULATION
+    float setpoint;
+    char *setpoint_desc;
     float ai1;
     char *ai1_desc;
     float ai2;

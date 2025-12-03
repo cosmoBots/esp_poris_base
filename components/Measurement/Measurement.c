@@ -239,14 +239,16 @@ Measurement_return_code_t Measurement_setup(void)
     ESP_LOGD(TAG, "setup()");
 #ifdef MEASUREMENT_ENABLE_SIMULATION
     // Set the constant data
+    Measurement_dre.setpoint_desc = SETP_DESC;
     Measurement_dre.ai1_desc = AI1_DESC;
     Measurement_dre.ai2_desc = AI2_DESC;
     Measurement_dre.bi0_desc = BI0_DESC;
 
     // Set the initial data values
-    Measurement_dre.ai1 = 15.0;     // Outdoor temp is cooler
-    Measurement_dre.ai2 = 10.0;     // Indoor temp is warmer, getting cooler
-    Measurement_dre.bi0 = true;    // The heater will be switched off at the first iteration
+    Measurement_dre.setpoint = 12.0;  // The setpoint will be raised in the next iteration
+    Measurement_dre.ai1 = 15.0;     // Indoor temp is warmer, getting cooler
+    Measurement_dre.ai2 = 10.0;     // Outdoor temp is cooler
+    Measurement_dre.bi0 = false;    // The heater will be switched off at the first iteration
 #endif
 
 #if CONFIG_MEASUREMENT_USE_THREAD
@@ -261,7 +263,7 @@ Measurement_return_code_t Measurement_setup(void)
 
 #ifdef MEASUREMENT_ENABLE_SIMULATION
 #define MEASUREMENT_HEATER_CYCLE_LIMIT ((MEASUREMENT_HEATER_CYCLE_MS / MEASUREMENT_CYCLE_PERIOD_MS) - 1)
-static uint8_t heater_counter = 0;
+static uint8_t setpoint_counter = 0;
 #endif
 
 #if CONFIG_MEASUREMENT_USE_THREAD
@@ -285,30 +287,39 @@ Measurement_return_code_t Measurement_spin(void)
         // Implement your spin here
         // this area is protected, so concentrate here
         // the stuff which needs protection against
-        // concurrency issues
 
         //ESP_LOGI(TAG, "Doing protected stuff %d",Measurement_dre.enabled);
 #ifdef MEASUREMENT_ENABLE_SIMULATION
-        // Computing the temperatures
+        // Computing the inner depending on the heater
+        // or the outer temperature
         if (Measurement_dre.bi0)
         {
-            Measurement_dre.ai1 += 0.001;
+            Measurement_dre.ai1 += 0.01;
         }
         else
         {
-            float deltadiff = (Measurement_dre.ai2 - Measurement_dre.ai1)*0.001;
+            float deltadiff = (Measurement_dre.ai2 - Measurement_dre.ai1)*0.005;
             Measurement_dre.ai1 += deltadiff;
         }
-        // Operating the heater
-        if (heater_counter <= 0)
+        // Operating the setpoint automatically
+        if (setpoint_counter <= 0)
         {
-            Measurement_dre.bi0 = !Measurement_dre.bi0;
-            heater_counter = MEASUREMENT_HEATER_CYCLE_LIMIT;
+            if (Measurement_dre.setpoint == 22)
+            {
+                Measurement_dre.setpoint = 12;
+            }
+            else
+            {
+                Measurement_dre.setpoint = 22;
+            }
+            setpoint_counter = MEASUREMENT_HEATER_CYCLE_LIMIT;
         }
         else
         {
-            heater_counter++;
+            setpoint_counter++;
         }
+        // Calculating heater based on setpoint
+        Measurement_dre.bi0 = (Measurement_dre.setpoint > Measurement_dre.ai1);
 #endif
 #if CONFIG_MEASUREMENT_USE_THREAD
         // Make a copy to cdre before unlocking
@@ -319,7 +330,8 @@ Measurement_return_code_t Measurement_spin(void)
         // Communicate results, do stuff which 
         // does not need protection
         // ...
-        ESP_LOGI(TAG, "ai1: %f ai2: %f bi0: %d",
+        ESP_LOGI(TAG, "sp: %f ai1: %f ai2: %f bi0: %d",
+            cdre->setpoint,
             cdre->ai1,
             cdre->ai2,
             cdre->bi0
