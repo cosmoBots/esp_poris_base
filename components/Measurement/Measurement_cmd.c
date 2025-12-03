@@ -1,4 +1,5 @@
 #include <string.h>
+#include <math.h>
 
 #include <cJSON.h>
 
@@ -72,6 +73,15 @@ static void config_parse_json(const char *data)
     }
 }
 
+// Round number to decimals and creates the entry
+static void cjson_add_number_dec(cJSON *obj, const char *key, double value, int dec)
+{
+    double scale = pow(10.0, dec);
+    double rounded = round(value * scale) / scale;
+    cJSON_AddNumberToObject(obj, key, rounded);
+}
+
+
 void Measurement_compose_json_payload(cJSON *root)
 {
 #if CONFIG_MEASUREMENT_USE_THREAD
@@ -82,8 +92,8 @@ void Measurement_compose_json_payload(cJSON *root)
     else
 #endif
     {
-        cJSON_AddNumberToObject(root, "ai-1", cdre->ai1);
-        cJSON_AddNumberToObject(root, "ai-2", cdre->ai2);
+        cjson_add_number_dec(root, "ai-1", cdre->ai1, 2);
+        cjson_add_number_dec(root, "ai-2", cdre->ai2, 2);
         cJSON_AddBoolToObject(root, "bi-0", cdre->bi0);
     }
 }
