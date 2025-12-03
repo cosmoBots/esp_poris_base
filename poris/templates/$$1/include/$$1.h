@@ -7,6 +7,8 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <PrjCfg.h>
+
 // ------------------ BEGIN Return code ------------------
 typedef enum {
     $$1_ret_error = -1,
