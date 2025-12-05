@@ -8,6 +8,7 @@ extern "C" {
 #include <stdint.h>
 
 #include <PrjCfg.h>
+#include <freertos/FreeRTOS.h>
 
 // ------------------ BEGIN Return code ------------------
 typedef enum {
@@ -17,12 +18,30 @@ typedef enum {
 // ------------------ END   Return code ------------------
 
 // ------------------ BEGIN Datatypes ------------------
+typedef enum {
+    DUALLED_OFF,
+    DUALLED_GREEN,
+    DUALLED_RED,
+    DUALLED_BLINK_GREEN,
+    DUALLED_BLINK_RED,
+    DUALLED_BOTH_COLORS,
+    DUALLED_BLINK_BOTH,
+    DUALLED_ALTERNATE_START_GREEN,
+    DUALLED_ALTERNATE_START_RED,
+} dual_led_state_t;
 
 // ------------------ END   Datatypes ------------------
 
 // ------------------ BEGIN DRE ------------------
 typedef struct {
     bool enabled;
+    dual_led_state_t state;
+    dual_led_state_t prev_state;
+    bool phase_on;
+    uint32_t on_ms;
+    uint32_t off_ms;
+    TickType_t last_toggle;
+    bool hw_init;
     DualLED_return_code_t last_return_code;
 } DualLED_dre_t;
 
@@ -89,6 +108,19 @@ DualLED_return_code_t DualLED_setup(void);
  */
 DualLED_return_code_t DualLED_enable(void);
 DualLED_return_code_t DualLED_disable(void);
+
+/**
+ * Set current LED state/behavior.
+ */
+void DualLED_set_state(dual_led_state_t newstate);
+
+/**
+ * Configure duty/periods for blinking/alternating states.
+ * - For blinking states, on_duration_ms is the time LEDs stay ON.
+ * - For alternating states, on_duration_ms is the time the starting LED stays ON.
+ * - In DUALLED_ALTERNATE_START_GREEN the starting LED is GREEN; in DUALLED_ALTERNATE_START_RED it is RED.
+ */
+void DualLED_set_duty(uint32_t on_duration_ms, uint32_t off_alternate_duration_ms);
 
 // ------------------ BEGIN Public API (COMMON)--------------------
 

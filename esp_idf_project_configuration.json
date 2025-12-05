@@ -172,5 +172,34 @@
       "postBuild": "",
       "postFlash": ""
     }
+  },
+  "S3PoE": {
+    "build": {
+      "compileArgs": [],
+      "ninjaArgs": [],
+      "buildDirectoryPath": "./build_s3poe",
+      "sdkconfigDefaults": [
+        "buildcfg/sdkconfig.S3PoE.defaults"
+      ],
+      "sdkconfigFilePath": "./build_s3poe/sdkconfig"
+    },
+    "env": {
+      "VARIANT": "S3PoE",
+      "VAR_SUFFIX": "s3poe"
+    },
+    "idfTarget": "esp32s3",
+    "flashBaudRate": "",
+    "monitorBaudRate": "",
+    "openOCD": {
+      "debugLevel": 0,
+      "configs": [],
+      "args": []
+    },
+    "tasks": {
+      "preBuild": "bash poris/prebuild.sh S3PoE",
+      "preFlash": "",
+      "postBuild": "",
+      "postFlash": ""
+    }
   }
 }

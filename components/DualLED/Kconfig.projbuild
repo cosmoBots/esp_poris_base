@@ -56,4 +56,18 @@ config DUALLED_TASK_PRIO
     default 5
     depends on DUALLED_USE_THREAD
 
+config DUALLED_RED_GPIO
+    int "Red LED GPIO"
+    default 7
+    range 0 49
+    help
+      GPIO number for the red LED.
+
+config DUALLED_GREEN_GPIO
+    int "Green LED GPIO"
+    default 5
+    range 0 49
+    help
+      GPIO number for the green LED.
+
 endmenu

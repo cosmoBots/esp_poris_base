@@ -20,6 +20,7 @@
 
 // BEGIN --- ESP-IDF headers section ---
 #include <esp_log.h>
+#include <driver/gpio.h>
 
 // END   --- ESP-IDF headers section ---
 
@@ -43,9 +44,121 @@ static const char *TAG = "DualLED";
 // BEGIN --- Internal variables (DRE)
 DualLED_dre_t DualLED_dre = {
     .enabled = true,
+    .state = DUALLED_OFF,
+    .prev_state = DUALLED_OFF,
+    .phase_on = true,
+    .on_ms = 500,
+    .off_ms = 500,
+    .last_toggle = 0,
+    .hw_init = false,
     .last_return_code = DualLED_ret_ok
 };
 // END   --- Internal variables (DRE)
+
+static inline void DualLED_apply_outputs(bool red_on, bool green_on)
+{
+    gpio_set_level(CONFIG_DUALLED_RED_GPIO, red_on ? 1 : 0);
+    gpio_set_level(CONFIG_DUALLED_GREEN_GPIO, green_on ? 1 : 0);
+}
+
+static void DualLED_hw_init(void)
+{
+    if (DualLED_dre.hw_init) return;
+    DualLED_dre.state = DUALLED_OFF;
+    DualLED_dre.prev_state = DUALLED_OFF;
+    DualLED_dre.phase_on = true;
+    DualLED_dre.on_ms = 500;
+    DualLED_dre.off_ms = 500;
+    DualLED_dre.last_toggle = xTaskGetTickCount();
+
+    gpio_reset_pin(CONFIG_DUALLED_RED_GPIO);
+    gpio_reset_pin(CONFIG_DUALLED_GREEN_GPIO);
+    gpio_set_direction(CONFIG_DUALLED_RED_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_direction(CONFIG_DUALLED_GREEN_GPIO, GPIO_MODE_OUTPUT);
+
+    DualLED_apply_outputs(false, false);
+    DualLED_dre.hw_init = true;
+}
+
+static void DualLED_update_phase(void)
+{
+    TickType_t now = xTaskGetTickCount();
+    uint32_t current_ms = DualLED_dre.phase_on ? DualLED_dre.on_ms : DualLED_dre.off_ms;
+    if ((TickType_t)(now - DualLED_dre.last_toggle) >= pdMS_TO_TICKS(current_ms))
+    {
+        DualLED_dre.phase_on = !DualLED_dre.phase_on;
+        DualLED_dre.last_toggle = now;
+    }
+}
+
+static void DualLED_render_state(void)
+{
+    switch (DualLED_dre.state)
+    {
+    case DUALLED_OFF:
+        DualLED_apply_outputs(false, false);
+        break;
+    case DUALLED_GREEN:
+        DualLED_apply_outputs(false, true);
+        break;
+    case DUALLED_RED:
+        DualLED_apply_outputs(true, false);
+        break;
+    case DUALLED_BOTH_COLORS:
+        DualLED_apply_outputs(true, true);
+        break;
+    case DUALLED_BLINK_GREEN:
+        DualLED_update_phase();
+        DualLED_apply_outputs(false, DualLED_dre.phase_on);
+        break;
+    case DUALLED_BLINK_RED:
+        DualLED_update_phase();
+        DualLED_apply_outputs(DualLED_dre.phase_on, false);
+        break;
+    case DUALLED_BLINK_BOTH:
+        DualLED_update_phase();
+        DualLED_apply_outputs(DualLED_dre.phase_on, DualLED_dre.phase_on);
+        break;
+    case DUALLED_ALTERNATE_START_GREEN:
+        DualLED_update_phase();
+        if (DualLED_dre.phase_on)
+            DualLED_apply_outputs(false, true);
+        else
+            DualLED_apply_outputs(true, false);
+        break;
+    case DUALLED_ALTERNATE_START_RED:
+        DualLED_update_phase();
+        if (DualLED_dre.phase_on)
+            DualLED_apply_outputs(true, false);
+        else
+            DualLED_apply_outputs(false, true);
+        break;
+    default:
+        DualLED_apply_outputs(false, false);
+        break;
+    }
+}
+
+void DualLED_set_state(dual_led_state_t newstate)
+{
+    DualLED_hw_init();
+    DualLED_dre.state = newstate;
+    DualLED_dre.prev_state = (dual_led_state_t)(-1); // force refresh
+    DualLED_dre.phase_on = true;
+    DualLED_dre.last_toggle = xTaskGetTickCount();
+    DualLED_render_state();
+}
+
+void DualLED_set_duty(uint32_t on_duration_ms, uint32_t off_alternate_duration_ms)
+{
+    DualLED_hw_init();
+    if (on_duration_ms == 0) on_duration_ms = 1;
+    if (off_alternate_duration_ms == 0) off_alternate_duration_ms = 1;
+    DualLED_dre.on_ms = on_duration_ms;
+    DualLED_dre.off_ms = off_alternate_duration_ms;
+    DualLED_dre.last_toggle = xTaskGetTickCount();
+}
+// END --- LED state machine
 
 // BEGIN --- Multitasking variables and handlers
 
@@ -229,6 +342,7 @@ DualLED_return_code_t DualLED_setup(void)
         return DualLED_ret_error;
     }
 #endif
+    DualLED_hw_init();
     DualLED_dre.last_return_code = DualLED_ret_ok;
     return DualLED_ret_ok;
 }
@@ -242,35 +356,28 @@ DualLED_return_code_t DualLED_spin(void)
     _lock();
 #endif
     bool en = DualLED_dre.enabled;
-#if CONFIG_DUALLED_USE_THREAD
-    _unlock();
-#endif
 
     if (!en)
     {
-#if CONFIG_DUALLED_USE_THREAD        
+        // keep outputs as-is, just exit
+#if CONFIG_DUALLED_USE_THREAD
         _unlock();
 #endif
         return DualLED_ret_ok;
     }
     else
     {
-        // Implement your spin here
-        // this area is protected, so concentrate here
-        // the stuff which needs protection against
-        // concurrency issues
-
-        ESP_LOGI(TAG, "Doing protected stuff %d", DualLED_dre.enabled);
-        //vTaskDelay(pdMS_TO_TICKS(120));
-
+        if (DualLED_dre.state != DualLED_dre.prev_state)
+        {
+            DualLED_dre.prev_state = DualLED_dre.state;
+            DualLED_dre.phase_on = true;
+            DualLED_dre.last_toggle = xTaskGetTickCount();
+        }
+        DualLED_render_state();
 #if CONFIG_DUALLED_USE_THREAD
         _unlock();
 #endif
 
-        // Communicate results, do stuff which 
-        // does not need protection
-        // ...
-        ESP_LOGI(TAG, "Hello world!");
         return DualLED_ret_ok;
     }
 }

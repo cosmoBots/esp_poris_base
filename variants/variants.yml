@@ -49,3 +49,11 @@ variants:
     extra_env:
       LOG_LEVEL: "debug"
       FOO: "bar"
+
+  - id: S3PoE
+    target: esp32s3
+    overlays: ["target_esp32s3.defaults","feat_s3_poe.defaults"]
+    components: ["PrjCfg","Wifi","OTA","Provisioning", "MQTTComm","Measurement", "DualLED"]
+    extra_env:
+      LOG_LEVEL: "debug"
+      FOO: "bar"
