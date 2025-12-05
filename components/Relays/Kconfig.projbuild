@@ -1,0 +1,78 @@
+menu "Relays settings"
+
+config PORIS_ENABLE_RELAYS
+    bool "Enable component Relays"
+    default y
+    help
+      Enable/disable component Relays at Kconfig level.
+      Variant gating is handled by environment variables (PORIS_ENABLE_RELAYS).
+
+config RELAYS_USE_THREAD
+    bool "Relays starts its own thread (Relays starts its own thread)"
+    default n
+    help
+      If enabled, Relays will create a FreeRTOS task and call spin()
+      periodically. If disabled, call Relays_spin() yourself from
+      your scheduler.
+    depends on PORIS_ENABLE_RELAYS
+
+config RELAYS_PERIOD_MS
+    int "Relays period (ms)"
+    range 10 600000
+    default 1000
+    depends on RELAYS_USE_THREAD
+
+config RELAYS_MINIMIZE_JITTER
+    bool "Enable jitter minimization for execution cycles"
+    default y
+    help
+      If active, the delay between loops will use vTaskDelayUntil() to guarantee long cycles will not shift the period, minimizing jitter.
+      If deactivate, the component will use vTaskDelay() so the time it wait between cycles is the period.  Long cycles will introduce a shift in the period.
+    depends on RELAYS_USE_THREAD
+
+choice RELAYS_PIN_CORE
+    prompt "Pin task to core"
+    default RELAYS_PIN_CORE_ANY
+    depends on RELAYS_USE_THREAD
+    help
+      Choose which core to pin the task to (or none).
+config RELAYS_PIN_CORE_ANY
+    bool "Any core (no affinity)"
+config RELAYS_PIN_CORE_0
+    bool "Core 0"
+config RELAYS_PIN_CORE_1
+    bool "Core 1"
+endchoice
+
+config RELAYS_TASK_STACK
+    int "Task stack size (bytes)"
+    range 2048 65536
+    default 4096
+    depends on RELAYS_USE_THREAD
+
+config RELAYS_TASK_PRIO
+    int "Task priority"
+    range 1 24
+    default 5
+    depends on RELAYS_USE_THREAD
+
+config RELAYS_COUNT
+    int "Number of relays"
+    range 1 16
+    default 2
+    help
+      Total number of relays managed by this component.
+
+config RELAYS_GPIO_LIST
+    string "Relay GPIO list (comma-separated)"
+    default "4,5"
+    help
+      Comma-separated list of GPIO numbers, one per relay, in order.
+
+config RELAYS_ALLOW_MULTIPLE
+    bool "Allow multiple relays on simultaneously"
+    default y
+    help
+      If disabled, requests that turn on multiple relays at once should be rejected (useful for HW that forbids parallel activation).
+
+endmenu

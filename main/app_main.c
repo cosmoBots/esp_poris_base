@@ -27,6 +27,8 @@
 #include <Measurement.h>
 #include <DualLED.h>
 #include <DualLedTester.h>
+#include <Relays.h>
+#include <RelaysTest.h>
 #include <DualLedTester.h>
 
 // Include comms callbacks
@@ -69,6 +71,14 @@ app_main_return_code init_components(void)
 #endif
 #ifdef CONFIG_PORIS_ENABLE_DUALLEDTESTER
     error_occurred = (DualLedTester_setup() != DualLedTester_ret_ok);
+    error_accumulator |= error_occurred;
+#endif
+#ifdef CONFIG_PORIS_ENABLE_RELAYS
+    error_occurred = (Relays_setup() != Relays_ret_ok);
+    error_accumulator |= error_occurred;
+#endif
+#ifdef CONFIG_PORIS_ENABLE_RELAYSTEST
+    error_occurred = (RelaysTest_setup() != RelaysTest_ret_ok);
     error_accumulator |= error_occurred;
 #endif
     return ret;
@@ -138,6 +148,26 @@ app_main_return_code start_components(void)
 #endif
     error_accumulator |= error_occurred;
 #endif
+#ifdef CONFIG_PORIS_ENABLE_RELAYS
+    error_occurred = (Relays_enable() != Relays_ret_ok);
+#ifdef CONFIG_RELAYS_USE_THREAD
+    if (!error_occurred)
+    {
+        error_occurred |= (Relays_start() != Relays_ret_ok);
+    }
+#endif
+    error_accumulator |= error_occurred;
+#endif
+#ifdef CONFIG_PORIS_ENABLE_RELAYSTEST
+    error_occurred = (RelaysTest_enable() != RelaysTest_ret_ok);
+#ifdef CONFIG_RELAYSTEST_USE_THREAD
+    if (!error_occurred)
+    {
+        error_occurred |= (RelaysTest_start() != RelaysTest_ret_ok);
+    }
+#endif
+    error_accumulator |= error_occurred;
+#endif
     if (error_accumulator)
     {
         ret = app_main_ret_error;
@@ -151,11 +181,17 @@ app_main_return_code start_components(void)
 #define DUALLED_CYCLE_LIMIT ((DUALLED_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
 #define DUALLEDTESTER_CYCLE_PERIOD_MS 100
 #define DUALLEDTESTER_CYCLE_LIMIT ((DUALLEDTESTER_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
+#define RELAYS_CYCLE_PERIOD_MS 100
+#define RELAYS_CYCLE_LIMIT ((RELAYS_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
+#define RELAYSTEST_CYCLE_PERIOD_MS 100
+#define RELAYSTEST_CYCLE_LIMIT ((RELAYSTEST_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
 
 static uint8_t mqttcomm_cycle_counter = 0;
 static uint8_t measurement_cycle_counter = 0;
 static uint8_t dualled_cycle_counter = 0;
 static uint8_t dualledtester_cycle_counter = 0;
+static uint8_t relays_cycle_counter = 0;
+static uint8_t relaystest_cycle_counter = 0;
 
 app_main_return_code run_components(void)
 {
@@ -212,11 +248,37 @@ app_main_return_code run_components(void)
     }
 #endif
 #endif
+#ifdef CONFIG_PORIS_ENABLE_RELAYS
+#ifndef CONFIG_RELAYS_USE_THREAD
+    if (relays_cycle_counter <= 0)
+    {
+        error_accumulator |= (Relays_spin() != Relays_ret_ok);
+        relays_cycle_counter = RELAYS_CYCLE_LIMIT;
+    }
+    else
+    {
+        relays_cycle_counter--;
+    }
+#endif
+#endif
+#ifdef CONFIG_PORIS_ENABLE_RELAYSTEST
+#ifndef CONFIG_RELAYSTEST_USE_THREAD
+    if (relaystest_cycle_counter <= 0)
+    {
+        error_accumulator |= (RelaysTest_spin() != RelaysTest_ret_ok);
+        relaystest_cycle_counter = RELAYSTEST_CYCLE_LIMIT;
+    }
+    else
+    {
+        relaystest_cycle_counter--;
+    }
+#endif
+#endif
 #ifdef CONFIG_PORIS_ENABLE_DUALLEDTESTER
 #ifndef CONFIG_DUALLEDTESTER_USE_THREAD
     if (dualledtester_cycle_counter <= 0)
     {
-        error_accumulator |= (DualLedTester_spin() != DualLedTester_ret_ok);
+        //error_accumulator |= (DualLedTester_spin() != DualLedTester_ret_ok);
         dualledtester_cycle_counter = DUALLEDTESTER_CYCLE_LIMIT;
     }
     else

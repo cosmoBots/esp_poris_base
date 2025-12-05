@@ -1,0 +1,72 @@
+menu "RelaysTest settings"
+
+config PORIS_ENABLE_RELAYSTEST
+    bool "Enable component RelaysTest"
+    default y
+    help
+      Enable/disable component RelaysTest at Kconfig level.
+      Variant gating is handled by environment variables (PORIS_ENABLE_RELAYSTEST).
+
+config RELAYSTEST_USE_THREAD
+    bool "RelaysTest starts its own thread (RelaysTest starts its own thread)"
+    default n
+    help
+      If enabled, RelaysTest will create a FreeRTOS task and call spin()
+      periodically. If disabled, call RelaysTest_spin() yourself from
+      your scheduler.
+    depends on PORIS_ENABLE_RELAYSTEST
+
+config RELAYSTEST_PERIOD_MS
+    int "RelaysTest period (ms)"
+    range 10 600000
+    default 1000
+    depends on RELAYSTEST_USE_THREAD
+
+config RELAYSTEST_MINIMIZE_JITTER
+    bool "Enable jitter minimization for execution cycles"
+    default y
+    help
+      If active, the delay between loops will use vTaskDelayUntil() to guarantee long cycles will not shift the period, minimizing jitter.
+      If deactivate, the component will use vTaskDelay() so the time it wait between cycles is the period.  Long cycles will introduce a shift in the period.
+    depends on RELAYSTEST_USE_THREAD
+
+choice RELAYSTEST_PIN_CORE
+    prompt "Pin task to core"
+    default RELAYSTEST_PIN_CORE_ANY
+    depends on RELAYSTEST_USE_THREAD
+    help
+      Choose which core to pin the task to (or none).
+config RELAYSTEST_PIN_CORE_ANY
+    bool "Any core (no affinity)"
+config RELAYSTEST_PIN_CORE_0
+    bool "Core 0"
+config RELAYSTEST_PIN_CORE_1
+    bool "Core 1"
+endchoice
+
+config RELAYSTEST_TASK_STACK
+    int "Task stack size (bytes)"
+    range 2048 65536
+    default 4096
+    depends on RELAYSTEST_USE_THREAD
+
+config RELAYSTEST_TASK_PRIO
+    int "Task priority"
+    range 1 24
+    default 5
+    depends on RELAYSTEST_USE_THREAD
+
+config RELAYSTEST_DWELL_MS
+    int "Dwell time per relay (ms)"
+    range 100 60000
+    default 5000
+    help
+      Time each relay stays ON during the test cycle.
+
+config RELAYSTEST_VERBOSE_MODE
+    bool "Enable verbose logs (state transitions)"
+    default n
+    help
+      When enabled, logs relay index and state on each transition.
+
+endmenu
