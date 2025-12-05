@@ -24,10 +24,14 @@ typedef enum {
     DUALLED_RED,
     DUALLED_BLINK_GREEN,
     DUALLED_BLINK_RED,
-    DUALLED_BOTH_COLORS,
-    DUALLED_BLINK_BOTH,
     DUALLED_ALTERNATE_START_GREEN,
     DUALLED_ALTERNATE_START_RED,
+    // Los opcionales al final, por conveniencia.  Aún podemos hacerlo ya que no tenemos nada en producción
+#if CONFIG_DUALLED_ALLOW_BOTH
+    DUALLED_BOTH_COLORS,
+    DUALLED_BLINK_BOTH,
+#endif    
+    DUALLED_STATE_TERMINATOR
 } dual_led_state_t;
 
 // ------------------ END   Datatypes ------------------

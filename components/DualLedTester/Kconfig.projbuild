@@ -56,4 +56,10 @@ config DUALLEDTESTER_TASK_PRIO
     default 5
     depends on DUALLEDTESTER_USE_THREAD
 
+config DUALLEDTESTER_VERBOSE_MODE
+    bool "Enable verbose logs (state transitions)"
+    default n
+    help
+      When enabled, DualLedTester will log the state name on each transition.
+
 endmenu

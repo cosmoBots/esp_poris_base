@@ -56,6 +56,12 @@ config DUALLED_TASK_PRIO
     default 5
     depends on DUALLED_USE_THREAD
 
+config DUALLED_ALLOW_BOTH
+    bool "Allow both colors simultaneously"
+    default y
+    help
+      Enable states that drive both colors at once. Disable for 2-pin LEDs where one color is the return path of the other.
+
 config DUALLED_RED_GPIO
     int "Red LED GPIO"
     default 7

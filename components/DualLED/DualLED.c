@@ -104,9 +104,6 @@ static void DualLED_render_state(void)
     case DUALLED_RED:
         DualLED_apply_outputs(true, false);
         break;
-    case DUALLED_BOTH_COLORS:
-        DualLED_apply_outputs(true, true);
-        break;
     case DUALLED_BLINK_GREEN:
         DualLED_update_phase();
         DualLED_apply_outputs(false, DualLED_dre.phase_on);
@@ -114,10 +111,6 @@ static void DualLED_render_state(void)
     case DUALLED_BLINK_RED:
         DualLED_update_phase();
         DualLED_apply_outputs(DualLED_dre.phase_on, false);
-        break;
-    case DUALLED_BLINK_BOTH:
-        DualLED_update_phase();
-        DualLED_apply_outputs(DualLED_dre.phase_on, DualLED_dre.phase_on);
         break;
     case DUALLED_ALTERNATE_START_GREEN:
         DualLED_update_phase();
@@ -133,6 +126,15 @@ static void DualLED_render_state(void)
         else
             DualLED_apply_outputs(false, true);
         break;
+#if CONFIG_DUALLED_ALLOW_BOTH
+    case DUALLED_BOTH_COLORS:
+        DualLED_apply_outputs(true, true);
+        break;
+    case DUALLED_BLINK_BOTH:
+        DualLED_update_phase();
+        DualLED_apply_outputs(DualLED_dre.phase_on, DualLED_dre.phase_on);
+        break;
+#endif
     default:
         DualLED_apply_outputs(false, false);
         break;
@@ -141,6 +143,15 @@ static void DualLED_render_state(void)
 
 void DualLED_set_state(dual_led_state_t newstate)
 {
+    if (newstate >= DUALLED_STATE_TERMINATOR)
+    {
+        ESP_LOGE(TAG, "Invalid state %d (out of range)", (int)newstate);
+        DualLED_dre.last_return_code = DualLED_ret_error;
+        return;
+    }
+    // No necesitas ver qué estado te piden, con el TERMINATOR es suficiente, ya que los estados inválidos
+    // no están compilados y no pueden pedírtelos.  Si te los pidiesen tendrían un número igual o mayor que el terminador
+    // no estamos expuestos a ese problema.
     DualLED_hw_init();
     DualLED_dre.state = newstate;
     DualLED_dre.prev_state = (dual_led_state_t)(-1); // force refresh

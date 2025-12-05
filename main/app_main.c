@@ -177,7 +177,7 @@ app_main_return_code run_components(void)
 #ifndef CONFIG_MQTTCOMM_USE_THREAD
     if (mqttcomm_cycle_counter <= 0)
     {
-        error_accumulator |= (MQTTComm_spin() != MQTTComm_ret_ok);
+        //error_accumulator |= (MQTTComm_spin() != MQTTComm_ret_ok);
         mqttcomm_cycle_counter = MQTTCOMM_CYCLE_LIMIT;
     }
     else
@@ -190,7 +190,7 @@ app_main_return_code run_components(void)
 #ifndef CONFIG_MEASUREMENT_USE_THREAD
     if (measurement_cycle_counter <= 0)
     {
-        error_accumulator |= (Measurement_spin() != Measurement_ret_ok);
+        //error_accumulator |= (Measurement_spin() != Measurement_ret_ok);
         measurement_cycle_counter = MEASUREMENT_CYCLE_LIMIT;
     }
     else

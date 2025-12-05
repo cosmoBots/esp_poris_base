@@ -42,6 +42,32 @@
 static const char *TAG = "DualLedTester";
 // END --- Logging related variables
 
+#if CONFIG_DUALLEDTESTER_VERBOSE_MODE
+static const char *k_dualled_state_names[] = {
+    "OFF",
+    "GREEN",
+    "RED",
+    "BLINK_GREEN",
+    "BLINK_RED",
+    "ALTERNATE_START_GREEN",
+    "ALTERNATE_START_RED",
+#if CONFIG_DUALLED_ALLOW_BOTH
+    "BOTH_COLORS",
+    "BLINK_BOTH",
+#endif
+};
+
+static const char *DualLedTester_state_name_safe(dual_led_state_t st)
+{
+    size_t idx = (size_t)st;
+    if (idx < (sizeof(k_dualled_state_names) / sizeof(k_dualled_state_names[0])))
+    {
+        return k_dualled_state_names[idx];
+    }
+    return "UNKNOWN";
+}
+#endif
+
 // BEGIN --- Internal variables (DRE)
 DualLedTester_dre_t DualLedTester_dre = {
     .enabled = true,
@@ -270,12 +296,18 @@ DualLedTester_return_code_t DualLedTester_spin(void)
             DUALLED_OFF,
             DUALLED_RED,
             DUALLED_GREEN,
+#if CONFIG_DUALLED_ALLOW_BOTH
             DUALLED_BOTH_COLORS,
+#endif
             DUALLED_BLINK_RED,
             DUALLED_BLINK_GREEN,
+#if CONFIG_DUALLED_ALLOW_BOTH
             DUALLED_BLINK_BOTH,
-            DUALLED_ALTERNATE_START_RED,
+#endif
+            DUALLED_OFF,                    // spacer before alternates
             DUALLED_ALTERNATE_START_GREEN,
+            DUALLED_OFF,                    // spacer between alternates
+            DUALLED_ALTERNATE_START_RED,
         };
         const size_t nseq = sizeof(k_sequence) / sizeof(k_sequence[0]);
 
@@ -287,7 +319,9 @@ DualLedTester_return_code_t DualLedTester_spin(void)
             dual_led_state_t next = k_sequence[DualLedTester_dre.seq_index];
             DualLedTester_dre.last_change = now;
             DualLED_set_state(next);
-            ESP_LOGI(TAG, "DualLED state -> %d", (int)next);
+#if CONFIG_DUALLEDTESTER_VERBOSE_MODE
+            ESP_LOGI(TAG, "DualLED state -> %d (%s)", (int)next, DualLedTester_state_name_safe(next));
+#endif
         }
 #if CONFIG_DUALLEDTESTER_USE_THREAD
         _unlock();
