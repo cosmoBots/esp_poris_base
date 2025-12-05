@@ -224,8 +224,10 @@ void main_compose_callback(char *data, int *len)
     cJSON_Delete(root);
 }
 
+#define MQTT_TOPIC_ORGANIZATION "cBots"
+#define MQTT_TOPIC_APIVERSION "v1"
 #define MQTT_TOPIC_SITE "MyHome"
-#define MQTT_TOPIC_DEVICE "HouseCtrl"
+#define MQTT_TOPIC_DEVICE "TempCtrl"
 
 void app_main(void)
 {
@@ -288,9 +290,9 @@ void app_main(void)
         cfg.f_data_cb = main_compose_callback;
 
         cfg.cfg_client_id = MQTT_TOPIC_DEVICE;
-        sprintf(cfg.cfg_topic, "IceEnergy/v1/%s/%s/configuration", MQTT_TOPIC_SITE, MQTT_TOPIC_DEVICE);
-        sprintf(cfg.req_topic, "IceEnergy/v1/%s/%s/commands", MQTT_TOPIC_SITE, MQTT_TOPIC_DEVICE);
-        sprintf(cfg.data_topic, "IceEnergy/v1/%s/%s/measurement", MQTT_TOPIC_SITE, MQTT_TOPIC_DEVICE);
+        sprintf(cfg.cfg_topic, "%s/%s/%s/%s/cfg", MQTT_TOPIC_ORGANIZATION, MQTT_TOPIC_APIVERSION, MQTT_TOPIC_SITE, MQTT_TOPIC_DEVICE);
+        sprintf(cfg.req_topic, "%s/%s/%s/%s/cmd", MQTT_TOPIC_ORGANIZATION, MQTT_TOPIC_APIVERSION, MQTT_TOPIC_SITE, MQTT_TOPIC_DEVICE);
+        sprintf(cfg.data_topic, "%s/%s/%s/%s/data", MQTT_TOPIC_ORGANIZATION, MQTT_TOPIC_APIVERSION, MQTT_TOPIC_SITE, MQTT_TOPIC_DEVICE);
 
         ESP_LOGI(TAG,"---> TOPICS RELATED TO %s", cfg.cfg_client_id);
 
