@@ -25,6 +25,7 @@
 #include <OTA.h>
 #include <MQTTComm.h>
 #include <Measurement.h>
+#include <DualLED.h>
 
 // Include comms callbacks
 #include <PrjCfg_cmd.h>
@@ -58,6 +59,10 @@ app_main_return_code init_components(void)
 #endif
 #ifdef CONFIG_PORIS_ENABLE_MEASUREMENT
     error_occurred = (Measurement_setup() != Measurement_ret_ok);
+    error_accumulator |= error_occurred;
+#endif
+#ifdef CONFIG_PORIS_ENABLE_DUALLED
+    error_occurred = (DualLED_setup() != DualLED_ret_ok);
     error_accumulator |= error_occurred;
 #endif
     return ret;
@@ -107,6 +112,16 @@ app_main_return_code start_components(void)
 #endif
     error_accumulator |= error_occurred;
 #endif
+#ifdef CONFIG_PORIS_ENABLE_DUALLED
+    error_occurred = (DualLED_enable() != DualLED_ret_ok);
+#ifdef CONFIG_DUALLED_USE_THREAD
+    if (!error_occurred)
+    {
+        error_occurred |= (DualLED_start() != DualLED_ret_ok);
+    }
+#endif
+    error_accumulator |= error_occurred;
+#endif
     if (error_accumulator)
     {
         ret = app_main_ret_error;
@@ -116,9 +131,12 @@ app_main_return_code start_components(void)
 
 #define MEASUREMENT_CYCLE_LIMIT ((MEASUREMENT_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
 #define MQTTCOMM_CYCLE_LIMIT ((MQTTCOMM_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
+#define DUALLED_CYCLE_PERIOD_MS 100
+#define DUALLED_CYCLE_LIMIT ((DUALLED_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
 
 static uint8_t mqttcomm_cycle_counter = 0;
 static uint8_t measurement_cycle_counter = 0;
+static uint8_t dualled_cycle_counter = 0;
 
 app_main_return_code run_components(void)
 {
@@ -159,6 +177,19 @@ app_main_return_code run_components(void)
     else
     {
         measurement_cycle_counter--;
+    }
+#endif
+#endif
+#ifdef CONFIG_PORIS_ENABLE_DUALLED
+#ifndef CONFIG_DUALLED_USE_THREAD
+    if (dualled_cycle_counter <= 0)
+    {
+        error_accumulator |= (DualLED_spin() != DualLED_ret_ok);
+        dualled_cycle_counter = DUALLED_CYCLE_LIMIT;
+    }
+    else
+    {
+        dualled_cycle_counter--;
     }
 #endif
 #endif
@@ -294,7 +325,7 @@ void app_main(void)
     }
     while (true)
     {
-        ESP_LOGI(TAG, "app_main spinning");
+        //ESP_LOGI(TAG, "app_main spinning");
         vTaskDelay(MAIN_CYCLE_PERIOD_MS / portTICK_PERIOD_MS);
         if (shall_execute)
         {

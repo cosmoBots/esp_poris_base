@@ -57,7 +57,7 @@ typedef enum {
 
 // ------------------ BEGIN Project configuration constants ------------------
 
-#define MAIN_CYCLE_PERIOD_MS 1000
+#define MAIN_CYCLE_PERIOD_MS 100
 
 #define MQTTCOMM_CYCLE_PERIOD_MS 30000
 
