@@ -224,8 +224,8 @@ void main_compose_callback(char *data, int *len)
     cJSON_Delete(root);
 }
 
-#define MQTT_TOPIC_SITE "Pete'sHouse"
-#define MQTT_TOPIC_DEVICE "HVAC-4"
+#define MQTT_TOPIC_SITE "MyHome"
+#define MQTT_TOPIC_DEVICE "HouseCtrl"
 
 void app_main(void)
 {
