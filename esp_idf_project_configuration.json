@@ -143,5 +143,34 @@
       "postBuild": "",
       "postFlash": ""
     }
+  },
+  "S3TouchScreen": {
+    "build": {
+      "compileArgs": [],
+      "ninjaArgs": [],
+      "buildDirectoryPath": "./build_s3touchscreen",
+      "sdkconfigDefaults": [
+        "buildcfg/sdkconfig.S3TouchScreen.defaults"
+      ],
+      "sdkconfigFilePath": "./build_s3touchscreen/sdkconfig"
+    },
+    "env": {
+      "VARIANT": "S3TouchScreen",
+      "VAR_SUFFIX": "s3touchscreen"
+    },
+    "idfTarget": "esp32s3",
+    "flashBaudRate": "",
+    "monitorBaudRate": "",
+    "openOCD": {
+      "debugLevel": 0,
+      "configs": [],
+      "args": []
+    },
+    "tasks": {
+      "preBuild": "bash poris/prebuild.sh S3TouchScreen",
+      "preFlash": "",
+      "postBuild": "",
+      "postFlash": ""
+    }
   }
 }

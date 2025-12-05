@@ -41,3 +41,11 @@ variants:
     extra_env:
       LOG_LEVEL: "debug"
       FOO: "bar"
+
+  - id: S3TouchScreen
+    target: esp32s3
+    overlays: ["target_esp32s3.defaults","feat_s3_touch.defaults"]
+    components: ["PrjCfg","Wifi","OTA","Provisioning", "MQTTComm","Measurement"]
+    extra_env:
+      LOG_LEVEL: "debug"
+      FOO: "bar"
