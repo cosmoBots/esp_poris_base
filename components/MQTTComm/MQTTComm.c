@@ -19,6 +19,8 @@
 
 // BEGIN --- ESP-IDF headers section ---
 #include <esp_log.h>
+#include <esp_system.h>
+#include <esp_mac.h>
 
 // END   --- ESP-IDF headers section ---
 
@@ -34,6 +36,14 @@
 #include "MQTTComm.h"
 #include "MqttSecrets.h"
 // END --- Self-includes section ---
+
+#ifndef CONFIG_MQTT_TOPIC_DEVICE_NAME
+#define CONFIG_MQTT_TOPIC_DEVICE_NAME ""
+#endif
+
+#ifndef CONFIG_MQTT_CLIENT_ID_CUSTOM
+#define CONFIG_MQTT_CLIENT_ID_CUSTOM ""
+#endif
 
 // BEGIN --- Logging related variables
 static const char *TAG = "MQTTComm";
@@ -78,14 +88,14 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
 #ifdef CONFIG_DEBUG_SEND_DATA_ON_CONNECTION
-        msg_id = esp_mqtt_client_publish(client, MQTTComm_dre.cfg.data_topic, "connected!", 0, 1, 0);
+        msg_id = esp_mqtt_client_publish(client, MQTTComm_dre.data_topic, "connected!", 0, 1, 0);
         ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
 #endif
-        msg_id = esp_mqtt_client_subscribe(client, MQTTComm_dre.cfg.req_topic, 0);
-        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d %s", msg_id, MQTTComm_dre.cfg.req_topic);
+        msg_id = esp_mqtt_client_subscribe(client, MQTTComm_dre.req_topic, 0);
+        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d %s", msg_id, MQTTComm_dre.req_topic);
 
-        msg_id = esp_mqtt_client_subscribe(client, MQTTComm_dre.cfg.cfg_topic, 1);
-        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d %s", msg_id, MQTTComm_dre.cfg.cfg_topic);
+        msg_id = esp_mqtt_client_subscribe(client, MQTTComm_dre.cfg_topic, 1);
+        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d %s", msg_id, MQTTComm_dre.cfg_topic);
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -94,7 +104,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     case MQTT_EVENT_SUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
 #ifdef CONFIG_DEBUG_SEND_DATA_ON_SUBSCRIPTION
-        msg_id = esp_mqtt_client_publish(client, MQTTComm_dre.cfg.data_topic, "subscribed!", 0, 0, 0);
+        msg_id = esp_mqtt_client_publish(client, MQTTComm_dre.data_topic, "subscribed!", 0, 0, 0);
         ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
 #endif
         break;
@@ -108,14 +118,14 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
         printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
         printf("DATA=%.*s\r\n", event->data_len, event->data);
-        ESP_LOGD(TAG, "Compare %.*s =? %s", event->topic_len, event->topic, MQTTComm_dre.cfg.cfg_topic);
-        if (strncmp(event->topic, MQTTComm_dre.cfg.cfg_topic, event->topic_len) == 0)
+        ESP_LOGD(TAG, "Compare %.*s =? %s", event->topic_len, event->topic, MQTTComm_dre.cfg_topic);
+        if (strncmp(event->topic, MQTTComm_dre.cfg_topic, event->topic_len) == 0)
         {
             MQTTComm_dre.cfg.f_cfg_cb(event->data, event->data_len);
         }
         else
         {
-            if (strncmp(event->topic, MQTTComm_dre.cfg.req_topic, event->topic_len) == 0)
+            if (strncmp(event->topic, MQTTComm_dre.req_topic, event->topic_len) == 0)
             {
                 MQTTComm_dre.cfg.f_req_cb(event->data, event->data_len);
             }
@@ -146,7 +156,7 @@ void mqtt_app_start(void)
             .authentication = {
                 .password = MQTT_BROKER_PW,
             },
-            .client_id = MQTTComm_dre.cfg.cfg_client_id}};
+            .client_id = MQTTComm_dre.client_id}};
 #if CONFIG_BROKER_URL_FROM_STDIN
     char line[128];
 
@@ -387,11 +397,55 @@ MQTTComm_return_code_t MQTTComm_setup(mqtt_comm_cfg_t *cfg)
     else
     {
         MQTTComm_dre.cfg.f_cfg_cb = cfg->f_cfg_cb;
-        strcpy(MQTTComm_dre.cfg.cfg_topic, cfg->cfg_topic);
         MQTTComm_dre.cfg.f_req_cb = cfg->f_req_cb;
-        strcpy(MQTTComm_dre.cfg.req_topic, cfg->req_topic);
         MQTTComm_dre.cfg.f_data_cb = cfg->f_data_cb;
-        strcpy(MQTTComm_dre.cfg.data_topic, cfg->data_topic);
+
+        snprintf(MQTTComm_dre.org, sizeof(MQTTComm_dre.org), "%s", CONFIG_MQTT_TOPIC_ORGANIZATION);
+        snprintf(MQTTComm_dre.api_version, sizeof(MQTTComm_dre.api_version), "%s", CONFIG_MQTT_TOPIC_APIVERSION);
+        snprintf(MQTTComm_dre.site, sizeof(MQTTComm_dre.site), "%s", CONFIG_MQTT_TOPIC_SITE);
+
+        if (CONFIG_MQTT_TOPIC_DEVICE_USE_WIFI_MAC)
+        {
+            uint8_t mac[6] = {0};
+            if (esp_read_mac(mac, ESP_MAC_WIFI_STA) == ESP_OK)
+            {
+                snprintf(MQTTComm_dre.device, sizeof(MQTTComm_dre.device),
+                         "%02X%02X%02X%02X%02X%02X",
+                         mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+            }
+            else
+            {
+                ESP_LOGW(TAG, "Could not read Wi-Fi MAC; falling back to configured device name");
+                snprintf(MQTTComm_dre.device, sizeof(MQTTComm_dre.device), "%s", CONFIG_MQTT_TOPIC_DEVICE_NAME);
+            }
+        }
+        else
+        {
+            snprintf(MQTTComm_dre.device, sizeof(MQTTComm_dre.device), "%s", CONFIG_MQTT_TOPIC_DEVICE_NAME);
+        }
+
+        if (CONFIG_MQTT_CLIENT_ID_USE_DEVICE)
+        {
+            snprintf(MQTTComm_dre.client_id, sizeof(MQTTComm_dre.client_id), "%s", MQTTComm_dre.device);
+        }
+        else
+        {
+            if (strlen(CONFIG_MQTT_CLIENT_ID_CUSTOM) > 0)
+            {
+                snprintf(MQTTComm_dre.client_id, sizeof(MQTTComm_dre.client_id), "%s", CONFIG_MQTT_CLIENT_ID_CUSTOM);
+            }
+            else
+            {
+                snprintf(MQTTComm_dre.client_id, sizeof(MQTTComm_dre.client_id), "%s", MQTTComm_dre.device);
+            }
+        }
+
+        snprintf(MQTTComm_dre.cfg_topic, sizeof(MQTTComm_dre.cfg_topic), "%s/%s/%s/%s/cfg",
+                 MQTTComm_dre.org, MQTTComm_dre.api_version, MQTTComm_dre.site, MQTTComm_dre.device);
+        snprintf(MQTTComm_dre.req_topic, sizeof(MQTTComm_dre.req_topic), "%s/%s/%s/%s/cmd",
+                 MQTTComm_dre.org, MQTTComm_dre.api_version, MQTTComm_dre.site, MQTTComm_dre.device);
+        snprintf(MQTTComm_dre.data_topic, sizeof(MQTTComm_dre.data_topic), "%s/%s/%s/%s/data",
+                 MQTTComm_dre.org, MQTTComm_dre.api_version, MQTTComm_dre.site, MQTTComm_dre.device);
 
 #if CONFIG_MQTTCOMM_USE_THREAD
         if (_create_mutex_once() != pdPASS)
@@ -401,6 +455,7 @@ MQTTComm_return_code_t MQTTComm_setup(mqtt_comm_cfg_t *cfg)
         }
 #endif
         mqtt_app_start();
+        MQTTComm_dre.initialized = true;
         MQTTComm_dre.last_return_code = MQTTComm_ret_ok;
     }
 
@@ -436,7 +491,7 @@ static // In case we are using a thread, this function should not be part of the
         {
             MQTTComm_dre.cfg.f_data_cb(data_buffer, &len);
             data_buffer[len] = '\0';
-            int msg_id = esp_mqtt_client_publish(MQTTComm_dre.main_client, MQTTComm_dre.cfg.data_topic, data_buffer, 0, 1, 0);
+            int msg_id = esp_mqtt_client_publish(MQTTComm_dre.main_client, MQTTComm_dre.data_topic, data_buffer, 0, 1, 0);
 #if CONFIG_MQTTCOMM_USE_THREAD
             _unlock();
 #endif

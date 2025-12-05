@@ -224,11 +224,6 @@ void main_compose_callback(char *data, int *len)
     cJSON_Delete(root);
 }
 
-#define MQTT_TOPIC_ORGANIZATION "cBots"
-#define MQTT_TOPIC_APIVERSION "v1"
-#define MQTT_TOPIC_SITE "MyHome"
-#define MQTT_TOPIC_DEVICE "TempCtrl"
-
 void app_main(void)
 {
     printf("Hello world!\n");
@@ -283,20 +278,16 @@ void app_main(void)
         OTA_disable();
 
         // Now let's setup the MQTT topics
-        mqtt_comm_cfg_t cfg;
-        
+        mqtt_comm_cfg_t cfg = {0};
         cfg.f_cfg_cb = main_parse_callback;
         cfg.f_req_cb = main_req_parse_callback;
         cfg.f_data_cb = main_compose_callback;
 
-        cfg.cfg_client_id = MQTT_TOPIC_DEVICE;
-        sprintf(cfg.cfg_topic, "%s/%s/%s/%s/cfg", MQTT_TOPIC_ORGANIZATION, MQTT_TOPIC_APIVERSION, MQTT_TOPIC_SITE, MQTT_TOPIC_DEVICE);
-        sprintf(cfg.req_topic, "%s/%s/%s/%s/cmd", MQTT_TOPIC_ORGANIZATION, MQTT_TOPIC_APIVERSION, MQTT_TOPIC_SITE, MQTT_TOPIC_DEVICE);
-        sprintf(cfg.data_topic, "%s/%s/%s/%s/data", MQTT_TOPIC_ORGANIZATION, MQTT_TOPIC_APIVERSION, MQTT_TOPIC_SITE, MQTT_TOPIC_DEVICE);
-
-        ESP_LOGI(TAG,"---> TOPICS RELATED TO %s", cfg.cfg_client_id);
-
         MQTTComm_setup(&cfg);
+        ESP_LOGI(TAG, "---> MQTT topics for device %s", MQTTComm_dre.device);
+        ESP_LOGI(TAG, "     cfg : %s", MQTTComm_dre.cfg_topic);
+        ESP_LOGI(TAG, "     cmd : %s", MQTTComm_dre.req_topic);
+        ESP_LOGI(TAG, "     data: %s", MQTTComm_dre.data_topic);
 #ifndef CONFIG_MQTTCOMM_USE_THREAD
         MQTTComm_enable();
 #endif

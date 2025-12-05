@@ -22,13 +22,9 @@ typedef enum {
 
 typedef struct mqtt_comm_cfg_t
 {
-    char cfg_topic[MAX_MQTT_COMM_TOPIC_LEN];
-    void (*f_cfg_cb)(const char *, int);    // Callback function for processing the requests
-    char req_topic[MAX_MQTT_COMM_TOPIC_LEN];
-    void (*f_req_cb)(const char *, int);    // Callback function for processing the configurations
-    char data_topic[MAX_MQTT_COMM_TOPIC_LEN];
-    void (*f_data_cb)(char *, int *);    // Callback function for creating the data payload for publishing
-    char *cfg_client_id;
+    void (*f_cfg_cb)(const char *, int);    // Callback for cfg topic payloads
+    void (*f_req_cb)(const char *, int);    // Callback for cmd topic payloads
+    void (*f_data_cb)(char *, int *);       // Callback to compose data payloads
 } mqtt_comm_cfg_t;
 
 // ------------------ END   Datatypes ------------------
@@ -39,6 +35,14 @@ typedef struct {
     bool initialized;
     bool started;
     mqtt_comm_cfg_t cfg;
+    char org[64];
+    char api_version[32];
+    char site[64];
+    char device[64];
+    char client_id[64];
+    char cfg_topic[MAX_MQTT_COMM_TOPIC_LEN];
+    char req_topic[MAX_MQTT_COMM_TOPIC_LEN];
+    char data_topic[MAX_MQTT_COMM_TOPIC_LEN];
     MQTTComm_return_code_t last_return_code;
     esp_mqtt_client_handle_t main_client;
 } MQTTComm_dre_t;
