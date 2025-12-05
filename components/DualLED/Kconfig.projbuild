@@ -1,0 +1,59 @@
+menu "DualLED settings"
+
+config PORIS_ENABLE_DUALLED
+    bool "Enable component DualLED"
+    default y
+    help
+      Enable/disable component DualLED at Kconfig level.
+      Variant gating is handled by environment variables (PORIS_ENABLE_DUALLED).
+
+config DUALLED_USE_THREAD
+    bool "DualLED starts its own thread (DualLED starts its own thread)"
+    default n
+    help
+      If enabled, DualLED will create a FreeRTOS task and call spin()
+      periodically. If disabled, call DualLED_spin() yourself from
+      your scheduler.
+    depends on PORIS_ENABLE_DUALLED
+
+config DUALLED_PERIOD_MS
+    int "DualLED period (ms)"
+    range 10 600000
+    default 1000
+    depends on DUALLED_USE_THREAD
+
+config DUALLED_MINIMIZE_JITTER
+    bool "Enable jitter minimization for execution cycles"
+    default y
+    help
+      If active, the delay between loops will use vTaskDelayUntil() to guarantee long cycles will not shift the period, minimizing jitter.
+      If deactivate, the component will use vTaskDelay() so the time it wait between cycles is the period.  Long cycles will introduce a shift in the period.
+    depends on DUALLED_USE_THREAD
+
+choice DUALLED_PIN_CORE
+    prompt "Pin task to core"
+    default DUALLED_PIN_CORE_ANY
+    depends on DUALLED_USE_THREAD
+    help
+      Choose which core to pin the task to (or none).
+config DUALLED_PIN_CORE_ANY
+    bool "Any core (no affinity)"
+config DUALLED_PIN_CORE_0
+    bool "Core 0"
+config DUALLED_PIN_CORE_1
+    bool "Core 1"
+endchoice
+
+config DUALLED_TASK_STACK
+    int "Task stack size (bytes)"
+    range 2048 65536
+    default 4096
+    depends on DUALLED_USE_THREAD
+
+config DUALLED_TASK_PRIO
+    int "Task priority"
+    range 1 24
+    default 5
+    depends on DUALLED_USE_THREAD
+
+endmenu

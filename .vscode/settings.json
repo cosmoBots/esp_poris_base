@@ -13,8 +13,8 @@
   "clangd.path": "/home/txinto/.espressif/tools/esp-clang/esp-19.1.2_20250312/esp-clang/bin/clangd",
   "clangd.arguments": [
     "--background-index",
-    "--query-driver=/home/txinto/.espressif/tools/xtensa-esp-elf/esp-14.2.0_20241119/xtensa-esp-elf/bin/xtensa-esp32s3-elf-gcc",
-    "--compile-commands-dir=/home/txinto/repos/cbots/poris_base/build_s3touchscreen"
+    "--query-driver=/home/txinto/.espressif/tools/riscv32-esp-elf/esp-14.2.0_20241119/riscv32-esp-elf/bin/riscv32-esp-elf-gcc",
+    "--compile-commands-dir=/home/txinto/repos/cbots/poris_base/build_c6devkit"
   ],
   "idf.flashType": "UART",
   "files.associations": {
