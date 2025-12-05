@@ -26,6 +26,8 @@
 #include <MQTTComm.h>
 #include <Measurement.h>
 #include <DualLED.h>
+#include <DualLedTester.h>
+#include <DualLedTester.h>
 
 // Include comms callbacks
 #include <PrjCfg_cmd.h>
@@ -63,6 +65,10 @@ app_main_return_code init_components(void)
 #endif
 #ifdef CONFIG_PORIS_ENABLE_DUALLED
     error_occurred = (DualLED_setup() != DualLED_ret_ok);
+    error_accumulator |= error_occurred;
+#endif
+#ifdef CONFIG_PORIS_ENABLE_DUALLEDTESTER
+    error_occurred = (DualLedTester_setup() != DualLedTester_ret_ok);
     error_accumulator |= error_occurred;
 #endif
     return ret;
@@ -122,6 +128,16 @@ app_main_return_code start_components(void)
 #endif
     error_accumulator |= error_occurred;
 #endif
+#ifdef CONFIG_PORIS_ENABLE_DUALLEDTESTER
+    error_occurred = (DualLedTester_enable() != DualLedTester_ret_ok);
+#ifdef CONFIG_DUALLEDTESTER_USE_THREAD
+    if (!error_occurred)
+    {
+        error_occurred |= (DualLedTester_start() != DualLedTester_ret_ok);
+    }
+#endif
+    error_accumulator |= error_occurred;
+#endif
     if (error_accumulator)
     {
         ret = app_main_ret_error;
@@ -133,10 +149,13 @@ app_main_return_code start_components(void)
 #define MQTTCOMM_CYCLE_LIMIT ((MQTTCOMM_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
 #define DUALLED_CYCLE_PERIOD_MS 100
 #define DUALLED_CYCLE_LIMIT ((DUALLED_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
+#define DUALLEDTESTER_CYCLE_PERIOD_MS 100
+#define DUALLEDTESTER_CYCLE_LIMIT ((DUALLEDTESTER_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
 
 static uint8_t mqttcomm_cycle_counter = 0;
 static uint8_t measurement_cycle_counter = 0;
 static uint8_t dualled_cycle_counter = 0;
+static uint8_t dualledtester_cycle_counter = 0;
 
 app_main_return_code run_components(void)
 {
@@ -190,6 +209,19 @@ app_main_return_code run_components(void)
     else
     {
         dualled_cycle_counter--;
+    }
+#endif
+#endif
+#ifdef CONFIG_PORIS_ENABLE_DUALLEDTESTER
+#ifndef CONFIG_DUALLEDTESTER_USE_THREAD
+    if (dualledtester_cycle_counter <= 0)
+    {
+        error_accumulator |= (DualLedTester_spin() != DualLedTester_ret_ok);
+        dualledtester_cycle_counter = DUALLEDTESTER_CYCLE_LIMIT;
+    }
+    else
+    {
+        dualledtester_cycle_counter--;
     }
 #endif
 #endif

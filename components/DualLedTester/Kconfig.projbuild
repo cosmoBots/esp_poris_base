@@ -1,0 +1,59 @@
+menu "DualLedTester settings"
+
+config PORIS_ENABLE_DUALLEDTESTER
+    bool "Enable component DualLedTester"
+    default y
+    help
+      Enable/disable component DualLedTester at Kconfig level.
+      Variant gating is handled by environment variables (PORIS_ENABLE_DUALLEDTESTER).
+
+config DUALLEDTESTER_USE_THREAD
+    bool "DualLedTester starts its own thread (DualLedTester starts its own thread)"
+    default n
+    help
+      If enabled, DualLedTester will create a FreeRTOS task and call spin()
+      periodically. If disabled, call DualLedTester_spin() yourself from
+      your scheduler.
+    depends on PORIS_ENABLE_DUALLEDTESTER
+
+config DUALLEDTESTER_PERIOD_MS
+    int "DualLedTester period (ms)"
+    range 10 600000
+    default 1000
+    depends on DUALLEDTESTER_USE_THREAD
+
+config DUALLEDTESTER_MINIMIZE_JITTER
+    bool "Enable jitter minimization for execution cycles"
+    default y
+    help
+      If active, the delay between loops will use vTaskDelayUntil() to guarantee long cycles will not shift the period, minimizing jitter.
+      If deactivate, the component will use vTaskDelay() so the time it wait between cycles is the period.  Long cycles will introduce a shift in the period.
+    depends on DUALLEDTESTER_USE_THREAD
+
+choice DUALLEDTESTER_PIN_CORE
+    prompt "Pin task to core"
+    default DUALLEDTESTER_PIN_CORE_ANY
+    depends on DUALLEDTESTER_USE_THREAD
+    help
+      Choose which core to pin the task to (or none).
+config DUALLEDTESTER_PIN_CORE_ANY
+    bool "Any core (no affinity)"
+config DUALLEDTESTER_PIN_CORE_0
+    bool "Core 0"
+config DUALLEDTESTER_PIN_CORE_1
+    bool "Core 1"
+endchoice
+
+config DUALLEDTESTER_TASK_STACK
+    int "Task stack size (bytes)"
+    range 2048 65536
+    default 4096
+    depends on DUALLEDTESTER_USE_THREAD
+
+config DUALLEDTESTER_TASK_PRIO
+    int "Task priority"
+    range 1 24
+    default 5
+    depends on DUALLEDTESTER_USE_THREAD
+
+endmenu
