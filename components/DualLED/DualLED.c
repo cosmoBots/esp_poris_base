@@ -149,9 +149,6 @@ void DualLED_set_state(dual_led_state_t newstate)
         DualLED_dre.last_return_code = DualLED_ret_error;
         return;
     }
-    // No necesitas ver qué estado te piden, con el TERMINATOR es suficiente, ya que los estados inválidos
-    // no están compilados y no pueden pedírtelos.  Si te los pidiesen tendrían un número igual o mayor que el terminador
-    // no estamos expuestos a ese problema.
     DualLED_hw_init();
     DualLED_dre.state = newstate;
     DualLED_dre.prev_state = (dual_led_state_t)(-1); // force refresh
