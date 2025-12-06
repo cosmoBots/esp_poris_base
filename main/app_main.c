@@ -25,10 +25,18 @@
 #include <OTA.h>
 #include <MQTTComm.h>
 #include <Measurement.h>
+#ifdef CONFIG_PORIS_ENABLE_DUALLED
 #include <DualLED.h>
+#endif
+#ifdef CONFIG_PORIS_ENABLE_DUALLEDTESTER
 #include <DualLedTester.h>
+#endif
+#ifdef CONFIG_PORIS_ENABLE_RELAYS
 #include <Relays.h>
+#endif
+#ifdef CONFIG_PORIS_ENABLE_RELAYSTEST
 #include <RelaysTest.h>
+#endif
 #include <DualLedTester.h>
 
 // Include comms callbacks
