@@ -37,7 +37,7 @@
 #ifdef CONFIG_PORIS_ENABLE_RELAYSTEST
 #include <RelaysTest.h>
 #endif
-#include <DualLedTester.h>
+// [PORIS_INTEGRATION_INCLUDE]
 
 // Include comms callbacks
 #include <PrjCfg_cmd.h>
@@ -89,6 +89,7 @@ app_main_return_code init_components(void)
     error_occurred = (RelaysTest_setup() != RelaysTest_ret_ok);
     error_accumulator |= error_occurred;
 #endif
+// [PORIS_INTEGRATION_INIT]
     return ret;
 }
 
@@ -176,6 +177,7 @@ app_main_return_code start_components(void)
 #endif
     error_accumulator |= error_occurred;
 #endif
+// [PORIS_INTEGRATION_START]
     if (error_accumulator)
     {
         ret = app_main_ret_error;
@@ -193,6 +195,7 @@ app_main_return_code start_components(void)
 #define RELAYS_CYCLE_LIMIT ((RELAYS_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
 #define RELAYSTEST_CYCLE_PERIOD_MS 100
 #define RELAYSTEST_CYCLE_LIMIT ((RELAYSTEST_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
+// [PORIS_INTEGRATION_DEFINES]
 
 static uint8_t mqttcomm_cycle_counter = 0;
 static uint8_t measurement_cycle_counter = 0;
@@ -200,6 +203,7 @@ static uint8_t dualled_cycle_counter = 0;
 static uint8_t dualledtester_cycle_counter = 0;
 static uint8_t relays_cycle_counter = 0;
 static uint8_t relaystest_cycle_counter = 0;
+// [PORIS_INTEGRATION_COUNTERS]
 
 app_main_return_code run_components(void)
 {
@@ -295,6 +299,7 @@ app_main_return_code run_components(void)
     }
 #endif
 #endif
+// [PORIS_INTEGRATION_RUN]
     if (error_accumulator)
     {
         ret = app_main_ret_error;
