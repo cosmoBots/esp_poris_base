@@ -1,1 +1,5 @@
 name,c_type,storage_type,nvs_key,json_key,group,module,nvs_mode,json,enabler
+state,dual_led_state_t,U32,,state,dualled,dualled,NONE,1,
+phase_on,bool,BOOL,,phase_on,dualled,dualled,NONE,1,
+on_ms,uint32_t,U32,on_ms,on_ms,dualled,dualled,LOADSAVE,1,
+off_ms,uint32_t,U32,off_ms,off_ms,dualled,dualled,LOADSAVE,1,

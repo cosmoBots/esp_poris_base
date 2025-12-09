@@ -34,6 +34,7 @@
 
 // BEGIN --- Self-includes section ---
 #include "DualLED.h"
+#include "DualLED_netvars.h"
 
 // END --- Self-includes section ---
 
@@ -44,16 +45,20 @@ static const char *TAG = "DualLED";
 // BEGIN --- Internal variables (DRE)
 DualLED_dre_t DualLED_dre = {
     .enabled = true,
-    .state = DUALLED_OFF,
     .prev_state = DUALLED_OFF,
-    .phase_on = true,
-    .on_ms = 500,
-    .off_ms = 500,
     .last_toggle = 0,
     .hw_init = false,
-    .last_return_code = DualLED_ret_ok
+    .last_return_code = DualLED_ret_ok,
+    .state = DUALLED_OFF,
+    .phase_on = true,
+    .on_ms = 500,
+    .off_ms = 500
 };
 // END   --- Internal variables (DRE)
+
+// Netvars dirty tracking
+static bool s_nvs_dirty = false;
+static TickType_t s_nvs_dirty_since = 0;
 
 static inline void DualLED_apply_outputs(bool red_on, bool green_on)
 {
@@ -382,9 +387,22 @@ DualLED_return_code_t DualLED_spin(void)
             DualLED_dre.last_toggle = xTaskGetTickCount();
         }
         DualLED_render_state();
+        TickType_t now_ticks = xTaskGetTickCount();
+        if (s_nvs_dirty &&
+            (TickType_t)(now_ticks - s_nvs_dirty_since) >= pdMS_TO_TICKS(5000))
+        {
+            s_nvs_dirty = false;
 #if CONFIG_DUALLED_USE_THREAD
-        _unlock();
+            _unlock();
 #endif
+            DualLED_nvs_cfg_save();
+        }
+        else
+        {
+#if CONFIG_DUALLED_USE_THREAD
+            _unlock();
+#endif
+        }
 
         return DualLED_ret_ok;
     }
