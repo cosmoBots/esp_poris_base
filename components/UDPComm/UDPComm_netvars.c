@@ -23,7 +23,15 @@ void UDPComm_netvars_append_json(cJSON *root)
 {
     if (UDPComm_netvars_count > 0)
     {
-        NetVars_append_json(UDPComm_netvars_desc, UDPComm_netvars_count, root);
+        cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "UDPComm");
+        if (!sub)
+        {
+            sub = cJSON_AddObjectToObject(root, "UDPComm");
+        }
+        if (sub)
+        {
+            NetVars_append_json(UDPComm_netvars_desc, UDPComm_netvars_count, sub);
+        }
     }
 }
 
@@ -100,13 +108,21 @@ void UDPComm_config_parse_json(const char *data)
         {
             cJSON *nvi = NULL;
             cJSON_ArrayForEach(nvi, root)
+        {
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(nvi, "UDPComm");
+            if (sub)
             {
-                nvs_cfg_changed = UDPComm_netvars_parse_json_dict(nvi);
+                nvs_cfg_changed = UDPComm_netvars_parse_json_dict(sub);
             }
+        }
         }
         else
         {
-            nvs_cfg_changed = UDPComm_netvars_parse_json_dict(root);
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "UDPComm");
+            if (sub)
+            {
+                nvs_cfg_changed = UDPComm_netvars_parse_json_dict(sub);
+            }
         }
         cJSON_Delete(root);
         if (nvs_cfg_changed)

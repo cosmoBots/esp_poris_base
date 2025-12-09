@@ -23,7 +23,15 @@ void DualLED_netvars_append_json(cJSON *root)
 {
     if (DualLED_netvars_count > 0)
     {
-        NetVars_append_json(DualLED_netvars_desc, DualLED_netvars_count, root);
+        cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "DualLED");
+        if (!sub)
+        {
+            sub = cJSON_AddObjectToObject(root, "DualLED");
+        }
+        if (sub)
+        {
+            NetVars_append_json(DualLED_netvars_desc, DualLED_netvars_count, sub);
+        }
     }
 }
 
@@ -100,13 +108,21 @@ void DualLED_config_parse_json(const char *data)
         {
             cJSON *nvi = NULL;
             cJSON_ArrayForEach(nvi, root)
+        {
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(nvi, "DualLED");
+            if (sub)
             {
-                nvs_cfg_changed = DualLED_netvars_parse_json_dict(nvi);
+                nvs_cfg_changed = DualLED_netvars_parse_json_dict(sub);
             }
+        }
         }
         else
         {
-            nvs_cfg_changed = DualLED_netvars_parse_json_dict(root);
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "DualLED");
+            if (sub)
+            {
+                nvs_cfg_changed = DualLED_netvars_parse_json_dict(sub);
+            }
         }
         cJSON_Delete(root);
         if (nvs_cfg_changed)

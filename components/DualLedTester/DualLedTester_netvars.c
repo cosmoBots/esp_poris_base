@@ -23,7 +23,15 @@ void DualLedTester_netvars_append_json(cJSON *root)
 {
     if (DualLedTester_netvars_count > 0)
     {
-        NetVars_append_json(DualLedTester_netvars_desc, DualLedTester_netvars_count, root);
+        cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "DualLedTester");
+        if (!sub)
+        {
+            sub = cJSON_AddObjectToObject(root, "DualLedTester");
+        }
+        if (sub)
+        {
+            NetVars_append_json(DualLedTester_netvars_desc, DualLedTester_netvars_count, sub);
+        }
     }
 }
 
@@ -100,13 +108,21 @@ void DualLedTester_config_parse_json(const char *data)
         {
             cJSON *nvi = NULL;
             cJSON_ArrayForEach(nvi, root)
+        {
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(nvi, "DualLedTester");
+            if (sub)
             {
-                nvs_cfg_changed = DualLedTester_netvars_parse_json_dict(nvi);
+                nvs_cfg_changed = DualLedTester_netvars_parse_json_dict(sub);
             }
+        }
         }
         else
         {
-            nvs_cfg_changed = DualLedTester_netvars_parse_json_dict(root);
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "DualLedTester");
+            if (sub)
+            {
+                nvs_cfg_changed = DualLedTester_netvars_parse_json_dict(sub);
+            }
         }
         cJSON_Delete(root);
         if (nvs_cfg_changed)

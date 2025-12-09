@@ -21,7 +21,15 @@ void Measurement_netvars_append_json(cJSON *root)
 {
     if (Measurement_netvars_count > 0)
     {
-        NetVars_append_json(Measurement_netvars_desc, Measurement_netvars_count, root);
+        cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "Measurement");
+        if (!sub)
+        {
+            sub = cJSON_AddObjectToObject(root, "Measurement");
+        }
+        if (sub)
+        {
+            NetVars_append_json(Measurement_netvars_desc, Measurement_netvars_count, sub);
+        }
     }
 }
 
@@ -99,12 +107,20 @@ void Measurement_config_parse_json(const char *data)
             cJSON *nvi = NULL;
             cJSON_ArrayForEach(nvi, root)
             {
-                nvs_cfg_changed = Measurement_netvars_parse_json_dict(nvi);
+                cJSON *sub = cJSON_GetObjectItemCaseSensitive(nvi, "Measurement");
+                if (sub)
+                {
+                    nvs_cfg_changed = Measurement_netvars_parse_json_dict(sub);
+                }
             }
         }
         else
         {
-            nvs_cfg_changed = Measurement_netvars_parse_json_dict(root);
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "Measurement");
+            if (sub)
+            {
+                nvs_cfg_changed = Measurement_netvars_parse_json_dict(sub);
+            }
         }
         cJSON_Delete(root);
         if (nvs_cfg_changed)

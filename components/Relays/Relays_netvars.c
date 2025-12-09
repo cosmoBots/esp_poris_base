@@ -23,7 +23,15 @@ void Relays_netvars_append_json(cJSON *root)
 {
     if (Relays_netvars_count > 0)
     {
-        NetVars_append_json(Relays_netvars_desc, Relays_netvars_count, root);
+        cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "Relays");
+        if (!sub)
+        {
+            sub = cJSON_AddObjectToObject(root, "Relays");
+        }
+        if (sub)
+        {
+            NetVars_append_json(Relays_netvars_desc, Relays_netvars_count, sub);
+        }
     }
 }
 
@@ -100,13 +108,21 @@ void Relays_config_parse_json(const char *data)
         {
             cJSON *nvi = NULL;
             cJSON_ArrayForEach(nvi, root)
+        {
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(nvi, "Relays");
+            if (sub)
             {
-                nvs_cfg_changed = Relays_netvars_parse_json_dict(nvi);
+                nvs_cfg_changed = Relays_netvars_parse_json_dict(sub);
             }
+        }
         }
         else
         {
-            nvs_cfg_changed = Relays_netvars_parse_json_dict(root);
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "Relays");
+            if (sub)
+            {
+                nvs_cfg_changed = Relays_netvars_parse_json_dict(sub);
+            }
         }
         cJSON_Delete(root);
         if (nvs_cfg_changed)

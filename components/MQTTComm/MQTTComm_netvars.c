@@ -23,7 +23,15 @@ void MQTTComm_netvars_append_json(cJSON *root)
 {
     if (MQTTComm_netvars_count > 0)
     {
-        NetVars_append_json(MQTTComm_netvars_desc, MQTTComm_netvars_count, root);
+        cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "MQTTComm");
+        if (!sub)
+        {
+            sub = cJSON_AddObjectToObject(root, "MQTTComm");
+        }
+        if (sub)
+        {
+            NetVars_append_json(MQTTComm_netvars_desc, MQTTComm_netvars_count, sub);
+        }
     }
 }
 
@@ -100,13 +108,21 @@ void MQTTComm_config_parse_json(const char *data)
         {
             cJSON *nvi = NULL;
             cJSON_ArrayForEach(nvi, root)
+        {
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(nvi, "MQTTComm");
+            if (sub)
             {
-                nvs_cfg_changed = MQTTComm_netvars_parse_json_dict(nvi);
+                nvs_cfg_changed = MQTTComm_netvars_parse_json_dict(sub);
             }
+        }
         }
         else
         {
-            nvs_cfg_changed = MQTTComm_netvars_parse_json_dict(root);
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "MQTTComm");
+            if (sub)
+            {
+                nvs_cfg_changed = MQTTComm_netvars_parse_json_dict(sub);
+            }
         }
         cJSON_Delete(root);
         if (nvs_cfg_changed)

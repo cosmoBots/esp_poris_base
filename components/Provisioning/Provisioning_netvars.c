@@ -23,7 +23,15 @@ void Provisioning_netvars_append_json(cJSON *root)
 {
     if (Provisioning_netvars_count > 0)
     {
-        NetVars_append_json(Provisioning_netvars_desc, Provisioning_netvars_count, root);
+        cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "Provisioning");
+        if (!sub)
+        {
+            sub = cJSON_AddObjectToObject(root, "Provisioning");
+        }
+        if (sub)
+        {
+            NetVars_append_json(Provisioning_netvars_desc, Provisioning_netvars_count, sub);
+        }
     }
 }
 
@@ -100,13 +108,21 @@ void Provisioning_config_parse_json(const char *data)
         {
             cJSON *nvi = NULL;
             cJSON_ArrayForEach(nvi, root)
+        {
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(nvi, "Provisioning");
+            if (sub)
             {
-                nvs_cfg_changed = Provisioning_netvars_parse_json_dict(nvi);
+                nvs_cfg_changed = Provisioning_netvars_parse_json_dict(sub);
             }
+        }
         }
         else
         {
-            nvs_cfg_changed = Provisioning_netvars_parse_json_dict(root);
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "Provisioning");
+            if (sub)
+            {
+                nvs_cfg_changed = Provisioning_netvars_parse_json_dict(sub);
+            }
         }
         cJSON_Delete(root);
         if (nvs_cfg_changed)

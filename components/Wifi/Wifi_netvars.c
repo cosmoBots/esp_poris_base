@@ -23,7 +23,15 @@ void Wifi_netvars_append_json(cJSON *root)
 {
     if (Wifi_netvars_count > 0)
     {
-        NetVars_append_json(Wifi_netvars_desc, Wifi_netvars_count, root);
+        cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "Wifi");
+        if (!sub)
+        {
+            sub = cJSON_AddObjectToObject(root, "Wifi");
+        }
+        if (sub)
+        {
+            NetVars_append_json(Wifi_netvars_desc, Wifi_netvars_count, sub);
+        }
     }
 }
 
@@ -100,13 +108,21 @@ void Wifi_config_parse_json(const char *data)
         {
             cJSON *nvi = NULL;
             cJSON_ArrayForEach(nvi, root)
+        {
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(nvi, "Wifi");
+            if (sub)
             {
-                nvs_cfg_changed = Wifi_netvars_parse_json_dict(nvi);
+                nvs_cfg_changed = Wifi_netvars_parse_json_dict(sub);
             }
+        }
         }
         else
         {
-            nvs_cfg_changed = Wifi_netvars_parse_json_dict(root);
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "Wifi");
+            if (sub)
+            {
+                nvs_cfg_changed = Wifi_netvars_parse_json_dict(sub);
+            }
         }
         cJSON_Delete(root);
         if (nvs_cfg_changed)

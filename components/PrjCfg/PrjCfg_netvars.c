@@ -19,7 +19,15 @@ const size_t PrjCfg_netvars_count = sizeof(PrjCfg_netvars_desc) / sizeof(PrjCfg_
 
 void PrjCfg_netvars_append_json(cJSON *root)
 {
-    NetVars_append_json(PrjCfg_netvars_desc, PrjCfg_netvars_count, root);
+    cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "PrjCfg");
+        if (!sub)
+        {
+            sub = cJSON_AddObjectToObject(root, "PrjCfg");
+        }
+        if (sub)
+        {
+            NetVars_append_json(PrjCfg_netvars_desc, PrjCfg_netvars_count, sub);
+        }
 }
 
 bool PrjCfg_netvars_parse_json_dict(cJSON *root)
@@ -82,13 +90,21 @@ void PrjCfg_config_parse_json(const char *data)
         {
             cJSON *nvi = NULL;
             cJSON_ArrayForEach(nvi, root)
+        {
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(nvi, "PrjCfg");
+            if (sub)
             {
-                nvs_cfg_changed = PrjCfg_netvars_parse_json_dict(nvi);
+                nvs_cfg_changed = PrjCfg_netvars_parse_json_dict(sub);
             }
+        }
         }
         else
         {
-            nvs_cfg_changed = PrjCfg_netvars_parse_json_dict(root);
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "PrjCfg");
+            if (sub)
+            {
+                nvs_cfg_changed = PrjCfg_netvars_parse_json_dict(sub);
+            }
         }
         cJSON_Delete(root);
         if (nvs_cfg_changed)
