@@ -2,7 +2,7 @@
 // Included from DualLED_netvars.c
 // DO NOT EDIT MANUALLY; edit netvars.csv and regenerate.
 
-    { "state", NULL, "state", "dualled", "dualled", NETVARS_TYPE_U32, PRJCFG_NVS_NONE, true, (void*)&(DualLED_dre.state) },
-    { "phase_on", NULL, "phase_on", "dualled", "dualled", NETVARS_TYPE_BOOL, PRJCFG_NVS_NONE, true, (void*)&(DualLED_dre.phase_on) },
-    { "on_ms", "on_ms", "on_ms", "dualled", "dualled", NETVARS_TYPE_U32, PRJCFG_NVS_LOADSAVE, true, (void*)&(DualLED_dre.on_ms) },
-    { "off_ms", "off_ms", "off_ms", "dualled", "dualled", NETVARS_TYPE_U32, PRJCFG_NVS_LOADSAVE, true, (void*)&(DualLED_dre.off_ms) },
+    { "state", NULL, "state", "dualled", "dualled", NETVARS_TYPE_U32, PRJCFG_NVS_NONE, true, 0, (void*)&(DualLED_dre.state) },
+    { "phase_on", NULL, "phase_on", "dualled", "dualled", NETVARS_TYPE_BOOL, PRJCFG_NVS_NONE, true, 0, (void*)&(DualLED_dre.phase_on) },
+    { "on_ms", "on_ms", "on_ms", "dualled", "dualled", NETVARS_TYPE_U32, PRJCFG_NVS_LOADSAVE, true, 0, (void*)&(DualLED_dre.on_ms) },
+    { "off_ms", "off_ms", "off_ms", "dualled", "dualled", NETVARS_TYPE_U32, PRJCFG_NVS_LOADSAVE, true, 0, (void*)&(DualLED_dre.off_ms) },

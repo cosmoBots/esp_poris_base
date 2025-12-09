@@ -74,11 +74,6 @@ typedef struct {
     bool enabled;
     PrjCfg_return_code_t last_return_code;
 
-    uint8_t eth_mac[PRJCFG_MAC_LEN];
-    char unique_id[PRJCFG_UNIQUEID_MAX_LEN];
-    esp_ip4_addr_t ip;
-    char ssid[PRJCFG_SSID_MAX_LEN];
-    bool wifi_connected;
 
 #include "PrjCfg_netvar_types_fragment.h_"
 

@@ -51,9 +51,6 @@ PrjCfg_dre_t PrjCfg_dre = {
     .eth_mac = {0,0,0,0,0,0},
     .unique_id = "",
     .ip_address = "",
-    .ip.addr = 0,
-    .ssid = "",
-    .wifi_connected = false,
     .skip_ota = true,
 };
 // END   --- Internal variables (DRE)
