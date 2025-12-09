@@ -45,7 +45,7 @@ static const char *TAG = "Measurement";
 Measurement_dre_t Measurement_dre = {
     .enabled = true,
     .last_return_code = Measurement_ret_ok,
-#ifdef MEASUREMENT_ENABLE_SIMULATION
+#ifdef CONFIG_MEASUREMENT_ENABLE_SIMULATION
     // Set the initial data values
     .setpoint = 12.0,  // The setpoint will be raised in the next iteration
     .ai1 = 15.0,     // Indoor temp is warmer, getting cooler
@@ -227,7 +227,7 @@ void Measurement_execute_function_safemode(void (*callback)())
 
 // BEGIN ------------------ Public API (COMMON + SPIN)------------------
 
-#ifdef MEASUREMENT_ENABLE_SIMULATION
+#ifdef CONFIG_MEASUREMENT_ENABLE_SIMULATION
 #if CONFIG_MEASUREMENT_USE_THREAD
 // If we wish to communicate some results, or do
 // time consuming products from the DRE we need to
@@ -257,7 +257,7 @@ Measurement_return_code_t Measurement_setup(void)
     return Measurement_ret_ok;
 }
 
-#ifdef MEASUREMENT_ENABLE_SIMULATION
+#ifdef CONFIG_MEASUREMENT_ENABLE_SIMULATION
 #define MEASUREMENT_HEATER_CYCLE_LIMIT ((MEASUREMENT_HEATER_CYCLE_MS / MEASUREMENT_CYCLE_PERIOD_MS) - 1)
 static uint8_t setpoint_counter = 0;
 #endif
@@ -285,7 +285,7 @@ Measurement_return_code_t Measurement_spin(void)
         // the stuff which needs protection against
 
         //ESP_LOGI(TAG, "Doing protected stuff %d",Measurement_dre.enabled);
-#ifdef MEASUREMENT_ENABLE_SIMULATION
+#ifdef CONFIG_MEASUREMENT_ENABLE_SIMULATION
         // Computing the inner depending on the heater
         // or the outer temperature
         if (Measurement_dre.bi0)

@@ -56,4 +56,10 @@ config MEASUREMENT_TASK_PRIO
     default 5
     depends on MEASUREMENT_USE_THREAD
 
+config MEASUREMENT_ENABLE_SIMULATION
+    bool "Enable simulation"
+    default y
+    help
+      Enable/disable Measurement simulation creating some netvars and simulated behavior.
+    depends on PORIS_ENABLE_MEASUREMENT
 endmenu
