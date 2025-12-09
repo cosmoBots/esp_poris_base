@@ -26,6 +26,8 @@ typedef enum {
 typedef struct {
     bool enabled;
     OTA_return_code_t last_return_code;
+#include "OTA_netvar_types_fragment.h_"
+
 } OTA_dre_t;
 
 extern OTA_dre_t OTA_dre;

@@ -22,6 +22,8 @@ typedef enum {
 typedef struct {
     bool enabled;
     Provisioning_return_code_t last_return_code;
+#include "Provisioning_netvar_types_fragment.h_"
+
 } Provisioning_dre_t;
 
 extern Provisioning_dre_t Provisioning_dre;

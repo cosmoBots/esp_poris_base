@@ -10,9 +10,9 @@ if(NOT (PORIS_ENABLE_PROVISIONING OR DEFINED ENV{PORIS_ENABLE_PROVISIONING}))
 endif()
 
 idf_component_register(
-  SRCS "Provisioning.c"
+  SRCS "Provisioning_netvars.c" "Provisioning.c"
   INCLUDE_DIRS "include"
-  PRIV_REQUIRES PrjCfg
+  PRIV_REQUIRES PrjCfg NetVars json nvs_flash esp_wifi
 )
 
 if(CONFIG_PROVISIONING_USE_THREAD)

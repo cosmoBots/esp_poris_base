@@ -45,6 +45,8 @@ typedef struct {
     char data_topic[MAX_MQTT_COMM_TOPIC_LEN];
     MQTTComm_return_code_t last_return_code;
     esp_mqtt_client_handle_t main_client;
+#include "MQTTComm_netvar_types_fragment.h_"
+
 } MQTTComm_dre_t;
 
 extern MQTTComm_dre_t MQTTComm_dre;

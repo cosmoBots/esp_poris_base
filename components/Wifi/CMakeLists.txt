@@ -10,9 +10,9 @@ if(NOT (PORIS_ENABLE_WIFI OR DEFINED ENV{PORIS_ENABLE_WIFI}))
 endif()
 
 idf_component_register(
-  SRCS "Wifi.c"
+  SRCS "Wifi_netvars.c" "Wifi.c"
   INCLUDE_DIRS "include"
-  PRIV_REQUIRES PrjCfg esp_wifi esp_netif esp_event nvs_flash
+  PRIV_REQUIRES PrjCfg esp_wifi esp_netif esp_event nvs_flash NetVars json
 )
 
 # Si Kconfig lo activó, define una macro útil

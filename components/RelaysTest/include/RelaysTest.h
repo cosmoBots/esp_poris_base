@@ -28,6 +28,8 @@ typedef struct {
     uint32_t relay_index;
     TickType_t last_change;
     RelaysTest_return_code_t last_return_code;
+#include "RelaysTest_netvar_types_fragment.h_"
+
 } RelaysTest_dre_t;
 
 extern RelaysTest_dre_t RelaysTest_dre;

@@ -40,8 +40,37 @@
 // [PORIS_INTEGRATION_INCLUDE]
 
 // Include comms callbacks
+#ifdef CONFIG_PORIS_ENABLE_PRJCFG
 #include <PrjCfg_netvars.h>
+#endif
+#ifdef CONFIG_PORIS_ENABLE_MEASUREMENT
 #include <Measurement_netvars.h>
+#endif
+#ifdef CONFIG_PORIS_ENABLE_MQTTCOMM
+#include <MQTTComm_netvars.h>
+#endif
+#ifdef CONFIG_PORIS_ENABLE_OTA
+#include <OTA_netvars.h>
+#endif
+#ifdef CONFIG_PORIS_ENABLE_DUALLED
+#include <DualLED_netvars.h>
+#endif
+#ifdef CONFIG_PORIS_ENABLE_DUALLEDTESTER
+#include <DualLedTester_netvars.h>
+#endif
+#ifdef CONFIG_PORIS_ENABLE_RELAYS
+#include <Relays_netvars.h>
+#endif
+#ifdef CONFIG_PORIS_ENABLE_RELAYSTEST
+#include <RelaysTest_netvars.h>
+#endif
+#ifdef CONFIG_PORIS_ENABLE_UDPCOMM
+#include <UDPComm_netvars.h>
+#endif
+#ifdef CONFIG_PORIS_ENABLE_WIFI
+#include <Wifi_netvars.h>
+#endif
+// [PORIS_INTEGRATION_NETVARS_INCLUDE]
 
 typedef enum
 {
@@ -290,7 +319,7 @@ app_main_return_code run_components(void)
 #ifndef CONFIG_DUALLEDTESTER_USE_THREAD
     if (dualledtester_cycle_counter <= 0)
     {
-        //error_accumulator |= (DualLedTester_spin() != DualLedTester_ret_ok);
+        error_accumulator |= (DualLedTester_spin() != DualLedTester_ret_ok);
         dualledtester_cycle_counter = DUALLEDTESTER_CYCLE_LIMIT;
     }
     else
@@ -311,8 +340,37 @@ app_main_return_code run_components(void)
 void main_parse_callback(const char *data, int len)
 {
     ESP_LOGI(TAG, "Parsing the CFG payload %d %.*s", len, len, data);
+#ifdef CONFIG_PORIS_ENABLE_PRJCFG
     PrjCfg_config_parse_json(data);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_MEASUREMENT
     Measurement_config_parse_json(data);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_MQTTCOMM
+    MQTTComm_config_parse_json(data);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_OTA
+    OTA_config_parse_json(data);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_DUALLED
+    DualLED_config_parse_json(data);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_DUALLEDTESTER
+    DualLedTester_config_parse_json(data);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_RELAYS
+    Relays_config_parse_json(data);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_RELAYSTEST
+    RelaysTest_config_parse_json(data);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_UDPCOMM
+    UDPComm_config_parse_json(data);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_WIFI
+    Wifi_config_parse_json(data);
+#endif
+// [PORIS_INTEGRATION_NETVARS_PARSE]
 }
 
 void main_req_parse_callback(const char *data, int len)
@@ -340,8 +398,37 @@ void main_compose_callback(char *data, int *len)
     ESP_LOGI(TAG, "Composing the DATA payload %d %.*s", *len, *len, data);
 
     cJSON *root = cJSON_CreateObject();
+#ifdef CONFIG_PORIS_ENABLE_PRJCFG
     PrjCfg_netvars_append_json(root);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_MEASUREMENT
     Measurement_netvars_append_json(root);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_MQTTCOMM
+    MQTTComm_netvars_append_json(root);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_OTA
+    OTA_netvars_append_json(root);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_DUALLED
+    DualLED_netvars_append_json(root);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_DUALLEDTESTER
+    DualLedTester_netvars_append_json(root);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_RELAYS
+    Relays_netvars_append_json(root);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_RELAYSTEST
+    RelaysTest_netvars_append_json(root);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_UDPCOMM
+    UDPComm_netvars_append_json(root);
+#endif
+#ifdef CONFIG_PORIS_ENABLE_WIFI
+    Wifi_netvars_append_json(root);
+#endif
+// [PORIS_INTEGRATION_NETVARS_APPEND]
 
     char *cPayload = cJSON_PrintUnformatted(root);
     if (cPayload != NULL)

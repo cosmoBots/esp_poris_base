@@ -10,9 +10,9 @@ if(NOT (PORIS_ENABLE_MQTTCOMM OR DEFINED ENV{PORIS_ENABLE_MQTTCOMM}))
 endif()
 
 idf_component_register(
-  SRCS "MQTTComm.c"
+  SRCS "MQTTComm_netvars.c" "MQTTComm.c"
   INCLUDE_DIRS "include"
-  PRIV_REQUIRES PrjCfg esp_wifi nvs_flash mqtt
+  PRIV_REQUIRES PrjCfg esp_wifi nvs_flash mqtt NetVars json
 )
 
 if(CONFIG_MQTTCOMM_USE_THREAD)

@@ -10,9 +10,9 @@ if(NOT (PORIS_ENABLE_DUALLEDTESTER OR DEFINED ENV{PORIS_ENABLE_DUALLEDTESTER}))
 endif()
 
 idf_component_register(
-  SRCS "DualLedTester.c"
+  SRCS "DualLedTester_netvars.c" "DualLedTester.c"
   INCLUDE_DIRS "include"
-  PRIV_REQUIRES PrjCfg DualLED
+  PRIV_REQUIRES PrjCfg DualLED NetVars json nvs_flash
 )
 
 if(CONFIG_DUALLEDTESTER_USE_THREAD)

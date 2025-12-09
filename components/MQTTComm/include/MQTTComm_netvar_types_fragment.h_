@@ -1,0 +1,3 @@
+// Auto-generated fragment for MQTTComm netvars
+// Include this inside the definition of struct MQTTComm_dre_t
+// DO NOT EDIT MANUALLY; edit netvars.csv and regenerate.

@@ -10,9 +10,9 @@ if(NOT (PORIS_ENABLE_RELAYS OR DEFINED ENV{PORIS_ENABLE_RELAYS}))
 endif()
 
 idf_component_register(
-  SRCS "Relays.c"
+  SRCS "Relays_netvars.c" "Relays.c"
   INCLUDE_DIRS "include"
-  PRIV_REQUIRES PrjCfg esp_driver_gpio
+  PRIV_REQUIRES PrjCfg esp_driver_gpio NetVars json nvs_flash
 )
 
 if(CONFIG_RELAYS_USE_THREAD)

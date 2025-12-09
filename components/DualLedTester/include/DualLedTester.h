@@ -30,6 +30,8 @@ typedef struct {
     uint32_t seq_index;
     TickType_t last_change;
     DualLedTester_return_code_t last_return_code;
+#include "DualLedTester_netvar_types_fragment.h_"
+
 } DualLedTester_dre_t;
 
 extern DualLedTester_dre_t DualLedTester_dre;

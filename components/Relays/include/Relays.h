@@ -35,6 +35,8 @@ typedef struct {
     relay_state_t states[RELAYS_MAX_COUNT];
     bool hw_init;
     Relays_return_code_t last_return_code;
+#include "Relays_netvar_types_fragment.h_"
+
 } Relays_dre_t;
 
 extern Relays_dre_t Relays_dre;

@@ -10,9 +10,9 @@ if(NOT (PORIS_ENABLE_RELAYSTEST OR DEFINED ENV{PORIS_ENABLE_RELAYSTEST}))
 endif()
 
 idf_component_register(
-  SRCS "RelaysTest.c"
+  SRCS "RelaysTest_netvars.c" "RelaysTest.c"
   INCLUDE_DIRS "include"
-  PRIV_REQUIRES PrjCfg Relays
+  PRIV_REQUIRES PrjCfg Relays NetVars json nvs_flash
 )
 
 if(CONFIG_RELAYSTEST_USE_THREAD)

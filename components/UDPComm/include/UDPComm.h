@@ -24,6 +24,8 @@ typedef enum {
 typedef struct {
     bool enabled;
     UDPComm_return_code_t last_return_code;
+#include "UDPComm_netvar_types_fragment.h_"
+
 } UDPComm_dre_t;
 
 extern UDPComm_dre_t UDPComm_dre;

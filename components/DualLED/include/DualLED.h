@@ -47,6 +47,8 @@ typedef struct {
     TickType_t last_toggle;
     bool hw_init;
     DualLED_return_code_t last_return_code;
+#include "DualLED_netvar_types_fragment.h_"
+
 } DualLED_dre_t;
 
 extern DualLED_dre_t DualLED_dre;

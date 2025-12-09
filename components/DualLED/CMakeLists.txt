@@ -10,9 +10,9 @@ if(NOT (PORIS_ENABLE_DUALLED OR DEFINED ENV{PORIS_ENABLE_DUALLED}))
 endif()
 
 idf_component_register(
-  SRCS "DualLED.c"
+  SRCS "DualLED_netvars.c" "DualLED.c"
   INCLUDE_DIRS "include"
-  PRIV_REQUIRES PrjCfg esp_driver_gpio
+  PRIV_REQUIRES PrjCfg esp_driver_gpio NetVars json nvs_flash
 )
 
 if(CONFIG_DUALLED_USE_THREAD)

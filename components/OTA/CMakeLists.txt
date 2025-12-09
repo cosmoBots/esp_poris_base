@@ -10,10 +10,10 @@ if(NOT (PORIS_ENABLE_OTA OR DEFINED ENV{PORIS_ENABLE_OTA}))
 endif()
 
 idf_component_register(
-  SRCS "OTA.c" "ble_helper/bluedroid_gatts.c" "ble_helper/nimble_gatts.c" "ble_helper/ble_api.c"
+  SRCS "OTA_netvars.c" "OTA.c" "ble_helper/bluedroid_gatts.c" "ble_helper/nimble_gatts.c" "ble_helper/ble_api.c"
   INCLUDE_DIRS "include" "./ble_helper/include/"
   EMBED_TXTFILES ./server_certs/ca_cert.pem
-  PRIV_REQUIRES PrjCfg esp_event app_update esp_http_client esp_https_ota nvs_flash esp_netif esp_wifi bt nimble_utils
+  PRIV_REQUIRES PrjCfg esp_event app_update esp_http_client esp_https_ota nvs_flash esp_netif esp_wifi bt nimble_utils NetVars json
 )
 
 target_link_libraries(${COMPONENT_LIB} PRIVATE idf::freertos)

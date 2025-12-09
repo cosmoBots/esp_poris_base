@@ -10,9 +10,9 @@ if(NOT (PORIS_ENABLE_UDPCOMM OR DEFINED ENV{PORIS_ENABLE_UDPCOMM}))
 endif()
 
 idf_component_register(
-  SRCS "UDPComm.c"
+  SRCS "UDPComm_netvars.c" "UDPComm.c"
   INCLUDE_DIRS "include"
-  PRIV_REQUIRES PrjCfg
+  PRIV_REQUIRES PrjCfg NetVars json nvs_flash
 )
 
 if(CONFIG_UDPCOMM_USE_THREAD)

@@ -22,6 +22,8 @@ typedef enum {
 typedef struct {
     bool enabled;
     Wifi_return_code_t last_return_code;
+#include "Wifi_netvar_types_fragment.h_"
+
 } Wifi_dre_t;
 
 extern Wifi_dre_t Wifi_dre;
