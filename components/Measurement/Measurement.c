@@ -313,6 +313,7 @@ Measurement_return_code_t Measurement_spin(void)
             {
                 Measurement_dre.setpoint = 22;
             }
+            Measurement_nvs_set_dirty();
             setpoint_counter = MEASUREMENT_HEATER_CYCLE_LIMIT;
         }
         else
@@ -320,7 +321,12 @@ Measurement_return_code_t Measurement_spin(void)
             setpoint_counter++;
         }
         // Calculating heater based on setpoint
-        Measurement_dre.bi0 = (Measurement_dre.setpoint > Measurement_dre.ai1);
+        bool new_bi0 = (Measurement_dre.setpoint > Measurement_dre.ai1);
+        if (new_bi0 != Measurement_dre.bi0)
+        {
+            Measurement_dre.bi0 = new_bi0;
+            Measurement_nvs_set_dirty();
+        }
 #endif
         // Make a copy to cdre before unlocking
         // to allow printing results, etc
