@@ -6,6 +6,8 @@
 #include "cJSON.h"
 #include <nvs.h>
 #include <esp_log.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 
 #include <NetVars.h>
 
@@ -236,6 +238,7 @@ void NetVars_nvs_save_component(const char *ident, const NetVars_desc_t netvars_
 {
     if (!ident) return;
     nvs_handle_t h;
+    ESP_LOGW(TAG, "Saving component %s", ident);
     esp_err_t err = nvs_open(ident, NVS_READWRITE, &h);
     if (err != ESP_OK)
     {
@@ -304,3 +307,40 @@ bool NetVars_parse_json_component_data(const char *ident, const NetVars_desc_t n
     return changed;
 }
 
+static inline BaseType_t _create_nvs_mutex_once(netvars_nvs_mgr_t *mngr)
+{
+    if (!mngr) return pdFAIL;
+    if (!mngr->mutex)
+    {
+        mngr->mutex = xSemaphoreCreateMutex();
+        if (!mngr->mutex) return pdFAIL;
+    }
+    return pdPASS;
+}
+
+void NetVars_nvs_set_dirty(netvars_nvs_mgr_t *mngr)
+{
+    if (_create_nvs_mutex_once(mngr) != pdPASS) return;
+    xSemaphoreTake(mngr->mutex, portMAX_DELAY);
+    mngr->dirty = true;
+    mngr->dirty_since = xTaskGetTickCount();
+    xSemaphoreGive(mngr->mutex);
+}
+
+bool NetVars_nvs_spin(netvars_nvs_mgr_t *mngr)
+{
+    if (_create_nvs_mutex_once(mngr) != pdPASS) return false;
+    TickType_t now_ticks = xTaskGetTickCount();
+    bool should_save = false;
+
+    xSemaphoreTake(mngr->mutex, portMAX_DELAY);
+    if (mngr->dirty &&
+        (TickType_t)(now_ticks - mngr->dirty_since) >= pdMS_TO_TICKS(5000))
+    {
+        mngr->dirty = false;
+        should_save = true;
+    }
+    xSemaphoreGive(mngr->mutex);
+
+    return should_save;
+}

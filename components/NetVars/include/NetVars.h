@@ -6,6 +6,8 @@ extern "C" {
 
 #include <string.h>
 #include <cJSON.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 #include <nvs.h>
 
 // ------------------ BEGIN Return code ------------------
@@ -47,6 +49,12 @@ typedef struct {
 
 // ------------------ END   Datatypes ------------------
 
+typedef struct {
+    SemaphoreHandle_t mutex;
+    bool dirty;
+    TickType_t dirty_since;
+} netvars_nvs_mgr_t;
+
 void NetVars_nvs_load(const NetVars_desc_t netvars_desc[], const size_t netvars_count, nvs_handle_t h);
 void NetVars_nvs_save(const NetVars_desc_t netvars_desc[], const size_t netvars_count, nvs_handle_t h);
 void NetVars_append_json(const NetVars_desc_t netvars_desc[], const size_t netvars_count, cJSON *root);
@@ -58,6 +66,8 @@ void NetVars_append_json_component(const char *ident, const NetVars_desc_t netva
 bool NetVars_parse_json_component(const char *ident, const NetVars_desc_t netvars_desc[], const size_t netvars_count, cJSON *root);
 bool NetVars_parse_json_component_data(const char *ident, const NetVars_desc_t netvars_desc[], const size_t netvars_count, const char *data);
 
+void NetVars_nvs_set_dirty(netvars_nvs_mgr_t *mngr);
+bool NetVars_nvs_spin(netvars_nvs_mgr_t *mngr);
 
 #ifdef __cplusplus
 }
