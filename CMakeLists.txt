@@ -65,8 +65,8 @@ set(PROJECT_ROOT "${CMAKE_SOURCE_DIR}")
 set(BUILDCFG_DIR  "${PROJECT_ROOT}/buildcfg")
 # Component search order: project components (default), then local overrides, then submodule defaults
 set(EXTRA_COMPONENT_DIRS
-    "${PROJECT_ROOT}/poris_components"
     "${PROJECT_ROOT}/poris/components"
+    "${PROJECT_ROOT}/poris_components"
 )
 
 # --- Cargar cache/flags de la variante -------------------------------------
