@@ -16,7 +16,6 @@ void Measurement_netvars_nvs_load(void);
 void Measurement_netvars_nvs_save(void);
 
 void Measurement_netvars_append_json(cJSON *root);
-bool Measurement_netvars_parse_json_dict(cJSON *root);
 
 void Measurement_config_parse_json(const char *data);
 

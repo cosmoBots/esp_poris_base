@@ -52,6 +52,13 @@ void NetVars_nvs_save(const NetVars_desc_t netvars_desc[], const size_t netvars_
 void NetVars_append_json(const NetVars_desc_t netvars_desc[], const size_t netvars_count, cJSON *root);
 bool NetVars_parse_json_dict(const NetVars_desc_t netvars_desc[], const size_t netvars_count, cJSON *root);
 
+void NetVars_nvs_load_component(const char *ident, const NetVars_desc_t netvars_desc[], const size_t netvars_count);
+void NetVars_nvs_save_component(const char *ident, const NetVars_desc_t netvars_desc[], const size_t netvars_count);
+void NetVars_append_json_component(const char *ident, const NetVars_desc_t netvars_desc[], const size_t netvars_count, cJSON *root);
+bool NetVars_parse_json_component(const char *ident, const NetVars_desc_t netvars_desc[], const size_t netvars_count, cJSON *root);
+bool NetVars_parse_json_component_data(const char *ident, const NetVars_desc_t netvars_desc[], const size_t netvars_count, const char *data);
+
+
 #ifdef __cplusplus
 }
 #endif

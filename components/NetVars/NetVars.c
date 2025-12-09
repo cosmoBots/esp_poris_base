@@ -5,8 +5,11 @@
 
 #include "cJSON.h"
 #include <nvs.h>
+#include <esp_log.h>
 
 #include <NetVars.h>
+
+static const char *TAG = "NetVars";
 
 void NetVars_nvs_load(const NetVars_desc_t netvars_desc[], const size_t netvars_count, nvs_handle_t h)
 {
@@ -214,3 +217,90 @@ bool NetVars_parse_json_dict(const NetVars_desc_t netvars_desc[], const size_t n
     }
     return out_nvs_changed;
 }
+
+void NetVars_nvs_load_component(const char *ident, const NetVars_desc_t netvars_desc[], const size_t netvars_count)
+{
+    if (!ident) return;
+    nvs_handle_t h;
+    esp_err_t err = nvs_open(ident, NVS_READWRITE, &h);
+    if (err != ESP_OK)
+    {
+        ESP_LOGW(TAG, "nvs_open(%s) failed: %s", ident, esp_err_to_name(err));
+        return;
+    }
+    NetVars_nvs_load(netvars_desc, netvars_count, h);
+    nvs_close(h);
+}
+
+void NetVars_nvs_save_component(const char *ident, const NetVars_desc_t netvars_desc[], const size_t netvars_count)
+{
+    if (!ident) return;
+    nvs_handle_t h;
+    esp_err_t err = nvs_open(ident, NVS_READWRITE, &h);
+    if (err != ESP_OK)
+    {
+        ESP_LOGW(TAG, "nvs_open(%s) failed: %s", ident, esp_err_to_name(err));
+        return;
+    }
+    NetVars_nvs_save(netvars_desc, netvars_count, h);
+    nvs_close(h);
+}
+
+void NetVars_append_json_component(const char *ident, const NetVars_desc_t netvars_desc[], const size_t netvars_count, cJSON *root)
+{
+    if (!ident || !root) return;
+    if (netvars_count == 0) return;
+
+    cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, ident);
+    if (!sub)
+    {
+        sub = cJSON_AddObjectToObject(root, ident);
+    }
+    if (sub)
+    {
+        NetVars_append_json(netvars_desc, netvars_count, sub);
+    }
+}
+
+bool NetVars_parse_json_component(const char *ident, const NetVars_desc_t netvars_desc[], const size_t netvars_count, cJSON *root)
+{
+    if (!ident || !root) return false;
+    if (netvars_count == 0) return false;
+
+    bool changed = false;
+
+    if (cJSON_IsArray(root))
+    {
+        cJSON *elem = NULL;
+        cJSON_ArrayForEach(elem, root)
+        {
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(elem, ident);
+            if (sub)
+            {
+                if (NetVars_parse_json_dict(netvars_desc, netvars_count, sub))
+                    changed = true;
+            }
+        }
+    }
+    else
+    {
+        cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, ident);
+        if (sub)
+        {
+            changed = NetVars_parse_json_dict(netvars_desc, netvars_count, sub);
+        }
+    }
+
+    return changed;
+}
+
+bool NetVars_parse_json_component_data(const char *ident, const NetVars_desc_t netvars_desc[], const size_t netvars_count, const char *data)
+{
+    if (!data) return false;
+    cJSON *root = cJSON_Parse(data);
+    if (!root) return false;
+    bool changed = NetVars_parse_json_component(ident, netvars_desc, netvars_count, root);
+    cJSON_Delete(root);
+    return changed;
+}
+

@@ -37,112 +37,26 @@ void Measurement_netvars_append_json(cJSON *root)
 {
     if (Measurement_netvars_count > 0)
     {
-        cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "Measurement");
-        if (!sub)
-        {
-            sub = cJSON_AddObjectToObject(root, "Measurement");
-        }
-        if (sub)
-        {
-            NetVars_append_json(Measurement_netvars_desc, Measurement_netvars_count, sub);
-        }
-    }
-}
-
-bool Measurement_netvars_parse_json_dict(cJSON *root)
-{
-    if (Measurement_netvars_count > 0)
-    {
-        return NetVars_parse_json_dict(Measurement_netvars_desc, Measurement_netvars_count, root);
-    }
-    else
-    {
-        return false;
+        NetVars_append_json_component("Measurement", Measurement_netvars_desc, Measurement_netvars_count, root);
     }
 }
 
 void Measurement_netvars_nvs_load(void)
 {
-    esp_err_t err;
-    // Open
-
-    ESP_LOGI(TAG, "Opening Non-Volatile Storage (NVS) handle... ");
-
-    nvs_handle_t my_handle;
-    err = nvs_open("Measurement", NVS_READWRITE, &my_handle);
-    if (err != ESP_OK)
-    {
-        ESP_LOGI(TAG, "Error (%s) opening NVS handle!", esp_err_to_name(err));
-    }
-    else
-    {
-        // Implement the load
-        if (Measurement_netvars_count > 0)
-        {
-            NetVars_nvs_load(Measurement_netvars_desc, Measurement_netvars_count, my_handle);
-        }
-        // Close
-        nvs_close(my_handle);
-    }
+    NetVars_nvs_load_component("Measurement", Measurement_netvars_desc, Measurement_netvars_count);
 }
 
 void Measurement_netvars_nvs_save(void)
 {
-    esp_err_t err;
-    // Open
-    ESP_LOGI(TAG, "Opening Non-Volatile Storage (NVS) handle... ");
-
-    nvs_handle_t my_handle;
-    err = nvs_open("Measurement", NVS_READWRITE, &my_handle);
-    if (err != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Error (%s) opening NVS handle!", esp_err_to_name(err));
-    }
-    else
-    {
-        // Implement the save
-        if (Measurement_netvars_count > 0)
-        {
-            NetVars_nvs_save(Measurement_netvars_desc, Measurement_netvars_count, my_handle);
-        }
-        // Close
-        nvs_close(my_handle);
-    }
+    NetVars_nvs_save_component("Measurement", Measurement_netvars_desc, Measurement_netvars_count);
 }
 
 void Measurement_config_parse_json(const char *data)
 {
-    bool nvs_cfg_changed = false;
-
-    cJSON *root = cJSON_Parse(data);
-
-    if (root != NULL)
-    {
-        if (data[0] == '[')
-        {
-            cJSON *nvi = NULL;
-            cJSON_ArrayForEach(nvi, root)
-            {
-                cJSON *sub = cJSON_GetObjectItemCaseSensitive(nvi, "Measurement");
-                if (sub)
-                {
-                    nvs_cfg_changed = Measurement_netvars_parse_json_dict(sub);
-                }
-            }
-        }
-        else
-        {
-            cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, "Measurement");
-            if (sub)
-            {
-                nvs_cfg_changed = Measurement_netvars_parse_json_dict(sub);
-            }
-        }
-        cJSON_Delete(root);
+    bool nvs_cfg_changed = NetVars_parse_json_component_data("Measurement", Measurement_netvars_desc, Measurement_netvars_count, data);
         if (nvs_cfg_changed)
         {
             Measurement_nvs_set_dirty();
-        }
     }
 }
 
