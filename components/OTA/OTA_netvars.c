@@ -72,7 +72,7 @@ void OTA_netvars_nvs_load(void)
     }
 }
 
-void OTA_nvs_cfg_save(void)
+void OTA_netvars_nvs_save(void)
 {
     esp_err_t err;
     // Open
@@ -127,7 +127,7 @@ void OTA_config_parse_json(const char *data)
         cJSON_Delete(root);
         if (nvs_cfg_changed)
         {
-            OTA_nvs_cfg_save();
+            OTA_netvars_nvs_save();
         }
     }
 }

@@ -72,7 +72,7 @@ void UDPComm_netvars_nvs_load(void)
     }
 }
 
-void UDPComm_nvs_cfg_save(void)
+void UDPComm_netvars_nvs_save(void)
 {
     esp_err_t err;
     // Open
@@ -127,7 +127,7 @@ void UDPComm_config_parse_json(const char *data)
         cJSON_Delete(root);
         if (nvs_cfg_changed)
         {
-            UDPComm_nvs_cfg_save();
+            UDPComm_netvars_nvs_save();
         }
     }
 }

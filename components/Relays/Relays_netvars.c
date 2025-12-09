@@ -72,7 +72,7 @@ void Relays_netvars_nvs_load(void)
     }
 }
 
-void Relays_nvs_cfg_save(void)
+void Relays_netvars_nvs_save(void)
 {
     esp_err_t err;
     // Open
@@ -127,7 +127,7 @@ void Relays_config_parse_json(const char *data)
         cJSON_Delete(root);
         if (nvs_cfg_changed)
         {
-            Relays_nvs_cfg_save();
+            Relays_netvars_nvs_save();
         }
     }
 }

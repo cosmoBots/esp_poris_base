@@ -72,7 +72,7 @@ void DualLED_netvars_nvs_load(void)
     }
 }
 
-void DualLED_nvs_cfg_save(void)
+void DualLED_netvars_nvs_save(void)
 {
     esp_err_t err;
     // Open
@@ -127,7 +127,7 @@ void DualLED_config_parse_json(const char *data)
         cJSON_Delete(root);
         if (nvs_cfg_changed)
         {
-            DualLED_nvs_cfg_save();
+            DualLED_netvars_nvs_save();
         }
     }
 }

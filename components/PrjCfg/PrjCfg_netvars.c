@@ -57,7 +57,7 @@ void PrjCfg_netvars_nvs_load(void)
     }
 }
 
-void PrjCfg_nvs_cfg_save(void)
+void PrjCfg_netvars_nvs_save(void)
 {
     esp_err_t err;
     // Open
@@ -109,7 +109,7 @@ void PrjCfg_config_parse_json(const char *data)
         cJSON_Delete(root);
         if (nvs_cfg_changed)
         {
-            PrjCfg_nvs_cfg_save();
+            PrjCfg_netvars_nvs_save();
         }
     }
 }

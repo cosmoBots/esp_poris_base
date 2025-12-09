@@ -72,7 +72,7 @@ void MQTTComm_netvars_nvs_load(void)
     }
 }
 
-void MQTTComm_nvs_cfg_save(void)
+void MQTTComm_netvars_nvs_save(void)
 {
     esp_err_t err;
     // Open
@@ -127,7 +127,7 @@ void MQTTComm_config_parse_json(const char *data)
         cJSON_Delete(root);
         if (nvs_cfg_changed)
         {
-            MQTTComm_nvs_cfg_save();
+            MQTTComm_netvars_nvs_save();
         }
     }
 }
