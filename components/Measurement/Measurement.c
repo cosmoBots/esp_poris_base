@@ -33,6 +33,7 @@
 
 // BEGIN --- Self-includes section ---
 #include "Measurement.h"
+#include "Measurement_netvars.h"
 
 // END --- Self-includes section ---
 
@@ -43,7 +44,14 @@ static const char *TAG = "Measurement";
 // BEGIN --- Internal variables (DRE)
 Measurement_dre_t Measurement_dre = {
     .enabled = true,
-    .last_return_code = Measurement_ret_ok
+    .last_return_code = Measurement_ret_ok,
+#ifdef MEASUREMENT_ENABLE_SIMULATION
+    // Set the initial data values
+    .setpoint = 12.0,  // The setpoint will be raised in the next iteration
+    .ai1 = 15.0,     // Indoor temp is warmer, getting cooler
+    .ai2 = 10.0,     // Outdoor temp is cooler
+    .bi0 = false,    // The heater will be switched off at the first iteration
+#endif    
 };
 // END   --- Internal variables (DRE)
 
@@ -237,14 +245,8 @@ Measurement_return_code_t Measurement_setup(void)
 {
     // Init liviano; no arranca tarea.
     ESP_LOGD(TAG, "setup()");
-#ifdef MEASUREMENT_ENABLE_SIMULATION
-    // Set the initial data values
-    Measurement_dre.setpoint = 12.0;  // The setpoint will be raised in the next iteration
-    Measurement_dre.ai1 = 15.0;     // Indoor temp is warmer, getting cooler
-    Measurement_dre.ai2 = 10.0;     // Outdoor temp is cooler
-    Measurement_dre.bi0 = false;    // The heater will be switched off at the first iteration
-#endif
-
+    // Loading values from NVS
+    Measurement_netvars_nvs_load();
 #if CONFIG_MEASUREMENT_USE_THREAD
     if (_create_mutex_once() != pdPASS) {
         ESP_LOGE(TAG, "mutex creation failed");
