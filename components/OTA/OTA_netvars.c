@@ -2,9 +2,6 @@
 #include <OTA.h>
 #include "OTA_netvars.h"
 
-// La instancia de datos real debe estar definida en otro lugar, por ejemplo:
-// OTA_dre_t OTA_dre;
-extern OTA_dre_t OTA_dre;
 static netvars_nvs_mgr_t OTA_nvs_mgr = {0};
 
 const NetVars_desc_t OTA_netvars_desc[] = {

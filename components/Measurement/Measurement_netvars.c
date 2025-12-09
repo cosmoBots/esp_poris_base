@@ -2,13 +2,6 @@
 #include <Measurement.h>
 #include "Measurement_netvars.h"
 
-#include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
-
-// La instancia de datos real debe estar definida en otro lugar, por ejemplo:
-// MEASUREMENT_t MEASUREMENT;
-extern Measurement_dre_t Measurement_dre;
-
 static netvars_nvs_mgr_t Measurement_nvs_mgr = {0};
 
 const NetVars_desc_t Measurement_netvars_desc[] = {
@@ -52,7 +45,6 @@ void Measurement_config_parse_json(const char *data)
         }
     }
 }
-
 
 void Measurement_nvs_set_dirty(void)
 {

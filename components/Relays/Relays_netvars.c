@@ -2,9 +2,6 @@
 #include <Relays.h>
 #include "Relays_netvars.h"
 
-// La instancia de datos real debe estar definida en otro lugar, por ejemplo:
-// Relays_dre_t Relays_dre;
-extern Relays_dre_t Relays_dre;
 static netvars_nvs_mgr_t Relays_nvs_mgr = {0};
 
 const NetVars_desc_t Relays_netvars_desc[] = {

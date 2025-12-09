@@ -2,9 +2,6 @@
 #include <Wifi.h>
 #include "Wifi_netvars.h"
 
-// La instancia de datos real debe estar definida en otro lugar, por ejemplo:
-// Wifi_dre_t Wifi_dre;
-extern Wifi_dre_t Wifi_dre;
 static netvars_nvs_mgr_t Wifi_nvs_mgr = {0};
 
 const NetVars_desc_t Wifi_netvars_desc[] = {

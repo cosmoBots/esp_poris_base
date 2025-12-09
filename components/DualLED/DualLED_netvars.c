@@ -2,10 +2,6 @@
 #include <DualLED.h>
 #include "DualLED_netvars.h"
 
-
-// La instancia de datos real debe estar definida en otro lugar, por ejemplo:
-// DualLED_dre_t DualLED_dre;
-extern DualLED_dre_t DualLED_dre;
 static netvars_nvs_mgr_t DualLED_nvs_mgr = {0};
 
 const NetVars_desc_t DualLED_netvars_desc[] = {

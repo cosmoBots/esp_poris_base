@@ -2,9 +2,6 @@
 #include <Provisioning.h>
 #include "Provisioning_netvars.h"
 
-// La instancia de datos real debe estar definida en otro lugar, por ejemplo:
-// Provisioning_dre_t Provisioning_dre;
-extern Provisioning_dre_t Provisioning_dre;
 static netvars_nvs_mgr_t Provisioning_nvs_mgr = {0};
 
 const NetVars_desc_t Provisioning_netvars_desc[] = {

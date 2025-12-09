@@ -2,9 +2,6 @@
 #include <MQTTComm.h>
 #include "MQTTComm_netvars.h"
 
-// La instancia de datos real debe estar definida en otro lugar, por ejemplo:
-// MQTTComm_dre_t MQTTComm_dre;
-extern MQTTComm_dre_t MQTTComm_dre;
 static netvars_nvs_mgr_t MQTTComm_nvs_mgr = {0};
 
 const NetVars_desc_t MQTTComm_netvars_desc[] = {

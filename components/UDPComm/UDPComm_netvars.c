@@ -2,9 +2,6 @@
 #include <UDPComm.h>
 #include "UDPComm_netvars.h"
 
-// La instancia de datos real debe estar definida en otro lugar, por ejemplo:
-// UDPComm_dre_t UDPComm_dre;
-extern UDPComm_dre_t UDPComm_dre;
 static netvars_nvs_mgr_t UDPComm_nvs_mgr = {0};
 
 const NetVars_desc_t UDPComm_netvars_desc[] = {

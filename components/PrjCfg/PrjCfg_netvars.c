@@ -2,9 +2,6 @@
 #include <PrjCfg.h>
 #include "PrjCfg_netvars.h"
 
-// La instancia de datos real debe estar definida en otro lugar, por ejemplo:
-// PrjCfg_dre_t PrjCfg_dre;
-extern PrjCfg_dre_t PrjCfg_dre;
 static netvars_nvs_mgr_t PrjCfg_nvs_mgr = {0};
 
 const NetVars_desc_t PrjCfg_netvars_desc[] = {

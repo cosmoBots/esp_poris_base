@@ -2,9 +2,6 @@
 #include <DualLedTester.h>
 #include "DualLedTester_netvars.h"
 
-// La instancia de datos real debe estar definida en otro lugar, por ejemplo:
-// DualLedTester_dre_t DualLedTester_dre;
-extern DualLedTester_dre_t DualLedTester_dre;
 static netvars_nvs_mgr_t DualLedTester_nvs_mgr = {0};
 
 const NetVars_desc_t DualLedTester_netvars_desc[] = {
