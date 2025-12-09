@@ -24,12 +24,7 @@ typedef enum {
 typedef struct {
     bool enabled;
     Measurement_return_code_t last_return_code;
-#ifdef MEASUREMENT_ENABLE_SIMULATION
-    float setpoint;
-    float ai1;
-    float ai2;
-    bool bi0;
-#endif
+#include "Measurement_netvar_types_fragment.h_"
 } Measurement_dre_t;
 
 extern Measurement_dre_t Measurement_dre;
