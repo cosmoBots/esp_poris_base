@@ -10,9 +10,9 @@ if(NOT (PORIS_ENABLE_PRJCFG OR DEFINED ENV{PORIS_ENABLE_PRJCFG}))
 endif()
 
 idf_component_register(
-  SRCS "PrjCfg.c" "PrjCfg_nvs.c"  "PrjCfg_cmd.c"
+  SRCS "PrjCfg_netvars.c" "PrjCfg.c" 
   INCLUDE_DIRS "include"
-  PRIV_REQUIRES PrjCfg nvs_flash json OTA
+  PRIV_REQUIRES PrjCfg NetVars nvs_flash json OTA
   REQUIRES esp_wifi
 )
 

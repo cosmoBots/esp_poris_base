@@ -40,7 +40,7 @@
 // [PORIS_INTEGRATION_INCLUDE]
 
 // Include comms callbacks
-#include <PrjCfg_cmd.h>
+#include <PrjCfg_netvars.h>
 #include <Measurement_cmd.h>
 
 typedef enum
@@ -197,12 +197,12 @@ app_main_return_code start_components(void)
 #define RELAYSTEST_CYCLE_LIMIT ((RELAYSTEST_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
 // [PORIS_INTEGRATION_DEFINES]
 
-static uint8_t mqttcomm_cycle_counter = 0;
-static uint8_t measurement_cycle_counter = 0;
-static uint8_t dualled_cycle_counter = 0;
-static uint8_t dualledtester_cycle_counter = 0;
-static uint8_t relays_cycle_counter = 0;
-static uint8_t relaystest_cycle_counter = 0;
+static uint16_t mqttcomm_cycle_counter = 0;
+static uint16_t measurement_cycle_counter = 0;
+static uint16_t dualled_cycle_counter = 0;
+static uint16_t dualledtester_cycle_counter = 0;
+static uint16_t relays_cycle_counter = 0;
+static uint16_t relaystest_cycle_counter = 0;
 // [PORIS_INTEGRATION_COUNTERS]
 
 app_main_return_code run_components(void)
@@ -225,7 +225,7 @@ app_main_return_code run_components(void)
 #ifndef CONFIG_MQTTCOMM_USE_THREAD
     if (mqttcomm_cycle_counter <= 0)
     {
-        //error_accumulator |= (MQTTComm_spin() != MQTTComm_ret_ok);
+        error_accumulator |= (MQTTComm_spin() != MQTTComm_ret_ok);
         mqttcomm_cycle_counter = MQTTCOMM_CYCLE_LIMIT;
     }
     else
@@ -238,7 +238,7 @@ app_main_return_code run_components(void)
 #ifndef CONFIG_MEASUREMENT_USE_THREAD
     if (measurement_cycle_counter <= 0)
     {
-        //error_accumulator |= (Measurement_spin() != Measurement_ret_ok);
+        error_accumulator |= (Measurement_spin() != Measurement_ret_ok);
         measurement_cycle_counter = MEASUREMENT_CYCLE_LIMIT;
     }
     else
@@ -311,7 +311,7 @@ app_main_return_code run_components(void)
 void main_parse_callback(const char *data, int len)
 {
     ESP_LOGI(TAG, "Parsing the CFG payload %d %.*s", len, len, data);
-    PrjCfg_parse_callback(data, len);
+    PrjCfg_config_parse_json(data);
     Measurement_parse_callback(data, len);
 }
 
@@ -340,7 +340,7 @@ void main_compose_callback(char *data, int *len)
     ESP_LOGI(TAG, "Composing the DATA payload %d %.*s", *len, *len, data);
 
     cJSON *root = cJSON_CreateObject();
-    PrjCfg_compose_json_payload(root);
+    PrjCfg_netvars_append_json(root);
     Measurement_compose_json_payload(root);
 
     char *cPayload = cJSON_PrintUnformatted(root);
