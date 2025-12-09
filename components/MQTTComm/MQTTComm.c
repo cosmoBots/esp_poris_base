@@ -34,6 +34,7 @@
 
 // BEGIN --- Self-includes section ---
 #include "MQTTComm.h"
+#include "MQTTComm_netvars.h"
 #include "MqttSecrets.h"
 // END --- Self-includes section ---
 
@@ -56,6 +57,11 @@ MQTTComm_dre_t MQTTComm_dre = {
     .started = false,
     .last_return_code = MQTTComm_ret_ok};
 // END   --- Internal variables (DRE)
+// Netvars dirty tracking
+static bool s_nvs_dirty = false;
+static TickType_t s_nvs_dirty_since = 0;
+
+
 
 // BEGIN --- Functional variables and handlers
 
@@ -485,27 +491,56 @@ static // In case we are using a thread, this function should not be part of the
     }
     else
     {
+        MQTTComm_return_code_t ret;
+        int msg_id = -1;
         // Do your stuff here
         // This is the periodic data publication loop
         if (MQTTComm_dre.cfg.f_cfg_cb != NULL)
         {
             MQTTComm_dre.cfg.f_data_cb(data_buffer, &len);
             data_buffer[len] = '\0';
-            int msg_id = esp_mqtt_client_publish(MQTTComm_dre.main_client, MQTTComm_dre.data_topic, data_buffer, 0, 1, 0);
+            msg_id = esp_mqtt_client_publish(MQTTComm_dre.main_client, MQTTComm_dre.data_topic, data_buffer, 0, 1, 0);
+            if (msg_id >= 0)
+            {
+                ret = MQTTComm_ret_ok;
+            }
+            else
+            {
+                ret = MQTTComm_ret_error;
+            }
+        }
+        else
+        {
+            ret = MQTTComm_ret_error;
+        }
+
+        // Check "dirtyness" of the nvs
+        TickType_t now_ticks = xTaskGetTickCount();
+        if (s_nvs_dirty &&
+            (TickType_t)(now_ticks - s_nvs_dirty_since) >= pdMS_TO_TICKS(5000))
+        {
+            s_nvs_dirty = false;
 #if CONFIG_MQTTCOMM_USE_THREAD
-            _unlock();
+                _unlock();
 #endif
-            ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
-            return MQTTComm_ret_ok;
+            MQTTComm_netvars_nvs_save();
         }
         else
         {
 #if CONFIG_MQTTCOMM_USE_THREAD
             _unlock();
 #endif
-            ESP_LOGW(TAG, "callback function for loading the data is not given");
-            return MQTTComm_ret_error;
         }
+        // Process the output messages
+        if (ret == MQTTComm_ret_ok)
+        {
+            ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+        }
+        else
+        {
+            ESP_LOGW(TAG, "callback function for loading the data is not given");
+        }
+        return ret;
     }
 }
 

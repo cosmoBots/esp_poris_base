@@ -34,6 +34,7 @@
 
 // BEGIN --- Self-includes section ---
 #include "DualLedTester.h"
+#include "DualLedTester_netvars.h"
 #include "DualLED.h"
 
 // END --- Self-includes section ---
@@ -79,6 +80,11 @@ DualLedTester_dre_t DualLedTester_dre = {
     .last_return_code = DualLedTester_ret_ok
 };
 // END   --- Internal variables (DRE)
+// Netvars dirty tracking
+static bool s_nvs_dirty = false;
+static TickType_t s_nvs_dirty_since = 0;
+
+
 
 // BEGIN --- Multitasking variables and handlers
 
@@ -323,9 +329,22 @@ DualLedTester_return_code_t DualLedTester_spin(void)
             ESP_LOGI(TAG, "DualLED state -> %d (%s)", (int)next, DualLedTester_state_name_safe(next));
 #endif
         }
+        TickType_t now_ticks = xTaskGetTickCount();
+        if (s_nvs_dirty &&
+            (TickType_t)(now_ticks - s_nvs_dirty_since) >= pdMS_TO_TICKS(5000))
+        {
+            s_nvs_dirty = false;
 #if CONFIG_DUALLEDTESTER_USE_THREAD
-        _unlock();
+            _unlock();
 #endif
+            DualLedTester_netvars_nvs_save();
+        }
+        else
+        {
+#if CONFIG_DUALLEDTESTER_USE_THREAD
+            _unlock();
+#endif
+        }
         return DualLedTester_ret_ok;
     }
 }

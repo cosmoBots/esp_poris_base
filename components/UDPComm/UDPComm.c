@@ -33,6 +33,7 @@
 
 // BEGIN --- Self-includes section ---
 #include "UDPComm.h"
+#include "UDPComm_netvars.h"
 
 // END --- Self-includes section ---
 
@@ -46,6 +47,11 @@ UDPComm_dre_t UDPComm_dre = {
     .last_return_code = UDPComm_ret_ok
 };
 // END   --- Internal variables (DRE)
+// Netvars dirty tracking
+static bool s_nvs_dirty = false;
+static TickType_t s_nvs_dirty_since = 0;
+
+
 
 // BEGIN --- Multitasking variables and handlers
 
@@ -263,10 +269,22 @@ UDPComm_return_code_t UDPComm_spin(void)
         ESP_LOGI(TAG, "Doing protected stuff %d", UDPComm_dre.enabled);
         //vTaskDelay(pdMS_TO_TICKS(120));
 
+        TickType_t now_ticks = xTaskGetTickCount();
+        if (s_nvs_dirty &&
+            (TickType_t)(now_ticks - s_nvs_dirty_since) >= pdMS_TO_TICKS(5000))
+        {
+            s_nvs_dirty = false;
 #if CONFIG_UDPCOMM_USE_THREAD
-        _unlock();
+            _unlock();
 #endif
-
+            UDPComm_netvars_nvs_save();
+        }
+        else
+        {
+#if CONFIG_UDPCOMM_USE_THREAD
+            _unlock();
+#endif
+        }
         // Communicate results, do stuff which 
         // does not need protection
         // ...

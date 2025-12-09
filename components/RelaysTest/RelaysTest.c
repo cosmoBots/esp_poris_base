@@ -34,6 +34,7 @@
 
 // BEGIN --- Self-includes section ---
 #include "RelaysTest.h"
+#include "RelaysTest_netvars.h"
 #include "Relays.h"
 
 // END --- Self-includes section ---
@@ -58,6 +59,11 @@ RelaysTest_dre_t RelaysTest_dre = {
     .last_return_code = RelaysTest_ret_ok
 };
 // END   --- Internal variables (DRE)
+// Netvars dirty tracking
+static bool s_nvs_dirty = false;
+static TickType_t s_nvs_dirty_since = 0;
+
+
 
 // BEGIN --- Multitasking variables and handlers
 
@@ -299,9 +305,22 @@ RelaysTest_return_code_t RelaysTest_spin(void)
 #endif
         }
 
+        TickType_t now_ticks = xTaskGetTickCount();
+        if (s_nvs_dirty &&
+            (TickType_t)(now_ticks - s_nvs_dirty_since) >= pdMS_TO_TICKS(5000))
+        {
+            s_nvs_dirty = false;
 #if CONFIG_RELAYSTEST_USE_THREAD
-        _unlock();
+            _unlock();
 #endif
+            RelaysTest_netvars_nvs_save();
+        }
+        else
+        {
+#if CONFIG_RELAYSTEST_USE_THREAD
+            _unlock();
+#endif
+        }
 
         return RelaysTest_ret_ok;
     }

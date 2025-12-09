@@ -395,7 +395,7 @@ DualLED_return_code_t DualLED_spin(void)
 #if CONFIG_DUALLED_USE_THREAD
             _unlock();
 #endif
-            DualLED_nvs_cfg_save();
+            DualLED_netvars_nvs_save();
         }
         else
         {
