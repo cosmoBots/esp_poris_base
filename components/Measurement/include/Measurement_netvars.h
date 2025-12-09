@@ -20,6 +20,9 @@ bool Measurement_netvars_parse_json_dict(cJSON *root);
 
 void Measurement_config_parse_json(const char *data);
 
+void Measurement_nvs_set_dirty(void);
+void Measurement_nvs_spin(void);
+
 #ifdef __cplusplus
 }
 #endif

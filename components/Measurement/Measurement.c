@@ -54,11 +54,6 @@ Measurement_dre_t Measurement_dre = {
 #endif    
 };
 // END   --- Internal variables (DRE)
-// Netvars dirty tracking
-static bool s_nvs_dirty = false;
-static TickType_t s_nvs_dirty_since = 0;
-
-
 
 // BEGIN --- Multitasking variables and handlers
 
@@ -331,22 +326,10 @@ Measurement_return_code_t Measurement_spin(void)
         // Make a copy to cdre before unlocking
         // to allow printing results, etc
         memcpy(cdre, &Measurement_dre, sizeof(Measurement_dre));
-        TickType_t now_ticks = xTaskGetTickCount();
-        if (s_nvs_dirty &&
-            (TickType_t)(now_ticks - s_nvs_dirty_since) >= pdMS_TO_TICKS(5000))
-        {
-            s_nvs_dirty = false;
 #if CONFIG_MEASUREMENT_USE_THREAD
-            _unlock();
+        _unlock();
 #endif
-            Measurement_netvars_nvs_save();
-        }
-        else
-        {
-#if CONFIG_MEASUREMENT_USE_THREAD
-            _unlock();
-#endif
-        }
+        Measurement_nvs_spin();
         // Communicate results, do stuff which 
         // does not need protection
         // ...
