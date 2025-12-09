@@ -20,6 +20,9 @@ bool PrjCfg_netvars_parse_json_dict(cJSON *root);
 
 void PrjCfg_config_parse_json(const char *data);
 
+void PrjCfg_nvs_set_dirty(void);
+void PrjCfg_nvs_spin(void);
+
 #ifdef __cplusplus
 }
 #endif

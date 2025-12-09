@@ -20,6 +20,9 @@ bool Wifi_netvars_parse_json_dict(cJSON *root);
 
 void Wifi_config_parse_json(const char *data);
 
+void Wifi_nvs_set_dirty(void);
+void Wifi_nvs_spin(void);
+
 #ifdef __cplusplus
 }
 #endif

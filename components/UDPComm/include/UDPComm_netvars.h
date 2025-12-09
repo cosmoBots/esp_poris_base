@@ -20,6 +20,9 @@ bool UDPComm_netvars_parse_json_dict(cJSON *root);
 
 void UDPComm_config_parse_json(const char *data);
 
+void UDPComm_nvs_set_dirty(void);
+void UDPComm_nvs_spin(void);
+
 #ifdef __cplusplus
 }
 #endif

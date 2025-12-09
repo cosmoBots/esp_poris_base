@@ -4,6 +4,8 @@
 
 
 #include <esp_log.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 #include <cJSON.h>
 #include <nvs.h>
 
@@ -12,6 +14,21 @@ const static char TAG[] = "MQTTComm_netvars";
 // La instancia de datos real debe estar definida en otro lugar, por ejemplo:
 // MQTTComm_dre_t MQTTComm_dre;
 extern MQTTComm_dre_t MQTTComm_dre;
+
+static SemaphoreHandle_t s_nvs_mutex = NULL;
+static bool s_nvs_dirty = false;
+static TickType_t s_nvs_dirty_since = 0;
+
+static inline BaseType_t _create_nvs_mutex_once(void)
+{
+    if (!s_nvs_mutex)
+    {
+        s_nvs_mutex = xSemaphoreCreateMutex();
+        if (!s_nvs_mutex) return pdFAIL;
+    }
+    return pdPASS;
+}
+
 
 const NetVars_desc_t MQTTComm_netvars_desc[] = {
 #include "MQTTComm_netvars_fragment.c_"
@@ -127,7 +144,35 @@ void MQTTComm_config_parse_json(const char *data)
         cJSON_Delete(root);
         if (nvs_cfg_changed)
         {
-            MQTTComm_netvars_nvs_save();
+            MQTTComm_nvs_set_dirty();
         }
+    }
+}
+
+
+void MQTTComm_nvs_set_dirty(void)
+{
+    if (_create_nvs_mutex_once() != pdPASS) return;
+    xSemaphoreTake(s_nvs_mutex, portMAX_DELAY);
+    s_nvs_dirty = true;
+    s_nvs_dirty_since = xTaskGetTickCount();
+    xSemaphoreGive(s_nvs_mutex);
+}
+
+void MQTTComm_nvs_spin(void)
+{
+    if (_create_nvs_mutex_once() != pdPASS) return;
+    TickType_t now_ticks = xTaskGetTickCount();
+    bool should_save = false;
+    xSemaphoreTake(s_nvs_mutex, portMAX_DELAY);
+    if (s_nvs_dirty && (TickType_t)(now_ticks - s_nvs_dirty_since) >= pdMS_TO_TICKS(5000))
+    {
+        s_nvs_dirty = false;
+        should_save = true;
+    }
+    xSemaphoreGive(s_nvs_mutex);
+    if (should_save)
+    {
+        MQTTComm_netvars_nvs_save();
     }
 }

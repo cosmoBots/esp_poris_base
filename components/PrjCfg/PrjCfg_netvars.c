@@ -4,12 +4,30 @@
 
 
 #include <esp_log.h>
+#include <nvs.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 
 const static char TAG[] = "PrjCfg_netvars";
 
 // La instancia de datos real debe estar definida en otro lugar, por ejemplo:
 // prjcfg_t prjcfg;
 extern PrjCfg_dre_t PrjCfg_dre;
+
+static SemaphoreHandle_t s_nvs_mutex = NULL;
+static bool s_nvs_dirty = false;
+static TickType_t s_nvs_dirty_since = 0;
+
+static inline BaseType_t _create_nvs_mutex_once(void)
+{
+    if (!s_nvs_mutex)
+    {
+        s_nvs_mutex = xSemaphoreCreateMutex();
+        if (!s_nvs_mutex) return pdFAIL;
+    }
+    return pdPASS;
+}
+
 
 const NetVars_desc_t PrjCfg_netvars_desc[] = {
 #include "PrjCfg_netvars_fragment.c_"
@@ -109,7 +127,34 @@ void PrjCfg_config_parse_json(const char *data)
         cJSON_Delete(root);
         if (nvs_cfg_changed)
         {
-            PrjCfg_netvars_nvs_save();
+            PrjCfg_nvs_set_dirty();
         }
+    }
+}
+
+void PrjCfg_nvs_set_dirty(void)
+{
+    if (_create_nvs_mutex_once() != pdPASS) return;
+    xSemaphoreTake(s_nvs_mutex, portMAX_DELAY);
+    s_nvs_dirty = true;
+    s_nvs_dirty_since = xTaskGetTickCount();
+    xSemaphoreGive(s_nvs_mutex);
+}
+
+void PrjCfg_nvs_spin(void)
+{
+    if (_create_nvs_mutex_once() != pdPASS) return;
+    TickType_t now_ticks = xTaskGetTickCount();
+    bool should_save = false;
+    xSemaphoreTake(s_nvs_mutex, portMAX_DELAY);
+    if (s_nvs_dirty && (TickType_t)(now_ticks - s_nvs_dirty_since) >= pdMS_TO_TICKS(5000))
+    {
+        s_nvs_dirty = false;
+        should_save = true;
+    }
+    xSemaphoreGive(s_nvs_mutex);
+    if (should_save)
+    {
+        PrjCfg_netvars_nvs_save();
     }
 }

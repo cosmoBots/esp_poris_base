@@ -20,6 +20,9 @@ bool OTA_netvars_parse_json_dict(cJSON *root);
 
 void OTA_config_parse_json(const char *data);
 
+void OTA_nvs_set_dirty(void);
+void OTA_nvs_spin(void);
+
 #ifdef __cplusplus
 }
 #endif

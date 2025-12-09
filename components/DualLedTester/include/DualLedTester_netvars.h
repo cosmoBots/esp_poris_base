@@ -20,6 +20,9 @@ bool DualLedTester_netvars_parse_json_dict(cJSON *root);
 
 void DualLedTester_config_parse_json(const char *data);
 
+void DualLedTester_nvs_set_dirty(void);
+void DualLedTester_nvs_spin(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -20,6 +20,9 @@ bool DualLED_netvars_parse_json_dict(cJSON *root);
 
 void DualLED_config_parse_json(const char *data);
 
+void DualLED_nvs_set_dirty(void);
+void DualLED_nvs_spin(void);
+
 #ifdef __cplusplus
 }
 #endif

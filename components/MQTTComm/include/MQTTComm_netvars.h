@@ -20,6 +20,9 @@ bool MQTTComm_netvars_parse_json_dict(cJSON *root);
 
 void MQTTComm_config_parse_json(const char *data);
 
+void MQTTComm_nvs_set_dirty(void);
+void MQTTComm_nvs_spin(void);
+
 #ifdef __cplusplus
 }
 #endif

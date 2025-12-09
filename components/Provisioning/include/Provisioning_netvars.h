@@ -20,6 +20,9 @@ bool Provisioning_netvars_parse_json_dict(cJSON *root);
 
 void Provisioning_config_parse_json(const char *data);
 
+void Provisioning_nvs_set_dirty(void);
+void Provisioning_nvs_spin(void);
+
 #ifdef __cplusplus
 }
 #endif

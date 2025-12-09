@@ -20,6 +20,9 @@ bool RelaysTest_netvars_parse_json_dict(cJSON *root);
 
 void RelaysTest_config_parse_json(const char *data);
 
+void RelaysTest_nvs_set_dirty(void);
+void RelaysTest_nvs_spin(void);
+
 #ifdef __cplusplus
 }
 #endif
