@@ -53,9 +53,6 @@ Relays_dre_t Relays_dre = {
     .last_return_code = Relays_ret_ok
 };
 // END   --- Internal variables (DRE)
-// Netvars dirty tracking
-static bool s_nvs_dirty = false;
-static TickType_t s_nvs_dirty_since = 0;
 
 
 
@@ -302,22 +299,11 @@ Relays_return_code_t Relays_spin(void)
     }
     else
     {
-        TickType_t now_ticks = xTaskGetTickCount();
-        if (s_nvs_dirty &&
-            (TickType_t)(now_ticks - s_nvs_dirty_since) >= pdMS_TO_TICKS(5000))
-        {
-            s_nvs_dirty = false;
 #if CONFIG_RELAYS_USE_THREAD
-            _unlock();
+        // Unlocking after the protected data has been managed for this cycle
+        _unlock();
 #endif
-            Relays_netvars_nvs_save();
-        }
-        else
-        {
-#if CONFIG_RELAYS_USE_THREAD
-            _unlock();
-#endif
-        }
+        Relays_nvs_spin();
 
         // Communicate results, do stuff which 
         // does not need protection

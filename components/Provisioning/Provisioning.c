@@ -47,9 +47,6 @@ Provisioning_dre_t Provisioning_dre = {
     .last_return_code = Provisioning_ret_ok
 };
 // END   --- Internal variables (DRE)
-// Netvars dirty tracking
-static bool s_nvs_dirty = false;
-static TickType_t s_nvs_dirty_since = 0;
 
 
 
@@ -269,22 +266,11 @@ Provisioning_return_code_t Provisioning_spin(void)
         //ESP_LOGI(TAG, "Doing protected stuff %d", Provisioning_dre.enabled);
         //vTaskDelay(pdMS_TO_TICKS(120));
 
-        TickType_t now_ticks = xTaskGetTickCount();
-        if (s_nvs_dirty &&
-            (TickType_t)(now_ticks - s_nvs_dirty_since) >= pdMS_TO_TICKS(5000))
-        {
-            s_nvs_dirty = false;
 #if CONFIG_PROVISIONING_USE_THREAD
-            _unlock();
+        // Unlocking after the protected data has been managed for this cycle
+        _unlock();
 #endif
-            Provisioning_netvars_nvs_save();
-        }
-        else
-        {
-#if CONFIG_PROVISIONING_USE_THREAD
-            _unlock();
-#endif
-        }
+        Provisioning_nvs_spin();
 
         // Communicate results, do stuff which 
         // does not need protection

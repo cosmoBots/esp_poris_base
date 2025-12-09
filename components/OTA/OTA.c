@@ -65,9 +65,6 @@ OTA_dre_t OTA_dre = {
 };
 
 // END   --- Internal variables (DRE)
-// Netvars dirty tracking
-static bool s_nvs_dirty = false;
-static TickType_t s_nvs_dirty_since = 0;
 
 
 

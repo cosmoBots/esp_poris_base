@@ -49,9 +49,6 @@ Wifi_dre_t Wifi_dre = {
     .last_return_code = Wifi_ret_ok
 };
 // END   --- Internal variables (DRE)
-// Netvars dirty tracking
-static bool s_nvs_dirty = false;
-static TickType_t s_nvs_dirty_since = 0;
 
 
 
@@ -163,13 +160,7 @@ Wifi_return_code_t Wifi_spin(void)
 
     //ESP_LOGI(TAG, "Hello world!");
     //vTaskDelay(pdMS_TO_TICKS(120));
-    TickType_t now_ticks = xTaskGetTickCount();
-    if (s_nvs_dirty &&
-        (TickType_t)(now_ticks - s_nvs_dirty_since) >= pdMS_TO_TICKS(5000))
-    {
-        s_nvs_dirty = false;
-        Wifi_netvars_nvs_save();
-    }
+    Wifi_nvs_spin();
     return Wifi_ret_ok;
 }
 

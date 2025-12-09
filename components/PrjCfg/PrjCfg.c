@@ -57,9 +57,6 @@ PrjCfg_dre_t PrjCfg_dre = {
     .skip_ota = true,
 };
 // END   --- Internal variables (DRE)
-// Netvars dirty tracking
-static bool s_nvs_dirty = false;
-static TickType_t s_nvs_dirty_since = 0;
 
 
 
@@ -292,19 +289,10 @@ PrjCfg_return_code_t PrjCfg_spin(void)
         //vTaskDelay(pdMS_TO_TICKS(120));
 
 #if CONFIG_PRJCFG_USE_THREAD
-        TickType_t now_ticks = xTaskGetTickCount();
-        if (s_nvs_dirty &&
-            (TickType_t)(now_ticks - s_nvs_dirty_since) >= pdMS_TO_TICKS(5000))
-        {
-            s_nvs_dirty = false;
-            _unlock();
-            PrjCfg_netvars_nvs_save();
-        }
-        else
-        {
-            _unlock();
-        }
+        // Unlocking after the protected data has been managed for this cycle
+        _unlock();
 #endif
+        PrjCfg_nvs_spin();
 
         // Communicate results, do stuff which 
         // does not need protection

@@ -56,9 +56,6 @@ DualLED_dre_t DualLED_dre = {
 };
 // END   --- Internal variables (DRE)
 
-// Netvars dirty tracking
-static bool s_nvs_dirty = false;
-static TickType_t s_nvs_dirty_since = 0;
 
 static inline void DualLED_apply_outputs(bool red_on, bool green_on)
 {
@@ -387,22 +384,13 @@ DualLED_return_code_t DualLED_spin(void)
             DualLED_dre.last_toggle = xTaskGetTickCount();
         }
         DualLED_render_state();
-        TickType_t now_ticks = xTaskGetTickCount();
-        if (s_nvs_dirty &&
-            (TickType_t)(now_ticks - s_nvs_dirty_since) >= pdMS_TO_TICKS(5000))
-        {
-            s_nvs_dirty = false;
+
 #if CONFIG_DUALLED_USE_THREAD
-            _unlock();
+        // Unlocking after the protected data has been managed for this cycle
+        _unlock();
 #endif
-            DualLED_netvars_nvs_save();
-        }
-        else
-        {
-#if CONFIG_DUALLED_USE_THREAD
-            _unlock();
-#endif
-        }
+
+        DualLED_nvs_spin();
 
         return DualLED_ret_ok;
     }
