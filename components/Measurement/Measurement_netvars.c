@@ -2,8 +2,6 @@
 #include <Measurement.h>
 #include "Measurement_netvars.h"
 
-
-#include <esp_log.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 
@@ -29,20 +27,29 @@ void Measurement_netvars_append_json(cJSON *root)
 
 void Measurement_netvars_nvs_load(void)
 {
-    NetVars_nvs_load_component("Measurement", Measurement_netvars_desc, Measurement_netvars_count);
+    if (Measurement_netvars_count > 0)
+    {
+        NetVars_nvs_load_component("Measurement", Measurement_netvars_desc, Measurement_netvars_count);
+    }
 }
 
 void Measurement_netvars_nvs_save(void)
 {
-    NetVars_nvs_save_component("Measurement", Measurement_netvars_desc, Measurement_netvars_count);
+    if (Measurement_netvars_count > 0)
+    {
+        NetVars_nvs_save_component("Measurement", Measurement_netvars_desc, Measurement_netvars_count);
+    }
 }
 
 void Measurement_config_parse_json(const char *data)
 {
-    bool nvs_cfg_changed = NetVars_parse_json_component_data("Measurement", Measurement_netvars_desc, Measurement_netvars_count, data);
-    if (nvs_cfg_changed)
+    if (Measurement_netvars_count > 0)
     {
-        Measurement_nvs_set_dirty();
+        bool nvs_cfg_changed = NetVars_parse_json_component_data("Measurement", Measurement_netvars_desc, Measurement_netvars_count, data);
+        if (nvs_cfg_changed)
+        {
+            Measurement_nvs_set_dirty();
+        }
     }
 }
 
