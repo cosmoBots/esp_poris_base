@@ -22,6 +22,7 @@ typedef enum {
     NETVARS_TYPE_I8,
     NETVARS_TYPE_I32,
     NETVARS_TYPE_U32,
+    NETVARS_TYPE_FLOAT,
     NETVARS_TYPE_STRING,
 } NetVars_type_t;
 

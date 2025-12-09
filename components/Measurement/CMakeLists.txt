@@ -10,9 +10,9 @@ if(NOT (PORIS_ENABLE_MEASUREMENT OR DEFINED ENV{PORIS_ENABLE_MEASUREMENT}))
 endif()
 
 idf_component_register(
-  SRCS "Measurement.c" "Measurement_cmd.c" "Measurement_nvs.c"
+  SRCS "Measurement_netvars.c" "Measurement.c"
   INCLUDE_DIRS "include"
-  PRIV_REQUIRES PrjCfg nvs_flash json
+  PRIV_REQUIRES PrjCfg NetVars nvs_flash json
 )
 
 if(CONFIG_MEASUREMENT_USE_THREAD)

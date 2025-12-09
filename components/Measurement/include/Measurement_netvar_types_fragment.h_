@@ -1,0 +1,8 @@
+// Auto-generated fragment for Measurement netvars
+// Include this inside the definition of struct Measurement_dre_t
+// DO NOT EDIT MANUALLY; edit netvars.csv and regenerate.
+
+    float setpoint;
+    float ai1;
+    float ai2;
+    bool bi0;

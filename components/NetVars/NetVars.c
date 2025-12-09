@@ -49,6 +49,14 @@ void NetVars_nvs_load(const NetVars_desc_t netvars_desc[], const size_t netvars_
             if (err == ESP_OK) *(uint32_t *)d->ptr = v;
             break;
         }
+        case NETVARS_TYPE_FLOAT: {
+            size_t len = sizeof(float);
+            err = nvs_get_blob(h, d->nvs_key, d->ptr, &len);
+            if (err == ESP_OK && len == sizeof(float)) {
+                // stored directly into ptr
+            }
+            break;
+        }
         case NETVARS_TYPE_STRING:
             break;
         }
@@ -80,6 +88,9 @@ void NetVars_nvs_save(const NetVars_desc_t netvars_desc[], const size_t netvars_
             break;
         case NETVARS_TYPE_U32:
             err = nvs_set_u32(h, d->nvs_key, *(uint32_t *)d->ptr);
+            break;
+        case NETVARS_TYPE_FLOAT:
+            err = nvs_set_blob(h, d->nvs_key, d->ptr, sizeof(float));
             break;
         case NETVARS_TYPE_STRING:
             err = ESP_OK;
@@ -115,6 +126,9 @@ void NetVars_append_json(const NetVars_desc_t netvars_desc[], const size_t netva
             break;
         case NETVARS_TYPE_U32:
             cJSON_AddNumberToObject(root, d->json_key, *(uint32_t *)d->ptr);
+            break;
+        case NETVARS_TYPE_FLOAT:
+            cJSON_AddNumberToObject(root, d->json_key, *(float *)d->ptr);
             break;
         case NETVARS_TYPE_STRING:
             cJSON_AddStringToObject(root, d->json_key, (const char *)d->ptr);
@@ -181,6 +195,14 @@ bool NetVars_parse_json_dict(const NetVars_desc_t netvars_desc[], const size_t n
             uint32_t value = (uint32_t)nvi->valueint;
             if (value != *(uint32_t *)d->ptr) {
                 *(uint32_t *)d->ptr = value;
+                out_nvs_changed = true;
+            }
+            break;
+        }
+        case NETVARS_TYPE_FLOAT: {
+            float value = (float)nvi->valuedouble;
+            if (value != *(float *)d->ptr) {
+                *(float *)d->ptr = value;
                 out_nvs_changed = true;
             }
             break;

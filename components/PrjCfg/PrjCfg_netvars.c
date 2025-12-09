@@ -12,8 +12,7 @@ const static char TAG[] = "PrjCfg_netvars";
 extern PrjCfg_dre_t PrjCfg_dre;
 
 const NetVars_desc_t PrjCfg_netvars_desc[] = {
-    { "skip_ota", "otaskip", "otaskip", "config", "ota", NETVARS_TYPE_BOOL, PRJCFG_NVS_LOADSAVE, true, (void*)&(PrjCfg_dre.skip_ota) },
-    { "ip_address", NULL, "ip", "config", "net", NETVARS_TYPE_STRING, PRJCFG_NVS_NONE, true, (void*)(PrjCfg_dre.ip_address) },
+#include "PrjCfg_netvars_fragment.c_"
 };
 
 const size_t PrjCfg_netvars_count = sizeof(PrjCfg_netvars_desc) / sizeof(PrjCfg_netvars_desc[0]);
@@ -36,7 +35,7 @@ void PrjCfg_netvars_nvs_load(void)
     ESP_LOGI(TAG, "Opening Non-Volatile Storage (NVS) handle... ");
 
     nvs_handle_t my_handle;
-    err = nvs_open("prjcfg", NVS_READWRITE, &my_handle);
+    err = nvs_open("PrjCfg", NVS_READWRITE, &my_handle);
     if (err != ESP_OK)
     {
         ESP_LOGI(TAG, "Error (%s) opening NVS handle!", esp_err_to_name(err));
@@ -57,7 +56,7 @@ void PrjCfg_nvs_cfg_save(void)
     ESP_LOGI(TAG, "Opening Non-Volatile Storage (NVS) handle... ");
 
     nvs_handle_t my_handle;
-    err = nvs_open("prjcfg", NVS_READWRITE, &my_handle);
+    err = nvs_open("PrjCfg", NVS_READWRITE, &my_handle);
     if (err != ESP_OK)
     {
         ESP_LOGE(TAG, "Error (%s) opening NVS handle!", esp_err_to_name(err));

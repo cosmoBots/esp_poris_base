@@ -41,7 +41,7 @@
 
 // Include comms callbacks
 #include <PrjCfg_netvars.h>
-#include <Measurement_cmd.h>
+#include <Measurement_netvars.h>
 
 typedef enum
 {
@@ -312,7 +312,7 @@ void main_parse_callback(const char *data, int len)
 {
     ESP_LOGI(TAG, "Parsing the CFG payload %d %.*s", len, len, data);
     PrjCfg_config_parse_json(data);
-    Measurement_parse_callback(data, len);
+    Measurement_config_parse_json(data);
 }
 
 void main_req_parse_callback(const char *data, int len)
@@ -341,7 +341,7 @@ void main_compose_callback(char *data, int *len)
 
     cJSON *root = cJSON_CreateObject();
     PrjCfg_netvars_append_json(root);
-    Measurement_compose_json_payload(root);
+    Measurement_netvars_append_json(root);
 
     char *cPayload = cJSON_PrintUnformatted(root);
     if (cPayload != NULL)

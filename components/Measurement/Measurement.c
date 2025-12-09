@@ -238,12 +238,6 @@ Measurement_return_code_t Measurement_setup(void)
     // Init liviano; no arranca tarea.
     ESP_LOGD(TAG, "setup()");
 #ifdef MEASUREMENT_ENABLE_SIMULATION
-    // Set the constant data
-    Measurement_dre.setpoint_desc = SETP_DESC;
-    Measurement_dre.ai1_desc = AI1_DESC;
-    Measurement_dre.ai2_desc = AI2_DESC;
-    Measurement_dre.bi0_desc = BI0_DESC;
-
     // Set the initial data values
     Measurement_dre.setpoint = 12.0;  // The setpoint will be raised in the next iteration
     Measurement_dre.ai1 = 15.0;     // Indoor temp is warmer, getting cooler
