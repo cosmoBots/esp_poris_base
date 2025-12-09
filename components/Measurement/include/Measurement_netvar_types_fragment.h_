@@ -1,8 +1,15 @@
 // Auto-generated fragment for Measurement netvars
 // Include this inside the definition of struct Measurement_dre_t
 // DO NOT EDIT MANUALLY; edit netvars.csv and regenerate.
-
+#ifdef CONFIG_MEASUREMENT_ENABLE_SIMULATION
     float setpoint;
+#endif
+#ifdef CONFIG_MEASUREMENT_ENABLE_SIMULATION
     float ai1;
+#endif
+#ifdef CONFIG_MEASUREMENT_ENABLE_SIMULATION
     float ai2;
+#endif
+#ifdef CONFIG_MEASUREMENT_ENABLE_SIMULATION
     bool bi0;
+#endif

@@ -19,12 +19,22 @@ const size_t Measurement_netvars_count = sizeof(Measurement_netvars_desc) / size
 
 void Measurement_netvars_append_json(cJSON *root)
 {
-    NetVars_append_json(Measurement_netvars_desc, Measurement_netvars_count, root);
+    if (Measurement_netvars_count > 0)
+    {
+        NetVars_append_json(Measurement_netvars_desc, Measurement_netvars_count, root);
+    }
 }
 
 bool Measurement_netvars_parse_json_dict(cJSON *root)
 {
-    return NetVars_parse_json_dict(Measurement_netvars_desc, Measurement_netvars_count, root);
+    if (Measurement_netvars_count > 0)
+    {
+        return NetVars_parse_json_dict(Measurement_netvars_desc, Measurement_netvars_count, root);
+    }
+    else
+    {
+        return false;
+    }
 }
 
 void Measurement_netvars_nvs_load(void)
@@ -43,7 +53,10 @@ void Measurement_netvars_nvs_load(void)
     else
     {
         // Implement the load
-        NetVars_nvs_load(Measurement_netvars_desc, Measurement_netvars_count, my_handle);
+        if (Measurement_netvars_count > 0)
+        {
+            NetVars_nvs_load(Measurement_netvars_desc, Measurement_netvars_count, my_handle);
+        }
         // Close
         nvs_close(my_handle);
     }
@@ -64,7 +77,10 @@ void Measurement_nvs_cfg_save(void)
     else
     {
         // Implement the save
-        NetVars_nvs_save(Measurement_netvars_desc, Measurement_netvars_count, my_handle);
+        if (Measurement_netvars_count > 0)
+        {
+            NetVars_nvs_save(Measurement_netvars_desc, Measurement_netvars_count, my_handle);
+        }
         // Close
         nvs_close(my_handle);
     }

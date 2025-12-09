@@ -326,12 +326,14 @@ Measurement_return_code_t Measurement_spin(void)
         // Communicate results, do stuff which 
         // does not need protection
         // ...
+#ifdef CONFIG_MEASUREMENT_ENABLE_SIMULATION
         ESP_LOGI(TAG, "sp: %f ai1: %f ai2: %f bi0: %d",
             cdre->setpoint,
             cdre->ai1,
             cdre->ai2,
             cdre->bi0
         );
+#endif
         return Measurement_ret_ok;
     }
 }
