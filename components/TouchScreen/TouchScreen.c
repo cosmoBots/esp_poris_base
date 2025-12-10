@@ -58,6 +58,7 @@ TouchScreen_dre_t TouchScreen_dre = {
     .line9 = "linea9",
     .line10 = "linea10"
 };
+
 // END   --- Internal variables (DRE)
 
 // BEGIN --- Multitasking variables and handlers
@@ -281,6 +282,10 @@ TouchScreen_return_code_t TouchScreen_setup(void)
     }
 #endif
     TouchScreen_dre.last_return_code = TouchScreen_ret_ok;
+
+    ESP_LOGI(TAG, "Launching touchscreen_main()");
+    touchscreen_main();
+
     return TouchScreen_ret_ok;
 }
 
@@ -330,12 +335,6 @@ TouchScreen_return_code_t TouchScreen_spin(void)
     }
 
     TouchScreen_nvs_spin();
-
-
-    // At this moment we will block here
-    ESP_LOGI(TAG, "Launching touchscreen_main()");
-    touchscreen_main();
-
 
     return TouchScreen_ret_ok;
 }
