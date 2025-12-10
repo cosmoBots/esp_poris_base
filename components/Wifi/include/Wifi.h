@@ -6,6 +6,7 @@ extern "C" {
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 
 // ------------------ BEGIN Return code ------------------
 typedef enum {
@@ -22,6 +23,7 @@ typedef enum {
 typedef struct {
     bool enabled;
     Wifi_return_code_t last_return_code;
+#define WIFI_IP_STR_MAX_LEN 16
 #include "Wifi_netvar_types_fragment.h_"
 
 } Wifi_dre_t;
@@ -51,6 +53,11 @@ Wifi_return_code_t Wifi_setup(void);
  */
 Wifi_return_code_t Wifi_enable(void);
 Wifi_return_code_t Wifi_disable(void);
+
+/**
+ *  Obtén la IPv4 actual en formato texto. Devuelve error si no hay IP válida.
+ */
+Wifi_return_code_t Wifi_get_ipv4_str(char *buf, size_t len);
 
 // ------------------ BEGIN Public API (COMMON)--------------------
 

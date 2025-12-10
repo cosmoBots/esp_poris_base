@@ -10,6 +10,15 @@ const NetVars_desc_t Wifi_netvars_desc[] = {
 
 const size_t Wifi_netvars_count = sizeof(Wifi_netvars_desc) / sizeof(Wifi_netvars_desc[0]);
 
+static void remove_readonly_netvars(cJSON *root)
+{
+    if (!root) return;
+    // Exponer en JSON pero ignorar en parse (solo lectura)
+    cJSON_DeleteItemFromObjectCaseSensitive(root, "ip_valid");
+    cJSON_DeleteItemFromObjectCaseSensitive(root, "ip_v4");
+    cJSON_DeleteItemFromObjectCaseSensitive(root, "ip_str");
+}
+
 void Wifi_netvars_append_json(cJSON *root)
 {
     if (Wifi_netvars_count > 0)
@@ -22,6 +31,7 @@ bool Wifi_netvars_parse_json_dict(cJSON *root)
 {
     if (Wifi_netvars_count > 0)
     {
+        remove_readonly_netvars(root);
         return NetVars_parse_json_dict(Wifi_netvars_desc, Wifi_netvars_count, root);
     }
     else
@@ -48,13 +58,44 @@ void Wifi_netvars_nvs_save(void)
 
 void Wifi_config_parse_json(const char *data)
 {
-    if (Wifi_netvars_count > 0)
+    if (!data || Wifi_netvars_count == 0) return;
+
+    cJSON *root = cJSON_Parse(data);
+    if (!root) return;
+
+    bool nvs_cfg_changed = false;
+    const char *ident = "Wifi";
+
+    if (cJSON_IsArray(root))
     {
-        bool nvs_cfg_changed = NetVars_parse_json_component_data("Wifi", Wifi_netvars_desc, Wifi_netvars_count, data);
-        if (nvs_cfg_changed)
+        cJSON *elem = NULL;
+        cJSON_ArrayForEach(elem, root)
         {
-            Wifi_nvs_set_dirty();
+            cJSON *sub = cJSON_GetObjectItemCaseSensitive(elem, ident);
+            if (sub)
+            {
+                remove_readonly_netvars(sub);
+                if (NetVars_parse_json_dict(Wifi_netvars_desc, Wifi_netvars_count, sub))
+                    nvs_cfg_changed = true;
+            }
         }
+    }
+    else
+    {
+        cJSON *sub = cJSON_GetObjectItemCaseSensitive(root, ident);
+        if (sub)
+        {
+            remove_readonly_netvars(sub);
+            if (NetVars_parse_json_dict(Wifi_netvars_desc, Wifi_netvars_count, sub))
+                nvs_cfg_changed = true;
+        }
+    }
+
+    cJSON_Delete(root);
+
+    if (nvs_cfg_changed)
+    {
+        Wifi_nvs_set_dirty();
     }
 }
 

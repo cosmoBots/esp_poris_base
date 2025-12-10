@@ -22,6 +22,7 @@
 #include <nvs_flash.h>
 #include <esp_netif.h>
 #include <esp_log.h>
+#include <lwip/inet.h>
 
 // END   --- ESP-IDF headers section ---
 
@@ -46,7 +47,10 @@ static const char *TAG = "Wifi";
 // BEGIN --- Internal variables (DRE)
 Wifi_dre_t Wifi_dre = {
     .enabled = true,
-    .last_return_code = Wifi_ret_ok
+    .last_return_code = Wifi_ret_ok,
+    .ip_valid = false,
+    .ip_v4 = 0,
+    .ip_str = {0}
 };
 // END   --- Internal variables (DRE)
 
@@ -76,10 +80,16 @@ static void wifi_event_handler(void *arg,
         esp_wifi_connect();
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
         ESP_LOGI(TAG, "WiFi desconectado, reintentando...");
+        Wifi_dre.ip_valid = false;
+        Wifi_dre.ip_v4 = 0;
+        Wifi_dre.ip_str[0] = '\0';
         esp_wifi_connect();
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t *event = (ip_event_got_ip_t *) event_data;
         ESP_LOGI(TAG, "IP obtenida: " IPSTR, IP2STR(&event->ip_info.ip));
+        Wifi_dre.ip_valid = true;
+        Wifi_dre.ip_v4 = event->ip_info.ip.addr;
+        esp_ip4addr_ntoa(&event->ip_info.ip, Wifi_dre.ip_str, sizeof(Wifi_dre.ip_str));
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
 }
@@ -175,6 +185,14 @@ Wifi_return_code_t Wifi_disable(void)
 {
     Wifi_dre.enabled = false;
     Wifi_dre.last_return_code = Wifi_ret_ok;
+    return Wifi_ret_ok;
+}
+
+Wifi_return_code_t Wifi_get_ipv4_str(char *buf, size_t len)
+{
+    if (!buf || len == 0) return Wifi_ret_error;
+    if (!Wifi_dre.ip_valid) return Wifi_ret_error;
+    strlcpy(buf, Wifi_dre.ip_str, len);
     return Wifi_ret_ok;
 }
 
