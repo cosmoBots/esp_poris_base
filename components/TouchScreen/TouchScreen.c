@@ -143,8 +143,71 @@ static void TouchScreen_task(void *arg)
 static lv_obj_t *s_labels[TOUCHSCREEN_MAX_LINES] = {0};
 static char s_prev_lines[TOUCHSCREEN_MAX_LINES][TOUCHSCREEN_LINE_MAX_CHARS + 1] = {{0}};
 static bool s_ui_ready = false;
-
 static lv_obj_t *s_screen = NULL;
+static lv_obj_t *s_button = NULL;
+static lv_obj_t *s_slider = NULL;
+static lv_obj_t *s_controls = NULL;
+static lv_obj_t *s_chart = NULL;
+static lv_chart_series_t *s_chart_series = NULL;
+static lv_timer_t *s_chart_timer = NULL;
+static lv_obj_t *s_alert = NULL;
+static int s_last_slider_value = 0;
+static void touchscreen_update(const TouchScreen_dre_t *snapshot);
+
+
+static inline void set_line_text(size_t idx, const char *text)
+{
+    if (!text) return;
+#if CONFIG_TOUCHSCREEN_USE_THREAD
+    _lock();
+#endif
+    switch (idx) {
+    case 0: strlcpy(TouchScreen_dre.line1, text, sizeof(TouchScreen_dre.line1)); break;
+    case 1: strlcpy(TouchScreen_dre.line2, text, sizeof(TouchScreen_dre.line2)); break;
+    case 2: strlcpy(TouchScreen_dre.line3, text, sizeof(TouchScreen_dre.line3)); break;
+    case 3: strlcpy(TouchScreen_dre.line4, text, sizeof(TouchScreen_dre.line4)); break;
+    case 4: strlcpy(TouchScreen_dre.line5, text, sizeof(TouchScreen_dre.line5)); break;
+    case 5: strlcpy(TouchScreen_dre.line6, text, sizeof(TouchScreen_dre.line6)); break;
+    case 6: strlcpy(TouchScreen_dre.line7, text, sizeof(TouchScreen_dre.line7)); break;
+    case 7: strlcpy(TouchScreen_dre.line8, text, sizeof(TouchScreen_dre.line8)); break;
+    case 8: strlcpy(TouchScreen_dre.line9, text, sizeof(TouchScreen_dre.line9)); break;
+    case 9: strlcpy(TouchScreen_dre.line10, text, sizeof(TouchScreen_dre.line10)); break;
+    default: break;
+    }
+#if CONFIG_TOUCHSCREEN_USE_THREAD
+    _unlock();
+#endif
+    touchscreen_update(&TouchScreen_dre);
+}
+
+static void btn_event_cb(lv_event_t *e)
+{
+    if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
+        set_line_text(0, "boton pulsado");
+    }
+}
+
+static void slider_event_cb(lv_event_t *e)
+{
+    if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *slider = lv_event_get_target(e);
+        int val = lv_slider_get_value(slider);
+        s_last_slider_value = val;
+        char buf[32];
+        snprintf(buf, sizeof(buf), "slider: %d", val);
+        set_line_text(1, buf);
+    }
+}
+
+static void chart_timer_cb(lv_timer_t *t)
+{
+    (void)t;
+    if (!s_ui_ready || !s_chart || !s_chart_series) return;
+    if (lvgl_port_lock(-1)) {
+        lv_chart_set_next_value(s_chart, s_chart_series, s_last_slider_value);
+        lvgl_port_unlock();
+    }
+}
 
 static void touchscreen_update(const TouchScreen_dre_t *snapshot)
 {
@@ -170,6 +233,14 @@ static void touchscreen_update(const TouchScreen_dre_t *snapshot)
         if (strncmp(src, s_prev_lines[i], TOUCHSCREEN_LINE_MAX_CHARS) != 0) {
             lv_label_set_text(s_labels[i], src);
             strlcpy(s_prev_lines[i], src, sizeof(s_prev_lines[i]));
+        }
+    }
+    // Alert: show only when line10 == "1"
+    if (s_alert) {
+        if (strncmp(snapshot->line10, "1", 1) == 0 && snapshot->line10[1] == '\0') {
+            lv_obj_clear_flag(s_alert, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(s_alert, LV_OBJ_FLAG_HIDDEN);
         }
     }
     lvgl_port_unlock();
@@ -290,15 +361,70 @@ void touchscreen_main(void)
     s_screen = lv_obj_create(NULL);
     lv_obj_set_size(s_screen, LV_HOR_RES, LV_VER_RES);
     lv_obj_set_style_pad_all(s_screen, 8, 0);
-    lv_obj_set_flex_flow(s_screen, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(s_screen, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_clear_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Labels container
+    lv_obj_t *label_cont = lv_obj_create(s_screen);
+    lv_obj_set_size(label_cont, LV_PCT(100), LV_SIZE_CONTENT);
+    lv_obj_set_style_pad_all(label_cont, 0, 0);
+    lv_obj_set_style_bg_opa(label_cont, LV_OPA_TRANSP, 0);
+    lv_obj_set_flex_flow(label_cont, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(label_cont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 
     for (size_t i = 0; i < TOUCHSCREEN_MAX_LINES; ++i) {
-        s_labels[i] = lv_label_create(s_screen);
+        s_labels[i] = lv_label_create(label_cont);
         lv_obj_set_width(s_labels[i], LV_PCT(100));
         lv_label_set_long_mode(s_labels[i], LV_LABEL_LONG_WRAP);
         lv_label_set_text(s_labels[i], s_prev_lines[i]);
     }
+
+    // Controls container (floating top-right)
+    s_controls = lv_obj_create(s_screen);
+    lv_obj_set_size(s_controls, LV_PCT(40), LV_SIZE_CONTENT);
+    lv_obj_set_style_bg_opa(s_controls, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_pad_all(s_controls, 4, 0);
+    lv_obj_clear_flag(s_controls, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_layout(s_controls, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(s_controls, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(s_controls, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_START);
+    lv_obj_align(s_controls, LV_ALIGN_TOP_RIGHT, -8, 8);
+
+    s_button = lv_btn_create(s_controls);
+    lv_obj_add_event_cb(s_button, btn_event_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *btn_label = lv_label_create(s_button);
+    lv_label_set_text(btn_label, "BTN");
+    lv_obj_center(btn_label);
+
+    // Slider
+    s_slider = lv_slider_create(s_controls);
+    lv_slider_set_range(s_slider, 0, 100);
+    lv_obj_set_width(s_slider, LV_PCT(100));
+    lv_obj_add_event_cb(s_slider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_slider_set_value(s_slider, 0, LV_ANIM_OFF);
+
+    // Chart
+    s_chart = lv_chart_create(s_screen);
+    lv_obj_set_width(s_chart, LV_PCT(95));
+    lv_obj_set_height(s_chart, LV_PCT(30));
+    lv_obj_align(s_chart, LV_ALIGN_BOTTOM_MID, 0, -8);
+    lv_chart_set_type(s_chart, LV_CHART_TYPE_LINE);
+    lv_chart_set_point_count(s_chart, 60);
+    lv_chart_set_range(s_chart, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
+    s_chart_series = lv_chart_add_series(s_chart, lv_palette_main(LV_PALETTE_BLUE), LV_CHART_AXIS_PRIMARY_Y);
+    for (uint16_t i = 0; i < lv_chart_get_point_count(s_chart); ++i) {
+        lv_chart_set_value_by_id(s_chart, s_chart_series, i, LV_CHART_POINT_NONE);
+    }
+    s_chart_timer = lv_timer_create(chart_timer_cb, 1000, NULL);
+
+    // Alert indicator (placed after controls so it's on top)
+    s_alert = lv_obj_create(s_screen);
+    lv_obj_set_size(s_alert, 24, 24);
+    lv_obj_set_style_bg_color(s_alert, lv_palette_main(LV_PALETTE_RED), 0);
+    lv_obj_set_style_radius(s_alert, LV_RADIUS_CIRCLE, 0);
+    lv_obj_set_style_border_color(s_alert, lv_palette_darken(LV_PALETTE_RED, 3), 0);
+    lv_obj_set_style_border_width(s_alert, 2, 0);
+    lv_obj_align(s_alert, LV_ALIGN_TOP_RIGHT, -4, 4);
+    lv_obj_add_flag(s_alert, LV_OBJ_FLAG_HIDDEN);
 
     lv_scr_load(s_screen);
     s_ui_ready = true;
