@@ -37,6 +37,7 @@
 // BEGIN --- Self-includes section ---
 #include "TouchScreen.h"
 #include "TouchScreen_netvars.h"
+#include "lvgl_port.h"
 // END --- Self-includes section ---
 
 // BEGIN --- Logging related variables
@@ -142,7 +143,37 @@ static void TouchScreen_task(void *arg)
 static lv_obj_t *s_labels[TOUCHSCREEN_MAX_LINES] = {0};
 static char s_prev_lines[TOUCHSCREEN_MAX_LINES][TOUCHSCREEN_LINE_MAX_CHARS + 1] = {{0}};
 static bool s_ui_ready = false;
-static uint8_t s_not_ready_logs = 0;
+
+static lv_obj_t *s_screen = NULL;
+
+static void touchscreen_update(const TouchScreen_dre_t *snapshot)
+{
+    if (!s_ui_ready) return;
+    if (!lvgl_port_lock(-1)) return;
+    for (size_t i = 0; i < TOUCHSCREEN_MAX_LINES; ++i) {
+        if (!s_labels[i]) continue;
+        const char *src = NULL;
+        switch (i) {
+        case 0: src = snapshot->line1; break;
+        case 1: src = snapshot->line2; break;
+        case 2: src = snapshot->line3; break;
+        case 3: src = snapshot->line4; break;
+        case 4: src = snapshot->line5; break;
+        case 5: src = snapshot->line6; break;
+        case 6: src = snapshot->line7; break;
+        case 7: src = snapshot->line8; break;
+        case 8: src = snapshot->line9; break;
+        case 9: src = snapshot->line10; break;
+        default: break;
+        }
+        if (!src) continue;
+        if (strncmp(src, s_prev_lines[i], TOUCHSCREEN_LINE_MAX_CHARS) != 0) {
+            lv_label_set_text(s_labels[i], src);
+            strlcpy(s_prev_lines[i], src, sizeof(s_prev_lines[i]));
+        }
+    }
+    lvgl_port_unlock();
+}
 
 // BEGIN ------------------ Public API (MULTITASKING)------------------
 
@@ -245,25 +276,36 @@ void TouchScreen_execute_function_safemode(void (*callback)())
 
 void touchscreen_main(void)
 {
+    if (s_ui_ready) return;
+
     waveshare_esp32_s3_rgb_lcd_init(); // Initialize the Waveshare ESP32-S3 RGB LCD 
     // wavesahre_rgb_lcd_bl_on();  //Turn on the screen backlight 
     // wavesahre_rgb_lcd_bl_off(); //Turn off the screen backlight 
-    
-    ESP_LOGI(TAG, "Display LVGL demos");
-    // Lock the mutex due to the LVGL APIs are not thread-safe
-    if (lvgl_port_lock(-1)) {
-        // lv_demo_stress();
-        // lv_demo_benchmark();
-        // lv_demo_music();
-#if CONFIG_LCD_TOUCH_CONTROLLER_GT911
-        lv_demo_widgets();
-#else
-        lv_demo_music();
-#endif
-        // example_lvgl_demo_ui();
-        // Release the mutex
-        lvgl_port_unlock();
+
+    if (!lvgl_port_lock(-1)) {
+        ESP_LOGW(TAG, "LVGL not ready (lvgl_port_lock failed)");
+        return;
     }
+
+    s_screen = lv_obj_create(NULL);
+    lv_obj_set_size(s_screen, LV_HOR_RES, LV_VER_RES);
+    lv_obj_set_style_pad_all(s_screen, 8, 0);
+    lv_obj_set_flex_flow(s_screen, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(s_screen, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+
+    for (size_t i = 0; i < TOUCHSCREEN_MAX_LINES; ++i) {
+        s_labels[i] = lv_label_create(s_screen);
+        lv_obj_set_width(s_labels[i], LV_PCT(100));
+        lv_label_set_long_mode(s_labels[i], LV_LABEL_LONG_WRAP);
+        lv_label_set_text(s_labels[i], s_prev_lines[i]);
+    }
+
+    lv_scr_load(s_screen);
+    s_ui_ready = true;
+    lvgl_port_unlock();
+
+    // Prime the UI with current values
+    touchscreen_update(&TouchScreen_dre);
 }
 
 
@@ -283,8 +325,8 @@ TouchScreen_return_code_t TouchScreen_setup(void)
 #endif
     TouchScreen_dre.last_return_code = TouchScreen_ret_ok;
 
-    ESP_LOGI(TAG, "Launching touchscreen_main()");
-    touchscreen_main();
+        ESP_LOGI(TAG, "Launching touchscreen_main()");
+        touchscreen_main();
 
     return TouchScreen_ret_ok;
 }
@@ -307,32 +349,7 @@ TouchScreen_return_code_t TouchScreen_spin(void)
         return TouchScreen_ret_ok;
     }
 
-    // Refresh lines that changed
-    for (size_t i = 0; i < TOUCHSCREEN_MAX_LINES; ++i) {
-        const char *src = NULL;
-        switch (i) {
-        case 0: src = snapshot.line1; break;
-        case 1: src = snapshot.line2; break;
-        case 2: src = snapshot.line3; break;
-        case 3: src = snapshot.line4; break;
-        case 4: src = snapshot.line5; break;
-        case 5: src = snapshot.line6; break;
-        case 6: src = snapshot.line7; break;
-        case 7: src = snapshot.line8; break;
-        case 8: src = snapshot.line9; break;
-        case 9: src = snapshot.line10; break;
-        default: break;
-        }
-        if (!src) continue;
-
-        char buf[TOUCHSCREEN_LINE_MAX_CHARS + 1];
-        strlcpy(buf, src, sizeof(buf));
-
-        if (strncmp(buf, s_prev_lines[i], sizeof(buf)) != 0) {
-            strncpy(s_prev_lines[i], buf, sizeof(s_prev_lines[i]));
-            s_prev_lines[i][sizeof(s_prev_lines[i]) - 1] = '\0';
-        }
-    }
+    touchscreen_update(&snapshot);
 
     TouchScreen_nvs_spin();
 
