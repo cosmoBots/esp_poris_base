@@ -1,4 +1,4 @@
 name,c_type,storage_type,nvs_key,json_key,group,module,nvs_mode,json,enabler,json_repr,json_mode
 ip_valid,bool,BOOL,,ip_valid,,,NONE,1,,,OUT
-ip_v4,uint32_t,U32,,ip_v4,,,NONE,1,,HEX,OUT
+ip_v4,uint32_t,U32,,ip_v4,,,NONE,1,,INVHEX,OUT
 ip_str,char[WIFI_IP_STR_MAX_LEN],STRING,,ip_str,,,NONE,1,,,OUT
