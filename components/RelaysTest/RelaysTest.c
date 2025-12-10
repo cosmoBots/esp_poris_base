@@ -192,7 +192,7 @@ RelaysTest_return_code_t RelaysTest_get_dre_clone(RelaysTest_dre_t *dst)
 {
     if (!dst) return RelaysTest_ret_error;
     _lock();
-    *dst = RelaysTest_dre;
+    memcpy(dst, &RelaysTest_dre, sizeof(RelaysTest_dre));
     _unlock();
     return RelaysTest_ret_ok;
 }

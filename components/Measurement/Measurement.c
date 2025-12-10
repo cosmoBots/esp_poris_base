@@ -185,7 +185,7 @@ Measurement_return_code_t Measurement_get_dre_clone(Measurement_dre_t *dst)
 {
     if (!dst) return Measurement_ret_error;
     _lock();
-    *dst = Measurement_dre;
+    memcpy(dst, &Measurement_dre, sizeof(Measurement_dre));
     _unlock();
     return Measurement_ret_ok;
 }

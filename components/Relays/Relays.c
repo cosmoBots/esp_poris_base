@@ -186,7 +186,7 @@ Relays_return_code_t Relays_get_dre_clone(Relays_dre_t *dst)
 {
     if (!dst) return Relays_ret_error;
     _lock();
-    *dst = Relays_dre;
+    memcpy(dst, &Relays_dre, sizeof(Relays_dre));
     _unlock();
     return Relays_ret_ok;
 }

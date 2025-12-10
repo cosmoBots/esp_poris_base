@@ -180,7 +180,7 @@ UDPComm_return_code_t UDPComm_get_dre_clone(UDPComm_dre_t *dst)
 {
     if (!dst) return UDPComm_ret_error;
     _lock();
-    *dst = UDPComm_dre;
+    memcpy(dst, &UDPComm_dre, sizeof(UDPComm_dre));
     _unlock();
     return UDPComm_ret_ok;
 }

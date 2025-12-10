@@ -200,7 +200,7 @@ PrjCfg_return_code_t PrjCfg_get_dre_clone(PrjCfg_dre_t *dst)
 {
     if (!dst) return PrjCfg_ret_error;
     _lock();
-    *dst = PrjCfg_dre;
+    memcpy(dst, &PrjCfg_dre, sizeof(PrjCfg_dre));
     _unlock();
     return PrjCfg_ret_ok;
 }

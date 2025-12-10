@@ -213,7 +213,7 @@ DualLedTester_return_code_t DualLedTester_get_dre_clone(DualLedTester_dre_t *dst
 {
     if (!dst) return DualLedTester_ret_error;
     _lock();
-    *dst = DualLedTester_dre;
+    memcpy(dst, &DualLedTester_dre, sizeof(DualLedTester_dre));
     _unlock();
     return DualLedTester_ret_ok;
 }

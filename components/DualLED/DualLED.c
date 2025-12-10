@@ -300,7 +300,7 @@ DualLED_return_code_t DualLED_get_dre_clone(DualLED_dre_t *dst)
 {
     if (!dst) return DualLED_ret_error;
     _lock();
-    *dst = DualLED_dre;
+    memcpy(dst, &DualLED_dre, sizeof(DualLED_dre));
     _unlock();
     return DualLED_ret_ok;
 }

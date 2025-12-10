@@ -180,7 +180,7 @@ Provisioning_return_code_t Provisioning_get_dre_clone(Provisioning_dre_t *dst)
 {
     if (!dst) return Provisioning_ret_error;
     _lock();
-    *dst = Provisioning_dre;
+    memcpy(dst, &Provisioning_dre, sizeof(Provisioning_dre));
     _unlock();
     return Provisioning_ret_ok;
 }

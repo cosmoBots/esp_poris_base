@@ -415,7 +415,7 @@ OTA_return_code_t OTA_get_dre_clone(OTA_dre_t *dst)
     if (!dst)
         return OTA_ret_error;
     _lock();
-    *dst = OTA_dre;
+    memcpy(dst, &OTA_dre, sizeof(OTA_dre));
     _unlock();
     return OTA_ret_ok;
 }

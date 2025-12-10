@@ -345,7 +345,7 @@ MQTTComm_return_code_t MQTTComm_get_dre_clone(MQTTComm_dre_t *dst)
     if (!dst)
         return MQTTComm_ret_error;
     _lock();
-    *dst = MQTTComm_dre;
+    memcpy(dst, &MQTTComm_dre, sizeof(MQTTComm_dre));
     _unlock();
     return MQTTComm_ret_ok;
 }
