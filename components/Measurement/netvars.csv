@@ -1,5 +1,5 @@
-name,c_type,storage_type,nvs_key,json_key,group,module,nvs_mode,json,enabler
-setpoint,float,FLOAT,setpoint,Temp-Setpoint,measurement,measurement,LOADSAVE,1,CONFIG_MEASUREMENT_ENABLE_SIMULATION
-ai1,float,FLOAT,,ai1,measurement,measurement,NONE,1,CONFIG_MEASUREMENT_ENABLE_SIMULATION
-ai2,float,FLOAT,,ai2,measurement,measurement,NONE,1,CONFIG_MEASUREMENT_ENABLE_SIMULATION
-bi0,bool,BOOL,bi0,bi0,measurement,measurement,LOADSAVE,1,CONFIG_MEASUREMENT_ENABLE_SIMULATION
+name,c_type,storage_type,nvs_key,json_key,group,module,nvs_mode,json,enabler,json_mode
+setpoint,float,FLOAT,setpoint,Temp-Setpoint,measurement,measurement,LOADSAVE,1,CONFIG_MEASUREMENT_ENABLE_SIMULATION,
+ai1,float,FLOAT,,ai1,measurement,measurement,NONE,1,CONFIG_MEASUREMENT_ENABLE_SIMULATION,
+ai2,float,FLOAT,,ai2,measurement,measurement,NONE,1,CONFIG_MEASUREMENT_ENABLE_SIMULATION,
+bi0,bool,BOOL,bi0,bi0,measurement,measurement,LOADSAVE,1,CONFIG_MEASUREMENT_ENABLE_SIMULATION,
