@@ -1,0 +1,59 @@
+menu "LcdScreen settings"
+
+config PORIS_ENABLE_LCDSCREEN
+    bool "Enable component LcdScreen"
+    default y
+    help
+      Enable/disable component LcdScreen at Kconfig level.
+      Variant gating is handled by environment variables (PORIS_ENABLE_LCDSCREEN).
+
+config LCDSCREEN_USE_THREAD
+    bool "LcdScreen starts its own thread (LcdScreen starts its own thread)"
+    default n
+    help
+      If enabled, LcdScreen will create a FreeRTOS task and call spin()
+      periodically. If disabled, call LcdScreen_spin() yourself from
+      your scheduler.
+    depends on PORIS_ENABLE_LCDSCREEN
+
+config LCDSCREEN_PERIOD_MS
+    int "LcdScreen period (ms)"
+    range 10 600000
+    default 1000
+    depends on LCDSCREEN_USE_THREAD
+
+config LCDSCREEN_MINIMIZE_JITTER
+    bool "Enable jitter minimization for execution cycles"
+    default y
+    help
+      If active, the delay between loops will use vTaskDelayUntil() to guarantee long cycles will not shift the period, minimizing jitter.
+      If deactivate, the component will use vTaskDelay() so the time it wait between cycles is the period.  Long cycles will introduce a shift in the period.
+    depends on LCDSCREEN_USE_THREAD
+
+choice LCDSCREEN_PIN_CORE
+    prompt "Pin task to core"
+    default LCDSCREEN_PIN_CORE_ANY
+    depends on LCDSCREEN_USE_THREAD
+    help
+      Choose which core to pin the task to (or none).
+config LCDSCREEN_PIN_CORE_ANY
+    bool "Any core (no affinity)"
+config LCDSCREEN_PIN_CORE_0
+    bool "Core 0"
+config LCDSCREEN_PIN_CORE_1
+    bool "Core 1"
+endchoice
+
+config LCDSCREEN_TASK_STACK
+    int "Task stack size (bytes)"
+    range 2048 65536
+    default 4096
+    depends on LCDSCREEN_USE_THREAD
+
+config LCDSCREEN_TASK_PRIO
+    int "Task priority"
+    range 1 24
+    default 5
+    depends on LCDSCREEN_USE_THREAD
+
+endmenu

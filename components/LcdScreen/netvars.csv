@@ -1,0 +1,11 @@
+name,c_type,storage_type,nvs_key,json_key,group,module,nvs_mode,json,enabler,json_repr,json_mode
+line1,char[128],STRING,,line1,,,NONE,1,,,
+line2,char[128],STRING,,line2,,,NONE,1,,,
+line3,char[128],STRING,,line3,,,NONE,1,,,
+line4,char[128],STRING,,line4,,,NONE,1,,,
+line5,char[128],STRING,,line5,,,NONE,1,,,
+line6,char[128],STRING,,line6,,,NONE,1,,,
+line7,char[128],STRING,,line7,,,NONE,1,,,
+line8,char[128],STRING,,line8,,,NONE,1,,,
+line9,char[128],STRING,,line9,,,NONE,1,,,
+line10,char[128],STRING,,line10,,,NONE,1,,,
