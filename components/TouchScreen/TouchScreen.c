@@ -239,6 +239,33 @@ void TouchScreen_execute_function_safemode(void (*callback)())
 
 // END   ------------------ Public API (MULTITASKING)------------------
 
+
+#include "waveshare_rgb_lcd_port.h"
+
+void touchscreen_main(void)
+{
+    waveshare_esp32_s3_rgb_lcd_init(); // Initialize the Waveshare ESP32-S3 RGB LCD 
+    // wavesahre_rgb_lcd_bl_on();  //Turn on the screen backlight 
+    // wavesahre_rgb_lcd_bl_off(); //Turn off the screen backlight 
+    
+    ESP_LOGI(TAG, "Display LVGL demos");
+    // Lock the mutex due to the LVGL APIs are not thread-safe
+    if (lvgl_port_lock(-1)) {
+        // lv_demo_stress();
+        // lv_demo_benchmark();
+        // lv_demo_music();
+#if CONFIG_EXAMPLE_LCD_TOUCH_CONTROLLER_GT911
+        lv_demo_widgets();
+#else
+        lv_demo_music();
+#endif
+        // example_lvgl_demo_ui();
+        // Release the mutex
+        lvgl_port_unlock();
+    }
+}
+
+
 // BEGIN ------------------ Public API (COMMON + SPIN)------------------
 
 TouchScreen_return_code_t TouchScreen_setup(void)
@@ -303,6 +330,13 @@ TouchScreen_return_code_t TouchScreen_spin(void)
     }
 
     TouchScreen_nvs_spin();
+
+
+    // At this moment we will block here
+    ESP_LOGI(TAG, "Launching touchscreen_main()");
+    touchscreen_main();
+
+
     return TouchScreen_ret_ok;
 }
 
