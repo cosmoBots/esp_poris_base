@@ -37,8 +37,8 @@
 #ifdef CONFIG_PORIS_ENABLE_RELAYSTEST
 #include <RelaysTest.h>
 #endif
-#ifdef CONFIG_PORIS_ENABLE_LCDSCREEN
-#include <LcdScreen.h>
+#ifdef CONFIG_PORIS_ENABLE_TOUCHSCREEN
+#include <TouchScreen.h>
 #endif
 // [PORIS_INTEGRATION_INCLUDE]
 
@@ -73,8 +73,8 @@
 #ifdef CONFIG_PORIS_ENABLE_WIFI
 #include <Wifi_netvars.h>
 #endif
-#ifdef CONFIG_PORIS_ENABLE_LCDSCREEN
-#include <LcdScreen_netvars.h>
+#ifdef CONFIG_PORIS_ENABLE_TOUCHSCREEN
+#include <TouchScreen_netvars.h>
 #endif
 // [PORIS_INTEGRATION_NETVARS_INCLUDE]
 
@@ -124,8 +124,8 @@ app_main_return_code init_components(void)
     error_occurred = (RelaysTest_setup() != RelaysTest_ret_ok);
     error_accumulator |= error_occurred;
 #endif
-#ifdef CONFIG_PORIS_ENABLE_LCDSCREEN
-    error_occurred = (LcdScreen_setup() != LcdScreen_ret_ok);
+#ifdef CONFIG_PORIS_ENABLE_TOUCHSCREEN
+    error_occurred = (TouchScreen_setup() != TouchScreen_ret_ok);
     error_accumulator |= error_occurred;
 #endif
 // [PORIS_INTEGRATION_INIT]
@@ -216,12 +216,12 @@ app_main_return_code start_components(void)
 #endif
     error_accumulator |= error_occurred;
 #endif
-#ifdef CONFIG_PORIS_ENABLE_LCDSCREEN
-    error_occurred = (LcdScreen_enable() != LcdScreen_ret_ok);
-#ifdef CONFIG_LCDSCREEN_USE_THREAD
+#ifdef CONFIG_PORIS_ENABLE_TOUCHSCREEN
+    error_occurred = (TouchScreen_enable() != TouchScreen_ret_ok);
+#ifdef CONFIG_TOUCHSCREEN_USE_THREAD
     if (!error_occurred)
     {
-        error_occurred |= (LcdScreen_start() != LcdScreen_ret_ok);
+        error_occurred |= (TouchScreen_start() != TouchScreen_ret_ok);
     }
 #endif
     error_accumulator |= error_occurred;
@@ -244,8 +244,8 @@ app_main_return_code start_components(void)
 #define RELAYS_CYCLE_LIMIT ((RELAYS_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
 #define RELAYSTEST_CYCLE_PERIOD_MS 100
 #define RELAYSTEST_CYCLE_LIMIT ((RELAYSTEST_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
-#define LCDSCREEN_CYCLE_PERIOD_MS 1000
-#define LCDSCREEN_CYCLE_LIMIT_MS ((LCDSCREEN_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
+#define TOUCHSCREEN_CYCLE_PERIOD_MS 1000
+#define TOUCHSCREEN_CYCLE_LIMIT_MS ((TOUCHSCREEN_CYCLE_PERIOD_MS / MAIN_CYCLE_PERIOD_MS) - 1)
 // [PORIS_INTEGRATION_DEFINES]
 
 static uint16_t mqttcomm_cycle_counter = 0;
@@ -254,7 +254,7 @@ static uint16_t dualled_cycle_counter = 0;
 static uint16_t dualledtester_cycle_counter = 0;
 static uint16_t relays_cycle_counter = 0;
 static uint16_t relaystest_cycle_counter = 0;
-static uint8_t lcdscreen_cycle_counter = 0;
+static uint8_t touchscreen_cycle_counter = 0;
 // [PORIS_INTEGRATION_COUNTERS]
 
 app_main_return_code run_components(void)
@@ -351,16 +351,16 @@ app_main_return_code run_components(void)
     }
 #endif
 #endif
-#ifdef CONFIG_PORIS_ENABLE_LCDSCREEN
-#ifndef CONFIG_LCDSCREEN_USE_THREAD
-    if (lcdscreen_cycle_counter <= 0)
+#ifdef CONFIG_PORIS_ENABLE_TOUCHSCREEN
+#ifndef CONFIG_TOUCHSCREEN_USE_THREAD
+    if (touchscreen_cycle_counter <= 0)
     {
-        error_accumulator |= (LcdScreen_spin() != LcdScreen_ret_ok);
-        lcdscreen_cycle_counter = LCDSCREEN_CYCLE_LIMIT_MS;
+        error_accumulator |= (TouchScreen_spin() != TouchScreen_ret_ok);
+        touchscreen_cycle_counter = TOUCHSCREEN_CYCLE_LIMIT_MS;
     }
     else
     {
-        lcdscreen_cycle_counter--;
+        touchscreen_cycle_counter--;
     }
 #endif
 #endif
@@ -406,8 +406,8 @@ void main_parse_callback(const char *data, int len)
 #ifdef CONFIG_PORIS_ENABLE_WIFI
     Wifi_config_parse_json(data);
 #endif
-#ifdef CONFIG_PORIS_ENABLE_LCDSCREEN
-    LcdScreen_config_parse_json(data);
+#ifdef CONFIG_PORIS_ENABLE_TOUCHSCREEN
+    TouchScreen_config_parse_json(data);
 #endif
 // [PORIS_INTEGRATION_NETVARS_PARSE]
 }
@@ -467,8 +467,8 @@ void main_compose_callback(char *data, int *len)
 #ifdef CONFIG_PORIS_ENABLE_WIFI
     Wifi_netvars_append_json(root);
 #endif
-#ifdef CONFIG_PORIS_ENABLE_LCDSCREEN
-    LcdScreen_netvars_append_json(root);
+#ifdef CONFIG_PORIS_ENABLE_TOUCHSCREEN
+    TouchScreen_netvars_append_json(root);
 #endif
 // [PORIS_INTEGRATION_NETVARS_APPEND]
 

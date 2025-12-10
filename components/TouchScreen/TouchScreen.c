@@ -11,7 +11,7 @@
 // BEGIN --- FreeRTOS headers section ---
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#if CONFIG_LCDSCREEN_USE_THREAD
+#if CONFIG_TOUCHSCREEN_USE_THREAD
   #include <freertos/semphr.h>
 #endif
 
@@ -35,18 +35,18 @@
 // end   --- Project configuration section ---
 
 // BEGIN --- Self-includes section ---
-#include "LcdScreen.h"
-#include "LcdScreen_netvars.h"
+#include "TouchScreen.h"
+#include "TouchScreen_netvars.h"
 // END --- Self-includes section ---
 
 // BEGIN --- Logging related variables
-static const char *TAG = "LcdScreen";
+static const char *TAG = "TouchScreen";
 // END --- Logging related variables
 
 // BEGIN --- Internal variables (DRE)
-LcdScreen_dre_t LcdScreen_dre = {
+TouchScreen_dre_t TouchScreen_dre = {
     .enabled = true,
-    .last_return_code = LcdScreen_ret_ok,
+    .last_return_code = TouchScreen_ret_ok,
     .line1 = "linea1",
     .line2 = "linea2",
     .line3 = "linea3",
@@ -62,12 +62,12 @@ LcdScreen_dre_t LcdScreen_dre = {
 
 // BEGIN --- Multitasking variables and handlers
 
-#if CONFIG_LCDSCREEN_USE_THREAD
+#if CONFIG_TOUCHSCREEN_USE_THREAD
 static TaskHandle_t s_task = NULL;
 static volatile bool s_run = false;
 static uint32_t s_period_ms =
-    #ifdef CONFIG_LCDSCREEN_PERIOD_MS
-      CONFIG_LCDSCREEN_PERIOD_MS
+    #ifdef CONFIG_TOUCHSCREEN_PERIOD_MS
+      CONFIG_TOUCHSCREEN_PERIOD_MS
     #else
       1000
     #endif
@@ -77,12 +77,12 @@ static SemaphoreHandle_t s_mutex = NULL;
 static inline void _lock(void)   { if (s_mutex) xSemaphoreTake(s_mutex, portMAX_DELAY); }
 static inline void _unlock(void) { if (s_mutex) xSemaphoreGive(s_mutex); }
 
-#ifdef CONFIG_LCDSCREEN_MINIMIZE_JITTER
+#ifdef CONFIG_TOUCHSCREEN_MINIMIZE_JITTER
     static TickType_t xLastWakeTime;
     static TickType_t xFrequency;
 #endif
 
-static LcdScreen_return_code_t LcdScreen_spin(void);  // In case we are using a thread, this function should not be part of the public API
+static TouchScreen_return_code_t TouchScreen_spin(void);  // In case we are using a thread, this function should not be part of the public API
 
 static inline BaseType_t _create_mutex_once(void)
 {
@@ -95,32 +95,32 @@ static inline BaseType_t _create_mutex_once(void)
 
 static inline BaseType_t _get_core_affinity(void)
 {
-    #if CONFIG_LCDSCREEN_PIN_CORE_ANY
+    #if CONFIG_TOUCHSCREEN_PIN_CORE_ANY
         return tskNO_AFFINITY;
-    #elif CONFIG_LCDSCREEN_PIN_CORE_0
+    #elif CONFIG_TOUCHSCREEN_PIN_CORE_0
         return 0;
-    #elif CONFIG_LCDSCREEN_PIN_CORE_1
+    #elif CONFIG_TOUCHSCREEN_PIN_CORE_1
         return 1;
     #else
         return tskNO_AFFINITY;
     #endif
 }
 
-static void LcdScreen_task(void *arg)
+static void TouchScreen_task(void *arg)
 {
     (void)arg;
     ESP_LOGI(TAG, "task started (period=%u ms)", (unsigned)s_period_ms);
-#ifdef CONFIG_LCDSCREEN_MINIMIZE_JITTER
+#ifdef CONFIG_TOUCHSCREEN_MINIMIZE_JITTER
     xLastWakeTime = xTaskGetTickCount();
     xFrequency = (s_period_ms / portTICK_PERIOD_MS);
 #endif
     while (s_run) {
-        LcdScreen_return_code_t ret = LcdScreen_spin();
-        if (ret != LcdScreen_ret_ok)
+        TouchScreen_return_code_t ret = TouchScreen_spin();
+        if (ret != TouchScreen_ret_ok)
         {
             ESP_LOGW(TAG, "Error in spin");
         }
-#ifdef CONFIG_LCDSCREEN_MINIMIZE_JITTER
+#ifdef CONFIG_TOUCHSCREEN_MINIMIZE_JITTER
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
 #else
         vTaskDelay(pdMS_TO_TICKS(s_period_ms));
@@ -130,16 +130,16 @@ static void LcdScreen_task(void *arg)
     vTaskDelete(NULL);
 }
 
-#endif // CONFIG_LCDSCREEN_USE_THREAD
+#endif // CONFIG_TOUCHSCREEN_USE_THREAD
 
 // END   --- Multitasking variables and handlers
 
 // BEGIN --- UI helpers
-#define LCDSCREEN_MAX_LINES 10
-#define LCDSCREEN_LINE_MAX_CHARS 128
+#define TOUCHSCREEN_MAX_LINES 10
+#define TOUCHSCREEN_LINE_MAX_CHARS 128
 
-static lv_obj_t *s_labels[LCDSCREEN_MAX_LINES] = {0};
-static char s_prev_lines[LCDSCREEN_MAX_LINES][LCDSCREEN_LINE_MAX_CHARS + 1] = {{0}};
+static lv_obj_t *s_labels[TOUCHSCREEN_MAX_LINES] = {0};
+static char s_prev_lines[TOUCHSCREEN_MAX_LINES][TOUCHSCREEN_LINE_MAX_CHARS + 1] = {{0}};
 static bool s_ui_ready = false;
 static uint8_t s_not_ready_logs = 0;
 
@@ -174,7 +174,7 @@ static void ensure_ui(void)
     if (!font) font = lv_font_get_default();
     lv_coord_t line_h = (font ? font->line_height : 16) + 2;
 
-    for (size_t i = 0; i < LCDSCREEN_MAX_LINES; ++i) {
+    for (size_t i = 0; i < TOUCHSCREEN_MAX_LINES; ++i) {
         lv_obj_t *lbl = lv_label_create(scr);
         if (!lbl) continue;
         lv_label_set_long_mode(lbl, LV_LABEL_LONG_CLIP);
@@ -189,7 +189,7 @@ static void ensure_ui(void)
 
 static void update_line(size_t idx, const char *text)
 {
-    if (idx >= LCDSCREEN_MAX_LINES || !s_labels[idx]) return;
+    if (idx >= TOUCHSCREEN_MAX_LINES || !s_labels[idx]) return;
     lv_label_set_text(s_labels[idx], text ? text : "");
 }
 // END   --- UI helpers
@@ -197,27 +197,27 @@ static void update_line(size_t idx, const char *text)
 // BEGIN ------------------ Public API (MULTITASKING)------------------
 
 
-#if CONFIG_LCDSCREEN_USE_THREAD
+#if CONFIG_TOUCHSCREEN_USE_THREAD
 
-LcdScreen_return_code_t LcdScreen_start(void)
+TouchScreen_return_code_t TouchScreen_start(void)
 {
     if (_create_mutex_once() != pdPASS) {
         ESP_LOGE(TAG, "mutex creation failed");
-        return LcdScreen_ret_error;
+        return TouchScreen_ret_error;
     }
     if (s_task) {
         // idempotente
-        return LcdScreen_ret_ok;
+        return TouchScreen_ret_ok;
     }
     s_run = true;
 
     BaseType_t core = _get_core_affinity();
     BaseType_t ok = xTaskCreatePinnedToCore(
-        LcdScreen_task,
-        "LcdScreen",
-        CONFIG_LCDSCREEN_TASK_STACK,
+        TouchScreen_task,
+        "TouchScreen",
+        CONFIG_TOUCHSCREEN_TASK_STACK,
         NULL,
-        CONFIG_LCDSCREEN_TASK_PRIO,
+        CONFIG_TOUCHSCREEN_TASK_PRIO,
         &s_task,
         core
     );
@@ -225,14 +225,14 @@ LcdScreen_return_code_t LcdScreen_start(void)
         s_task = NULL;
         s_run = false;
         ESP_LOGE(TAG, "xTaskCreatePinnedToCore failed");
-        return LcdScreen_ret_error;
+        return TouchScreen_ret_error;
     }
-    return LcdScreen_ret_ok;
+    return TouchScreen_ret_ok;
 }
 
-LcdScreen_return_code_t LcdScreen_stop(void)
+TouchScreen_return_code_t TouchScreen_stop(void)
 {
-    if (!s_task) return LcdScreen_ret_ok; // idempotente
+    if (!s_task) return TouchScreen_ret_ok; // idempotente
     s_run = false;
     // Espera una vuelta de scheduler para que el loop salga y se autodelete
     vTaskDelay(pdMS_TO_TICKS(1));
@@ -243,32 +243,32 @@ LcdScreen_return_code_t LcdScreen_stop(void)
         vTaskDelete(t);
     }
     ESP_LOGI(TAG, "stopped");
-    return LcdScreen_ret_ok;
+    return TouchScreen_ret_ok;
 }
 
-LcdScreen_return_code_t LcdScreen_get_dre_clone(LcdScreen_dre_t *dst)
+TouchScreen_return_code_t TouchScreen_get_dre_clone(TouchScreen_dre_t *dst)
 {
-    if (!dst) return LcdScreen_ret_error;
+    if (!dst) return TouchScreen_ret_error;
     _lock();
-    memcpy(dst, &LcdScreen_dre, sizeof(LcdScreen_dre));
+    memcpy(dst, &TouchScreen_dre, sizeof(TouchScreen_dre));
     _unlock();
-    return LcdScreen_ret_ok;
+    return TouchScreen_ret_ok;
 }
 
-LcdScreen_return_code_t LcdScreen_set_period_ms(uint32_t period_ms)
+TouchScreen_return_code_t TouchScreen_set_period_ms(uint32_t period_ms)
 {
     if (period_ms < 10) period_ms = 10;
     _lock();
     s_period_ms = period_ms;
-#ifdef CONFIG_LCDSCREEN_MINIMIZE_JITTER    
+#ifdef CONFIG_TOUCHSCREEN_MINIMIZE_JITTER    
     xFrequency = (s_period_ms / portTICK_PERIOD_MS);
 #endif
     _unlock();
     ESP_LOGI(TAG, "period set to %u ms", (unsigned)period_ms);
-    return LcdScreen_ret_ok;
+    return TouchScreen_ret_ok;
 }
 
-uint32_t LcdScreen_get_period_ms(void)
+uint32_t TouchScreen_get_period_ms(void)
 {
     _lock();
     uint32_t v = s_period_ms;
@@ -279,57 +279,57 @@ uint32_t LcdScreen_get_period_ms(void)
 /**
  *  Execute a function wrapped with locks so you can access the DRE variables in thread-safe mode
 */
-void LcdScreen_execute_function_safemode(void (*callback)())
+void TouchScreen_execute_function_safemode(void (*callback)())
 {
     _lock();
     callback();
     _unlock();
 }
 
-#endif // CONFIG_LCDSCREEN_USE_THREAD
+#endif // CONFIG_TOUCHSCREEN_USE_THREAD
 
 // END   ------------------ Public API (MULTITASKING)------------------
 
 // BEGIN ------------------ Public API (COMMON + SPIN)------------------
 
-LcdScreen_return_code_t LcdScreen_setup(void)
+TouchScreen_return_code_t TouchScreen_setup(void)
 {
     // Init liviano; no arranca tarea.
     ESP_LOGD(TAG, "setup()");
     // Loading values from NVS
-    LcdScreen_netvars_nvs_load();    
-#if CONFIG_LCDSCREEN_USE_THREAD
+    TouchScreen_netvars_nvs_load();    
+#if CONFIG_TOUCHSCREEN_USE_THREAD
     if (_create_mutex_once() != pdPASS) {
         ESP_LOGE(TAG, "mutex creation failed");
-        return LcdScreen_ret_error;
+        return TouchScreen_ret_error;
     }
 #endif
-    LcdScreen_dre.last_return_code = LcdScreen_ret_ok;
-    return LcdScreen_ret_ok;
+    TouchScreen_dre.last_return_code = TouchScreen_ret_ok;
+    return TouchScreen_ret_ok;
 }
 
-#if CONFIG_LCDSCREEN_USE_THREAD
+#if CONFIG_TOUCHSCREEN_USE_THREAD
 static  // In case we are using a thread, this function should not be part of the public API
 #endif
-LcdScreen_return_code_t LcdScreen_spin(void)
+TouchScreen_return_code_t TouchScreen_spin(void)
 {
-#if CONFIG_LCDSCREEN_USE_THREAD
+#if CONFIG_TOUCHSCREEN_USE_THREAD
     _lock();
 #endif
-    LcdScreen_dre_t snapshot = LcdScreen_dre;
-#if CONFIG_LCDSCREEN_USE_THREAD
+    TouchScreen_dre_t snapshot = TouchScreen_dre;
+#if CONFIG_TOUCHSCREEN_USE_THREAD
     _unlock();
 #endif
 
     if (!snapshot.enabled)
     {
-        return LcdScreen_ret_ok;
+        return TouchScreen_ret_ok;
     }
 
     ensure_ui();
 
     // Refresh lines that changed
-    for (size_t i = 0; i < LCDSCREEN_MAX_LINES; ++i) {
+    for (size_t i = 0; i < TOUCHSCREEN_MAX_LINES; ++i) {
         const char *src = NULL;
         switch (i) {
         case 0: src = snapshot.line1; break;
@@ -346,7 +346,7 @@ LcdScreen_return_code_t LcdScreen_spin(void)
         }
         if (!src) continue;
 
-        char buf[LCDSCREEN_LINE_MAX_CHARS + 1];
+        char buf[TOUCHSCREEN_LINE_MAX_CHARS + 1];
         strlcpy(buf, src, sizeof(buf));
 
         if (strncmp(buf, s_prev_lines[i], sizeof(buf)) != 0) {
@@ -356,34 +356,34 @@ LcdScreen_return_code_t LcdScreen_spin(void)
         }
     }
 
-    LcdScreen_nvs_spin();
-    return LcdScreen_ret_ok;
+    TouchScreen_nvs_spin();
+    return TouchScreen_ret_ok;
 }
 
-LcdScreen_return_code_t LcdScreen_enable(void)
+TouchScreen_return_code_t TouchScreen_enable(void)
 {
-#if CONFIG_LCDSCREEN_USE_THREAD
+#if CONFIG_TOUCHSCREEN_USE_THREAD
     _lock();
 #endif
-    LcdScreen_dre.enabled = true;
-    LcdScreen_dre.last_return_code = LcdScreen_ret_ok;
-#if CONFIG_LCDSCREEN_USE_THREAD
+    TouchScreen_dre.enabled = true;
+    TouchScreen_dre.last_return_code = TouchScreen_ret_ok;
+#if CONFIG_TOUCHSCREEN_USE_THREAD
     _unlock();
 #endif
-    return LcdScreen_ret_ok;
+    return TouchScreen_ret_ok;
 }
 
-LcdScreen_return_code_t LcdScreen_disable(void)
+TouchScreen_return_code_t TouchScreen_disable(void)
 {
-#if CONFIG_LCDSCREEN_USE_THREAD
+#if CONFIG_TOUCHSCREEN_USE_THREAD
     _lock();
 #endif
-    LcdScreen_dre.enabled = false;
-    LcdScreen_dre.last_return_code = LcdScreen_ret_ok;
-#if CONFIG_LCDSCREEN_USE_THREAD
+    TouchScreen_dre.enabled = false;
+    TouchScreen_dre.last_return_code = TouchScreen_ret_ok;
+#if CONFIG_TOUCHSCREEN_USE_THREAD
     _unlock();
 #endif
-    return LcdScreen_ret_ok;
+    return TouchScreen_ret_ok;
 }
 
 // BEGIN ------------------ Public API (COMMON)------------------
