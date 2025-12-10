@@ -12,6 +12,6 @@ dependencies:
     version: 9.4.0
 direct_dependencies:
 - lvgl/lvgl
-manifest_hash: 3a1e0fa6290add423196834f4d362899fbc708b3145c2bd4dfe9a0802205c0be
+manifest_hash: d283d6cade93f3fe87ad483596c069962bef49fddef19164425e63efffc906cc
 target: esp32s3
 version: 2.0.0

@@ -44,7 +44,7 @@ variants:
 
   - id: S3TouchScreen
     target: esp32s3
-    overlays: ["target_esp32s3.defaults","feat_s3_touch.defaults"]
+    overlays: ["target_esp32s3.defaults","feat_s3_touch.defaults","feat_touchscreen_lvgl.defaults"]
     components: ["PrjCfg", "NetVars","Wifi","OTA","Provisioning", "MQTTComm","Measurement","TouchScreen"]
     extra_env:
       LOG_LEVEL: "debug"

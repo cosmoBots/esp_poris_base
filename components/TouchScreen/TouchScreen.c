@@ -143,57 +143,6 @@ static char s_prev_lines[TOUCHSCREEN_MAX_LINES][TOUCHSCREEN_LINE_MAX_CHARS + 1] 
 static bool s_ui_ready = false;
 static uint8_t s_not_ready_logs = 0;
 
-static void ensure_ui(void)
-{
-    if (s_ui_ready) return;
-    if (!lv_is_initialized()) {
-        if (s_not_ready_logs < 3) {
-            ESP_LOGW(TAG, "LVGL not ready (lv_init pending)");
-            s_not_ready_logs++;
-        }
-        return;
-    }
-    lv_disp_t *disp = lv_disp_get_default();
-    if (!disp) {
-        if (s_not_ready_logs < 3) {
-            ESP_LOGW(TAG, "LVGL not ready (no default display yet)");
-            s_not_ready_logs++;
-        }
-        return;
-    }
-    lv_obj_t *scr = lv_disp_get_scr_act(disp);
-    if (!scr) {
-        if (s_not_ready_logs < 3) {
-            ESP_LOGW(TAG, "LVGL not ready (no active screen)");
-            s_not_ready_logs++;
-        }
-        return;
-    }
-    lv_coord_t y = 0;
-    const lv_font_t *font = lv_obj_get_style_text_font(scr, LV_PART_MAIN);
-    if (!font) font = lv_font_get_default();
-    lv_coord_t line_h = (font ? font->line_height : 16) + 2;
-
-    for (size_t i = 0; i < TOUCHSCREEN_MAX_LINES; ++i) {
-        lv_obj_t *lbl = lv_label_create(scr);
-        if (!lbl) continue;
-        lv_label_set_long_mode(lbl, LV_LABEL_LONG_CLIP);
-        lv_obj_set_width(lbl, lv_obj_get_width(scr));
-        lv_obj_set_pos(lbl, 0, y);
-        lv_label_set_text(lbl, "");
-        s_labels[i] = lbl;
-        y += line_h;
-    }
-    s_ui_ready = true;
-}
-
-static void update_line(size_t idx, const char *text)
-{
-    if (idx >= TOUCHSCREEN_MAX_LINES || !s_labels[idx]) return;
-    lv_label_set_text(s_labels[idx], text ? text : "");
-}
-// END   --- UI helpers
-
 // BEGIN ------------------ Public API (MULTITASKING)------------------
 
 
@@ -326,8 +275,6 @@ TouchScreen_return_code_t TouchScreen_spin(void)
         return TouchScreen_ret_ok;
     }
 
-    ensure_ui();
-
     // Refresh lines that changed
     for (size_t i = 0; i < TOUCHSCREEN_MAX_LINES; ++i) {
         const char *src = NULL;
@@ -350,7 +297,6 @@ TouchScreen_return_code_t TouchScreen_spin(void)
         strlcpy(buf, src, sizeof(buf));
 
         if (strncmp(buf, s_prev_lines[i], sizeof(buf)) != 0) {
-            update_line(i, buf);
             strncpy(s_prev_lines[i], buf, sizeof(s_prev_lines[i]));
             s_prev_lines[i][sizeof(s_prev_lines[i]) - 1] = '\0';
         }
