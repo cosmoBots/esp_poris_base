@@ -3,8 +3,8 @@
 // DO NOT EDIT MANUALLY; edit netvars.csv and regenerate.
 
 #ifdef CONFIG_MEASUREMENT_ENABLE_SIMULATION
-    { "setpoint", "setpoint", "Temp-Setpoint", "measurement", "measurement", NETVARS_TYPE_FLOAT, PRJCFG_NVS_LOADSAVE, true, 0, (void*)&(Measurement_dre.setpoint) },
-    { "ai1", NULL, "ai1", "measurement", "measurement", NETVARS_TYPE_FLOAT, PRJCFG_NVS_NONE, true, 0, (void*)&(Measurement_dre.ai1) },
-    { "ai2", NULL, "ai2", "measurement", "measurement", NETVARS_TYPE_FLOAT, PRJCFG_NVS_NONE, true, 0, (void*)&(Measurement_dre.ai2) },
-    { "bi0", "bi0", "bi0", "measurement", "measurement", NETVARS_TYPE_BOOL, PRJCFG_NVS_LOADSAVE, true, 0, (void*)&(Measurement_dre.bi0) },
+    { "setpoint", "setpoint", "Temp-Setpoint", "measurement", "measurement", NETVARS_TYPE_FLOAT, PRJCFG_NVS_LOADSAVE, true, NETVARS_JSON_AUTO, 0, (void*)&(Measurement_dre.setpoint) },
+    { "ai1", NULL, "ai1", "measurement", "measurement", NETVARS_TYPE_FLOAT, PRJCFG_NVS_NONE, true, NETVARS_JSON_AUTO, 0, (void*)&(Measurement_dre.ai1) },
+    { "ai2", NULL, "ai2", "measurement", "measurement", NETVARS_TYPE_FLOAT, PRJCFG_NVS_NONE, true, NETVARS_JSON_AUTO, 0, (void*)&(Measurement_dre.ai2) },
+    { "bi0", "bi0", "bi0", "measurement", "measurement", NETVARS_TYPE_BOOL, PRJCFG_NVS_LOADSAVE, true, NETVARS_JSON_AUTO, 0, (void*)&(Measurement_dre.bi0) },
 #endif
