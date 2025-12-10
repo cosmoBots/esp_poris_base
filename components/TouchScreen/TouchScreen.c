@@ -255,7 +255,7 @@ void touchscreen_main(void)
         // lv_demo_stress();
         // lv_demo_benchmark();
         // lv_demo_music();
-#if CONFIG_EXAMPLE_LCD_TOUCH_CONTROLLER_GT911
+#if CONFIG_LCD_TOUCH_CONTROLLER_GT911
         lv_demo_widgets();
 #else
         lv_demo_music();
