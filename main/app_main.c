@@ -52,7 +52,11 @@
 #include <TouchScreen.h>
 #endif
 #ifdef CONFIG_PORIS_ENABLE_PROVISIONING
+#ifdef CONFIG_PORIS_ENABLE_WIFI
+#error "Provisioning component can not coexist with Wifi component"
+#else
 #include <Provisioning.h>
+#endif
 #endif
 // [PORIS_INTEGRATION_INCLUDE]
 
@@ -285,6 +289,8 @@ static uint16_t relaystest_cycle_counter = 0;
 static uint8_t touchscreen_cycle_counter = 0;
 // [PORIS_INTEGRATION_COUNTERS]
 
+static bool ota_checked = false;
+
 app_main_return_code run_components(void)
 {
     app_main_return_code ret = app_main_ret_ok;
@@ -303,19 +309,23 @@ app_main_return_code run_components(void)
 #endif
 #ifdef CONFIG_PORIS_ENABLE_MQTTCOMM
 #ifndef CONFIG_MQTTCOMM_USE_THREAD
-    if (mqttcomm_cycle_counter <= 0)
+    if (ota_checked)
     {
-        error_accumulator |= (MQTTComm_spin() != MQTTComm_ret_ok);
-        mqttcomm_cycle_counter = MQTTCOMM_CYCLE_LIMIT;
-    }
-    else
-    {
-        mqttcomm_cycle_counter--;
+        if (mqttcomm_cycle_counter <= 0)
+        {
+            error_accumulator |= (MQTTComm_spin() != MQTTComm_ret_ok);
+            mqttcomm_cycle_counter = MQTTCOMM_CYCLE_LIMIT;
+        }
+        else
+        {
+            mqttcomm_cycle_counter--;
+        }
     }
 #endif
 #endif
 #ifdef CONFIG_PORIS_ENABLE_MEASUREMENT
 #ifndef CONFIG_MEASUREMENT_USE_THREAD
+
     if (measurement_cycle_counter <= 0)
     {
         error_accumulator |= (Measurement_spin() != Measurement_ret_ok);
@@ -325,6 +335,7 @@ app_main_return_code run_components(void)
     {
         measurement_cycle_counter--;
     }
+
 #endif
 #endif
 #ifdef CONFIG_PORIS_ENABLE_DUALLED
@@ -519,6 +530,16 @@ void main_compose_callback(char *data, int *len)
     cJSON_Delete(root);
 }
 
+bool check_ip_valid(void)
+{
+#ifdef CONFIG_PORIS_ENABLE_PROVISIONING
+    return Provisioning_dre.ip_valid;
+#endif    
+#ifdef CONFIG_PORIS_ENABLE_WIFI
+    return Wifi_dre.ip_valid;
+#endif    
+}
+
 void app_main(void)
 {
     printf("Hello world!\n");
@@ -580,40 +601,46 @@ void app_main(void)
             shall_execute = false;
         }
     }
-    if (shall_execute)
-    {
-        // Boot-time actions
-        // Check OTA
-        OTA_enable();
-        OTA_start();
-        // If OTA has not rebooted, we should continue
-        OTA_disable();
-
-        // Now let's setup the MQTT topics
-        mqtt_comm_cfg_t cfg = {0};
-        cfg.f_cfg_cb = main_parse_callback;
-        cfg.f_req_cb = main_req_parse_callback;
-        cfg.f_data_cb = main_compose_callback;
-
-        MQTTComm_setup(&cfg);
-        ESP_LOGI(TAG, "---> MQTT topics for device %s", MQTTComm_dre.device);
-        ESP_LOGI(TAG, "     cfg : %s", MQTTComm_dre.cfg_topic);
-        ESP_LOGI(TAG, "     cmd : %s", MQTTComm_dre.req_topic);
-        ESP_LOGI(TAG, "     data: %s", MQTTComm_dre.data_topic);
-#ifndef CONFIG_MQTTCOMM_USE_THREAD
-        MQTTComm_enable();
-#endif
-    }
     while (true)
     {
         //ESP_LOGI(TAG, "app_main spinning");
         vTaskDelay(MAIN_CYCLE_PERIOD_MS / portTICK_PERIOD_MS);
         if (shall_execute)
         {
+#ifdef CONFIG_PORIS_ENABLE_OTA            
+            if (!ota_checked)
+            {
+                if (check_ip_valid())
+                {
+                    // Boot-time actions
+                    // Check OTA
+                    OTA_enable();
+                    OTA_start();
+                    // If OTA has not rebooted, we should continue
+                    OTA_disable();
+                    ota_checked = true;
+                    // Now let's setup the MQTT topics
+                    mqtt_comm_cfg_t cfg = {0};
+                    cfg.f_cfg_cb = main_parse_callback;
+                    cfg.f_req_cb = main_req_parse_callback;
+                    cfg.f_data_cb = main_compose_callback;
+
+                    MQTTComm_setup(&cfg);
+                    ESP_LOGI(TAG, "---> MQTT topics for device %s", MQTTComm_dre.device);
+                    ESP_LOGI(TAG, "     cfg : %s", MQTTComm_dre.cfg_topic);
+                    ESP_LOGI(TAG, "     cmd : %s", MQTTComm_dre.req_topic);
+                    ESP_LOGI(TAG, "     data: %s", MQTTComm_dre.data_topic);
+#ifndef CONFIG_MQTTCOMM_USE_THREAD
+                    MQTTComm_enable();
+#endif                    
+                }
+            }
+#endif
             if (run_components() != app_main_ret_ok)
             {
                 ESP_LOGW(TAG, "Could not run all  components!!!");
             }
+
         }
     }
 }

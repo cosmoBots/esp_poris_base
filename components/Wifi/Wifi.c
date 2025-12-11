@@ -199,3 +199,15 @@ Wifi_return_code_t Wifi_get_ipv4_str(char *buf, size_t len)
 }
 
 // BEGIN ------------------ Public API (COMMON)------------------
+
+bool Wifi_ip_valid(void)
+{
+#ifdef CONFIG_WIFI_USE_THREAD
+    _lock();
+#endif
+    bool ret = Wifi_dre.ip_valid;
+#ifdef CONFIG_WIFI_USE_THREAD
+    _unlock();
+#endif
+    return ret;
+}

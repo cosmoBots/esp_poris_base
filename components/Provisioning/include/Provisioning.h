@@ -94,7 +94,9 @@ Provisioning_return_code_t Provisioning_disable(void);
 
 // ------------------ BEGIN Public API (COMMON)--------------------
 
-void provision_forget(void);
+void Provisioning_forget(void);
+
+bool Provisioning_ip_valid(void);
 
 #ifdef __cplusplus
 }

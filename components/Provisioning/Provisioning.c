@@ -47,6 +47,7 @@ static const char *TAG = "Provisioning";
 // BEGIN --- Internal variables (DRE)
 Provisioning_dre_t Provisioning_dre = {
     .enabled = true,
+    .ip_valid = false,
     .last_return_code = Provisioning_ret_ok
 };
 // END   --- Internal variables (DRE)
@@ -590,7 +591,7 @@ void provision_app(void)
 
 
 /* This has to be called to forget credentials*/
-void provision_forget(void)
+void Provisioning_forget(void)
 {
 
     ESP_LOGI(TAG, "Forgetting credentials");
@@ -777,7 +778,21 @@ void Provisioning_execute_function_safemode(void (*callback)())
     _unlock();
 }
 
+
 #endif // CONFIG_PROVISIONING_USE_THREAD
+
+bool Provisioning_ip_valid(void)
+{
+#ifdef CONFIG_PROVISIONING_USE_THREAD
+    _lock();
+#endif
+    bool ret = Provisioning_dre.ip_valid;
+#ifdef CONFIG_PROVISIONING_USE_THREAD
+    _unlock();
+#endif
+    return ret;
+}
+
 
 // END   ------------------ Public API (MULTITASKING)------------------
 
