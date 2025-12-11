@@ -289,7 +289,12 @@ static uint16_t relaystest_cycle_counter = 0;
 static uint8_t touchscreen_cycle_counter = 0;
 // [PORIS_INTEGRATION_COUNTERS]
 
+#ifdef CONFIG_PORIS_ENABLE_OTA
 static bool ota_checked = false;
+#endif
+#ifdef CONFIG_PORIS_ENABLE_MQTTCOMM
+static bool mqttcomm_started = false;
+#endif
 
 app_main_return_code run_components(void)
 {
@@ -607,7 +612,7 @@ void app_main(void)
         vTaskDelay(MAIN_CYCLE_PERIOD_MS / portTICK_PERIOD_MS);
         if (shall_execute)
         {
-#ifdef CONFIG_PORIS_ENABLE_OTA            
+#ifdef CONFIG_PORIS_ENABLE_OTA
             if (!ota_checked)
             {
                 if (check_ip_valid())
@@ -619,6 +624,14 @@ void app_main(void)
                     // If OTA has not rebooted, we should continue
                     OTA_disable();
                     ota_checked = true;
+                }
+            }
+#endif
+#ifdef CONFIG_PORIS_ENABLE_MQTTCOMM
+            if (!mqttcomm_started)
+            {
+                if (check_ip_valid())
+                {
                     // Now let's setup the MQTT topics
                     mqtt_comm_cfg_t cfg = {0};
                     cfg.f_cfg_cb = main_parse_callback;
@@ -632,7 +645,8 @@ void app_main(void)
                     ESP_LOGI(TAG, "     data: %s", MQTTComm_dre.data_topic);
 #ifndef CONFIG_MQTTCOMM_USE_THREAD
                     MQTTComm_enable();
-#endif                    
+#endif
+                    mqttcomm_started = true;
                 }
             }
 #endif
