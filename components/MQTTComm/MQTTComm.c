@@ -425,21 +425,18 @@ MQTTComm_return_code_t MQTTComm_setup(mqtt_comm_cfg_t *cfg)
         snprintf(MQTTComm_dre.device, sizeof(MQTTComm_dre.device), "%s", CONFIG_MQTT_TOPIC_DEVICE_NAME);
 #endif
 
-        if (CONFIG_MQTT_CLIENT_ID_USE_DEVICE)
+#ifdef CONFIG_MQTT_CLIENT_ID_USE_DEVICE)
+        snprintf(MQTTComm_dre.client_id, sizeof(MQTTComm_dre.client_id), "%s", MQTTComm_dre.device);
+#else
+        if (strlen(CONFIG_MQTT_CLIENT_ID_CUSTOM) > 0)
         {
-            snprintf(MQTTComm_dre.client_id, sizeof(MQTTComm_dre.client_id), "%s", MQTTComm_dre.device);
+            snprintf(MQTTComm_dre.client_id, sizeof(MQTTComm_dre.client_id), "%s", CONFIG_MQTT_CLIENT_ID_CUSTOM);
         }
         else
         {
-            if (strlen(CONFIG_MQTT_CLIENT_ID_CUSTOM) > 0)
-            {
-                snprintf(MQTTComm_dre.client_id, sizeof(MQTTComm_dre.client_id), "%s", CONFIG_MQTT_CLIENT_ID_CUSTOM);
-            }
-            else
-            {
-                snprintf(MQTTComm_dre.client_id, sizeof(MQTTComm_dre.client_id), "%s", MQTTComm_dre.device);
-            }
+            snprintf(MQTTComm_dre.client_id, sizeof(MQTTComm_dre.client_id), "%s", MQTTComm_dre.device);
         }
+#endif
 
         snprintf(MQTTComm_dre.cfg_topic, sizeof(MQTTComm_dre.cfg_topic), "%s/%s/%s/%s/cfg",
                  MQTTComm_dre.org, MQTTComm_dre.api_version, MQTTComm_dre.site, MQTTComm_dre.device);
