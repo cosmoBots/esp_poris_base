@@ -105,21 +105,20 @@ Wifi_return_code_t Wifi_setup(void)
     ESP_LOGD(TAG, "setup()");
     Wifi_dre.last_return_code = Wifi_ret_ok;
 
-        ESP_LOGI(TAG, "Inicializando WiFi...");
-
-    s_wifi_event_group = xEventGroupCreate();
-
-    esp_err_t err = esp_netif_init();
-    if (err != ESP_OK && err != ESP_ERR_ESP_NETIF_ALREADY_INIT)
-    {
-        ESP_ERROR_CHECK(err);
-    }
+    ESP_LOGI(TAG, "Inicializando WiFi...");
 
 
+    /* Create default event loop if not present */
+    esp_err_t err = esp_event_loop_create_default();
     if (err != ESP_OK && err != ESP_ERR_INVALID_STATE)
     {
         ESP_ERROR_CHECK(err);
     }
+
+    s_wifi_event_group = xEventGroupCreate();
+
+    ESP_ERROR_CHECK(esp_netif_init());
+
     esp_netif_create_default_wifi_sta();
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
