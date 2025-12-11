@@ -1,7 +1,0 @@
-// Auto-generated fragment for Wifi netvars
-// Include this inside the definition of struct Wifi_dre_t
-// DO NOT EDIT MANUALLY; edit netvars.csv and regenerate.
-
-    bool ip_valid;
-    uint32_t ip_v4;
-    char ip_str[WIFI_IP_STR_MAX_LEN];
