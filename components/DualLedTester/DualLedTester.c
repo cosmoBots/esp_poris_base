@@ -255,6 +255,23 @@ void DualLedTester_execute_function_safemode(void (*callback)())
 
 // BEGIN ------------------ Public API (COMMON + SPIN)------------------
 
+static const dual_led_state_t k_sequence[] = {
+    DUALLED_RED,
+    DUALLED_GREEN,
+#if CONFIG_DUALLED_ALLOW_BOTH
+    DUALLED_BOTH_COLORS,
+#endif
+    DUALLED_BLINK_RED,
+    DUALLED_BLINK_GREEN,
+#if CONFIG_DUALLED_ALLOW_BOTH
+    DUALLED_BLINK_BOTH,
+#endif
+    DUALLED_OFF,                    // spacer before alternates
+    DUALLED_ALTERNATE_START_GREEN,
+    DUALLED_OFF,                    // spacer between alternates
+    DUALLED_ALTERNATE_START_RED,
+};
+
 DualLedTester_return_code_t DualLedTester_setup(void)
 {
     // Init liviano; no arranca tarea.
@@ -271,7 +288,7 @@ DualLedTester_return_code_t DualLedTester_setup(void)
     DualLedTester_dre.seq_index = 0;
     DualLedTester_dre.last_change = xTaskGetTickCount();
     DualLED_set_duty(DualLedTester_dre.duty_on_ms, DualLedTester_dre.duty_off_ms);
-    DualLED_set_state(DUALLED_OFF);
+    DualLED_set_state(k_sequence[DualLedTester_dre.seq_index]);
     DualLedTester_dre.last_return_code = DualLedTester_ret_ok;
     return DualLedTester_ret_ok;
 }
@@ -295,23 +312,7 @@ DualLedTester_return_code_t DualLedTester_spin(void)
     }
     else
     {
-        static const dual_led_state_t k_sequence[] = {
-            DUALLED_OFF,
-            DUALLED_RED,
-            DUALLED_GREEN,
-#if CONFIG_DUALLED_ALLOW_BOTH
-            DUALLED_BOTH_COLORS,
-#endif
-            DUALLED_BLINK_RED,
-            DUALLED_BLINK_GREEN,
-#if CONFIG_DUALLED_ALLOW_BOTH
-            DUALLED_BLINK_BOTH,
-#endif
-            DUALLED_OFF,                    // spacer before alternates
-            DUALLED_ALTERNATE_START_GREEN,
-            DUALLED_OFF,                    // spacer between alternates
-            DUALLED_ALTERNATE_START_RED,
-        };
+
         const size_t nseq = sizeof(k_sequence) / sizeof(k_sequence[0]);
 
         TickType_t now = xTaskGetTickCount();
