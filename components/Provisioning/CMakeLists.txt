@@ -12,7 +12,7 @@ endif()
 idf_component_register(
   SRCS "Provisioning_netvars.c" "Provisioning.c"
   INCLUDE_DIRS "include"
-  PRIV_REQUIRES PrjCfg NetVars json nvs_flash esp_wifi
+  PRIV_REQUIRES PrjCfg NetVars json nvs_flash esp_wifi wifi_provisioning
 )
 
 if(CONFIG_PROVISIONING_USE_THREAD)

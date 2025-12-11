@@ -16,14 +16,13 @@ typedef enum {
 // ------------------ END   Return code ------------------
 
 // ------------------ BEGIN Datatypes ------------------
-
+#define WIFI_IP_STR_MAX_LEN 16
 // ------------------ END   Datatypes ------------------
 
 // ------------------ BEGIN DRE ------------------
 typedef struct {
     bool enabled;
     Wifi_return_code_t last_return_code;
-#define WIFI_IP_STR_MAX_LEN 16
 #include "Wifi_netvar_types_fragment.h_"
 
 } Wifi_dre_t;

@@ -9,8 +9,11 @@
 #include <cJSON.h>
 
 #include "sdkconfig.h"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+
+#include <nvs_flash.h>
 #include "esp_chip_info.h"
 #include "esp_flash.h"
 #include "esp_system.h"
@@ -21,10 +24,18 @@
 
 
 // Include components
+#ifdef CONFIG_PORIS_ENABLE_WIFI
 #include <Wifi.h>
+#endif
+#ifdef CONFIG_PORIS_ENABLE_OTA
 #include <OTA.h>
+#endif
+#ifdef CONFIG_PORIS_ENABLE_MQTTCOMM
 #include <MQTTComm.h>
+#endif
+#ifdef CONFIG_PORIS_ENABLE_MEASUREMENT
 #include <Measurement.h>
+#endif
 #ifdef CONFIG_PORIS_ENABLE_DUALLED
 #include <DualLED.h>
 #endif
@@ -39,6 +50,9 @@
 #endif
 #ifdef CONFIG_PORIS_ENABLE_TOUCHSCREEN
 #include <TouchScreen.h>
+#endif
+#ifdef CONFIG_PORIS_ENABLE_PROVISIONING
+#include <Provisioning.h>
 #endif
 // [PORIS_INTEGRATION_INCLUDE]
 
@@ -96,6 +110,10 @@ app_main_return_code init_components(void)
     error_occurred = (PrjCfg_setup() != PrjCfg_ret_ok);
     error_accumulator |= error_occurred;
 #endif
+#ifdef CONFIG_PORIS_ENABLE_PROVISIONING
+    error_occurred = (Provisioning_setup() != Provisioning_ret_ok);
+    error_accumulator |= error_occurred;
+#endif
 #ifdef CONFIG_PORIS_ENABLE_WIFI
     error_occurred = (Wifi_setup() != Wifi_ret_ok);
     error_accumulator |= error_occurred;
@@ -144,6 +162,16 @@ app_main_return_code start_components(void)
     if (!error_occurred)
     {
         error_occurred |= (PrjCfg_start() != PrjCfg_ret_ok);
+    }
+#endif
+    error_accumulator |= error_occurred;
+#endif
+#ifdef CONFIG_PORIS_ENABLE_PROVISIONING
+    error_occurred = (Provisioning_enable() != Provisioning_ret_ok);
+#ifdef CONFIG_PROVISIONING_USE_THREAD
+    if (!error_occurred)
+    {
+        error_occurred |= (Provisioning_start() != Provisioning_ret_ok);
     }
 #endif
     error_accumulator |= error_occurred;
@@ -522,6 +550,23 @@ void app_main(void)
     printf("Minimum free heap size: %" PRIu32 " bytes\n", esp_get_minimum_free_heap_size());
 
     bool shall_execute = true;
+
+    // Initialize NVS.
+    esp_err_t err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
+        // 1.OTA app partition table has a smaller NVS partition size than the non-OTA
+        // partition table. This size mismatch may cause NVS initialization to fail.
+        // 2.NVS partition contains data in new format and cannot be recognized by this version of code.
+        // If this happens, we erase NVS partition and initialize NVS again.
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(err);
+
+    /* Initialize the event loop */
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+
     if (init_components() != app_main_ret_ok)
     {
         ESP_LOGE(TAG, "Cannot init components!!!");

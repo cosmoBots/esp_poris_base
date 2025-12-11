@@ -6,7 +6,7 @@ extern "C" {
 
 #include <stdbool.h>
 #include <stdint.h>
-
+#include <esp_netif.h>
 // ------------------ BEGIN Return code ------------------
 typedef enum {
     Provisioning_ret_error = -1,
@@ -15,7 +15,8 @@ typedef enum {
 // ------------------ END   Return code ------------------
 
 // ------------------ BEGIN Datatypes ------------------
-
+#define PROVISIONING_IP_STR_MAX_LEN 16
+#define PROVISIONING_SSID_MAX_LEN (32 + 1)
 // ------------------ END   Datatypes ------------------
 
 // ------------------ BEGIN DRE ------------------
@@ -23,6 +24,7 @@ typedef struct {
     bool enabled;
     Provisioning_return_code_t last_return_code;
 #include "Provisioning_netvar_types_fragment.h_"
+    esp_ip4_addr_t ip;
 
 } Provisioning_dre_t;
 
@@ -91,6 +93,8 @@ Provisioning_return_code_t Provisioning_enable(void);
 Provisioning_return_code_t Provisioning_disable(void);
 
 // ------------------ BEGIN Public API (COMMON)--------------------
+
+void provision_forget(void);
 
 #ifdef __cplusplus
 }
