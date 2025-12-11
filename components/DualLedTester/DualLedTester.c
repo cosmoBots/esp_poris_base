@@ -289,6 +289,11 @@ DualLedTester_return_code_t DualLedTester_setup(void)
     DualLedTester_dre.last_change = xTaskGetTickCount();
     DualLED_set_duty(DualLedTester_dre.duty_on_ms, DualLedTester_dre.duty_off_ms);
     DualLED_set_state(k_sequence[DualLedTester_dre.seq_index]);
+#if CONFIG_DUALLEDTESTER_VERBOSE_MODE
+    ESP_LOGI(TAG, "DualLED state -> %d (%s)", 
+        (int)k_sequence[DualLedTester_dre.seq_index], 
+        DualLedTester_state_name_safe(k_sequence[DualLedTester_dre.seq_index]));
+#endif    
     DualLedTester_dre.last_return_code = DualLedTester_ret_ok;
     return DualLedTester_ret_ok;
 }
