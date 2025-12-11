@@ -407,25 +407,23 @@ MQTTComm_return_code_t MQTTComm_setup(mqtt_comm_cfg_t *cfg)
         snprintf(MQTTComm_dre.api_version, sizeof(MQTTComm_dre.api_version), "%s", CONFIG_MQTT_TOPIC_APIVERSION);
         snprintf(MQTTComm_dre.site, sizeof(MQTTComm_dre.site), "%s", CONFIG_MQTT_TOPIC_SITE);
 
-        if (CONFIG_MQTT_TOPIC_DEVICE_USE_WIFI_MAC)
+#ifdef CONFIG_MQTT_TOPIC_DEVICE_USE_WIFI_MAC
+
+        uint8_t mac[6] = {0};
+        if (esp_read_mac(mac, ESP_MAC_WIFI_STA) == ESP_OK)
         {
-            uint8_t mac[6] = {0};
-            if (esp_read_mac(mac, ESP_MAC_WIFI_STA) == ESP_OK)
-            {
-                snprintf(MQTTComm_dre.device, sizeof(MQTTComm_dre.device),
-                         "%02X%02X%02X%02X%02X%02X",
-                         mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-            }
-            else
-            {
-                ESP_LOGW(TAG, "Could not read Wi-Fi MAC; falling back to configured device name");
-                snprintf(MQTTComm_dre.device, sizeof(MQTTComm_dre.device), "%s", CONFIG_MQTT_TOPIC_DEVICE_NAME);
-            }
+            snprintf(MQTTComm_dre.device, sizeof(MQTTComm_dre.device),
+                        "%02X%02X%02X%02X%02X%02X",
+                        mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
         }
         else
         {
+            ESP_LOGW(TAG, "Could not read Wi-Fi MAC; falling back to configured device name");
             snprintf(MQTTComm_dre.device, sizeof(MQTTComm_dre.device), "%s", CONFIG_MQTT_TOPIC_DEVICE_NAME);
         }
+#else
+        snprintf(MQTTComm_dre.device, sizeof(MQTTComm_dre.device), "%s", CONFIG_MQTT_TOPIC_DEVICE_NAME);
+#endif
 
         if (CONFIG_MQTT_CLIENT_ID_USE_DEVICE)
         {
