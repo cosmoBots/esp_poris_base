@@ -152,13 +152,12 @@ static void chart_timer_cb(lv_timer_t *t)
 
 static void touchscreen_update(void)
 {
-    UIDemo_dre_t snapshot;
 #if CONFIG_UIDEMO_USE_THREAD
     _lock();
-    snapshot = UIDemo_dre;
+#endif
+    UIDemo_dre_t snapshot = UIDemo_dre;
+#if CONFIG_UIDEMO_USE_THREAD
     _unlock();
-#else
-    snapshot = UIDemo_dre;
 #endif
 
     if (!s_ui_ready) return;
