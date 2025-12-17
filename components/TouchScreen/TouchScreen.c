@@ -20,6 +20,7 @@
 
 // BEGIN --- ESP-IDF headers section ---
 #include <esp_log.h>
+#include "esp_err.h"
 
 // END   --- ESP-IDF headers section ---
 

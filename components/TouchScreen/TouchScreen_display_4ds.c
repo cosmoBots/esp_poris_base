@@ -5,6 +5,7 @@
 #include "esp_err.h"
 #include "esp_log.h"
 
+#include "driver/i2c.h"
 #include "driver/gpio.h"
 #include "esp_lcd_panel_ops.h"
 #include "esp_lcd_panel_rgb.h"
@@ -44,6 +45,90 @@ static const char *TAG = "TouchScreen4DS";
 #define GEN4_RGB_H_RES             800
 #define GEN4_RGB_V_RES             480
 #define GEN4_43CT_PIXEL_CLOCK_HZ   (16 * 1000 * 1000)
+
+// Touch controller (from GFX4dESP32 sources): I2C @ 0x38, data starts at reg 0x02
+#define GEN4_TOUCH_I2C_PORT        I2C_NUM_0
+#define GEN4_TOUCH_I2C_SDA         17
+#define GEN4_TOUCH_I2C_SCL         18
+#define GEN4_TOUCH_I2C_FREQ_HZ     400000
+#define GEN4_TOUCH_ADDR            0x38
+#define GEN4_TOUCH_REG             0x02
+
+static bool s_i2c_inited = false;
+static lv_indev_drv_t s_indev_drv;
+static lv_indev_t *s_indev = NULL;
+
+static esp_err_t touch_i2c_init(void)
+{
+    if (s_i2c_inited) return ESP_OK;
+    i2c_config_t conf = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = GEN4_TOUCH_I2C_SDA,
+        .scl_io_num = GEN4_TOUCH_I2C_SCL,
+        .sda_pullup_en = GPIO_PULLUP_ENABLE,
+        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .master.clk_speed = GEN4_TOUCH_I2C_FREQ_HZ,
+    };
+    ESP_ERROR_CHECK(i2c_param_config(GEN4_TOUCH_I2C_PORT, &conf));
+    ESP_ERROR_CHECK(i2c_driver_install(GEN4_TOUCH_I2C_PORT, conf.mode, 0, 0, 0));
+    s_i2c_inited = true;
+    return ESP_OK;
+}
+
+static esp_err_t touch_read(uint16_t *out_x, uint16_t *out_y, bool *out_pressed)
+{
+    if (!out_x || !out_y || !out_pressed) return ESP_ERR_INVALID_ARG;
+    *out_pressed = false;
+
+    uint8_t reg = GEN4_TOUCH_REG;
+    uint8_t buf[6] = {0};
+    esp_err_t err = i2c_master_write_read_device(
+        GEN4_TOUCH_I2C_PORT,
+        GEN4_TOUCH_ADDR,
+        &reg,
+        1,
+        buf,
+        sizeof(buf),
+        pdMS_TO_TICKS(50)
+    );
+    if (err != ESP_OK) return err;
+
+    uint8_t tps = buf[0];
+    if (tps == 0xFF || tps == 0) {
+        return ESP_OK;
+    }
+
+    uint16_t y = (uint16_t)(((buf[1] & 0x0F) << 8) | buf[2]);
+    uint16_t x = (uint16_t)(((buf[3] & 0x0F) << 8) | buf[4]);
+
+    if (x >= GEN4_RGB_H_RES) x = GEN4_RGB_H_RES - 1;
+    if (y >= GEN4_RGB_V_RES) y = GEN4_RGB_V_RES - 1;
+
+    *out_x = x;
+    *out_y = y;
+    *out_pressed = true;
+    return ESP_OK;
+}
+
+static void lvgl_touch_read_cb(lv_indev_drv_t *drv, lv_indev_data_t *data)
+{
+    (void)drv;
+    static uint16_t last_x = 0;
+    static uint16_t last_y = 0;
+
+    uint16_t x = 0, y = 0;
+    bool pressed = false;
+    if (touch_read(&x, &y, &pressed) == ESP_OK && pressed) {
+        last_x = x;
+        last_y = y;
+        data->state = LV_INDEV_STATE_PR;
+    } else {
+        data->state = LV_INDEV_STATE_REL;
+    }
+    data->point.x = (lv_coord_t)last_x;
+    data->point.y = (lv_coord_t)last_y;
+    data->continue_reading = false;
+}
 
 IRAM_ATTR static bool rgb_lcd_on_vsync_event(esp_lcd_panel_handle_t panel,
                                             const esp_lcd_rgb_panel_event_data_t *edata,
@@ -132,8 +217,22 @@ esp_err_t TouchScreen_display_init(void)
 
     backlight_on();
 
-    // No touch controller integration yet (unknown controller / pins)
+    ESP_ERROR_CHECK(touch_i2c_init());
+
     ESP_ERROR_CHECK(lvgl_port_init(panel_handle, NULL));
+    // Register LVGL touch input device (polling I2C controller at 0x38)
+    if (lvgl_port_lock(1000)) {
+        lv_indev_drv_init(&s_indev_drv);
+        s_indev_drv.type = LV_INDEV_TYPE_POINTER;
+        s_indev_drv.read_cb = lvgl_touch_read_cb;
+        s_indev = lv_indev_drv_register(&s_indev_drv);
+        if (!s_indev) {
+            ESP_LOGW(TAG, "lv_indev_drv_register failed");
+        }
+        lvgl_port_unlock();
+    } else {
+        ESP_LOGW(TAG, "lvgl_port_lock failed, touch not registered");
+    }
 
     esp_lcd_rgb_panel_event_callbacks_t cbs = {
         .on_vsync = rgb_lcd_on_vsync_event,

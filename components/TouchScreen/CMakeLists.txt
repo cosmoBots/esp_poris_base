@@ -28,7 +28,7 @@ endif()
 idf_component_register(
   SRCS ${srcs}
   INCLUDE_DIRS "include"
-  PRIV_REQUIRES PrjCfg NetVars json nvs_flash
+  PRIV_REQUIRES PrjCfg NetVars json nvs_flash driver esp_lcd
 )
 
 # Suprime warnings de formato en LVGL
