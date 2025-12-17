@@ -33,7 +33,6 @@
 
 // BEGIN --- Project configuration section ---
 #include <TouchScreen.h>
-#include <lvgl_port.h>
 // end   --- Project configuration section ---
 
 // BEGIN --- Self-includes section ---
@@ -74,7 +73,7 @@ lv_style_t style_text_invert;
 static lv_obj_t *s_screen = NULL;
 static bool s_ui_ready = false;
 
-#define UIDEMO_FIRST_DEMO
+//#define UIDEMO_FIRST_DEMO
 #ifdef UIDEMO_FIRST_DEMO
 
 static lv_obj_t *s_labels[TOUCHSCREEN_MAX_LINES] = {0};
@@ -87,13 +86,19 @@ static lv_chart_series_t *s_chart_series = NULL;
 static lv_timer_t *s_chart_timer = NULL;
 static lv_obj_t *s_alert = NULL;
 static int s_last_slider_value = 0;
-static void touchscreen_update(const UIDemo_dre_t *snapshot);
+static void touchscreen_update(void);
+static void UIDemo_ensure_ui(void);
+
+#if CONFIG_UIDEMO_USE_THREAD
+static inline void _lock(void);
+static inline void _unlock(void);
+#endif
 
 
 static inline void set_line_text(size_t idx, const char *text)
 {
     if (!text) return;
-#if CONFIG_TOUCHSCREEN_USE_THREAD
+#if CONFIG_UIDEMO_USE_THREAD
     _lock();
 #endif
     switch (idx) {
@@ -109,10 +114,10 @@ static inline void set_line_text(size_t idx, const char *text)
     case 9: strlcpy(UIDemo_dre.line10, text, sizeof(UIDemo_dre.line10)); break;
     default: break;
     }
-#if CONFIG_TOUCHSCREEN_USE_THREAD
+#if CONFIG_UIDEMO_USE_THREAD
     _unlock();
 #endif
-    touchscreen_update(&UIDemo_dre);
+    touchscreen_update();
 }
 
 static void btn_event_cb(lv_event_t *e)
@@ -138,30 +143,42 @@ static void chart_timer_cb(lv_timer_t *t)
 {
     (void)t;
     if (!s_ui_ready || !s_chart || !s_chart_series) return;
-    if (lvgl_port_lock(-1)) {
+    if (TouchScreen_lvgl_lock(-1)) {
         lv_chart_set_next_value(s_chart, s_chart_series, s_last_slider_value);
-        lvgl_port_unlock();
+        TouchScreen_lvgl_unlock();
     }
 }
+#endif
 
-static void touchscreen_update(const UIDemo_dre_t *snapshot)
+static void touchscreen_update(void)
 {
+    UIDemo_dre_t snapshot;
+#if CONFIG_UIDEMO_USE_THREAD
+    _lock();
+    snapshot = UIDemo_dre;
+    _unlock();
+#else
+    snapshot = UIDemo_dre;
+#endif
+
     if (!s_ui_ready) return;
-    if (!lvgl_port_lock(-1)) return;
+    if (!TouchScreen_lvgl_lock(-1)) return;
+
+#ifdef UIDEMO_FIRST_DEMO
     for (size_t i = 0; i < TOUCHSCREEN_MAX_LINES; ++i) {
         if (!s_labels[i]) continue;
         const char *src = NULL;
         switch (i) {
-        case 0: src = snapshot->line1; break;
-        case 1: src = snapshot->line2; break;
-        case 2: src = snapshot->line3; break;
-        case 3: src = snapshot->line4; break;
-        case 4: src = snapshot->line5; break;
-        case 5: src = snapshot->line6; break;
-        case 6: src = snapshot->line7; break;
-        case 7: src = snapshot->line8; break;
-        case 8: src = snapshot->line9; break;
-        case 9: src = snapshot->line10; break;
+        case 0: src = snapshot.line1; break;
+        case 1: src = snapshot.line2; break;
+        case 2: src = snapshot.line3; break;
+        case 3: src = snapshot.line4; break;
+        case 4: src = snapshot.line5; break;
+        case 5: src = snapshot.line6; break;
+        case 6: src = snapshot.line7; break;
+        case 7: src = snapshot.line8; break;
+        case 8: src = snapshot.line9; break;
+        case 9: src = snapshot.line10; break;
         default: break;
         }
         if (!src) continue;
@@ -172,16 +189,15 @@ static void touchscreen_update(const UIDemo_dre_t *snapshot)
     }
     // Alert: show only when line10 == "1"
     if (s_alert) {
-        if (strncmp(snapshot->line10, "1", 1) == 0 && snapshot->line10[1] == '\0') {
+        if (strncmp(snapshot.line10, "1", 1) == 0 && snapshot.line10[1] == '\0') {
             lv_obj_clear_flag(s_alert, LV_OBJ_FLAG_HIDDEN);
         } else {
             lv_obj_add_flag(s_alert, LV_OBJ_FLAG_HIDDEN);
         }
     }
-    lvgl_port_unlock();
-}
-
 #endif
+    TouchScreen_lvgl_unlock();
+}
 
 // END   --- Internal variables (DRE)
 
@@ -359,22 +375,15 @@ void UIDemo_execute_function_safemode(void (*callback)())
 // END   ------------------ Public API (MULTITASKING)------------------
 
 // BEGIN ------------------ Public API (COMMON + SPIN)------------------
-
-UIDemo_return_code_t UIDemo_setup(void)
+static void UIDemo_ensure_ui(void)
 {
-    // Init liviano; no arranca tarea.
-    ESP_LOGD(TAG, "setup()");
-    // Loading values from NVS
-    UIDemo_netvars_nvs_load();    
-#if CONFIG_UIDEMO_USE_THREAD
-    if (_create_mutex_once() != pdPASS) {
-        ESP_LOGE(TAG, "mutex creation failed");
-        return UIDemo_ret_error;
-    }
-#endif
+    if (s_ui_ready) return;
+    if (!TouchScreen_lvgl_ready()) return;
+    if (!TouchScreen_lvgl_lock(1000)) return;
 
-    s_screen = lv_scr_act();
-
+    s_screen = lv_obj_create(NULL);
+    lv_obj_set_size(s_screen, LV_HOR_RES, LV_VER_RES);
+    lv_obj_clear_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
 
 #ifdef UIDEMO_FIRST_DEMO
     // Labels container
@@ -440,16 +449,7 @@ UIDemo_return_code_t UIDemo_setup(void)
     lv_obj_align(s_alert, LV_ALIGN_TOP_RIGHT, -4, 4);
     lv_obj_add_flag(s_alert, LV_OBJ_FLAG_HIDDEN);
 
-    lv_scr_load(s_screen);
-    s_ui_ready = true;
-    lvgl_port_unlock();
-
-    // Prime the UI with current values
-    touchscreen_update(&UIDemo_dre);
-
 #else
-
-
     lv_style_init(&style_header_bg);
     lv_style_set_bg_color(&style_header_bg, lv_color_hex(0x033875));
     lv_style_set_bg_opa(&style_header_bg, LV_OPA_COVER);
@@ -457,15 +457,14 @@ UIDemo_return_code_t UIDemo_setup(void)
     lv_style_init(&style_btn_primary);
     lv_style_set_bg_color(&style_btn_primary, lv_color_hex(0x437dce));
     lv_style_set_bg_opa(&style_btn_primary, LV_OPA_COVER);
-    lv_style_set_radius(&style_btn_primary, 8);   // ajustable
-    lv_style_set_pad_all(&style_btn_primary, 10); // ajustable
+    lv_style_set_radius(&style_btn_primary, 8);
+    lv_style_set_pad_all(&style_btn_primary, 10);
 
     lv_style_init(&style_text_body);
     lv_style_set_text_color(&style_text_body, lv_color_hex(0x170632));
 
     lv_style_init(&style_text_invert);
     lv_style_set_text_color(&style_text_invert, lv_color_hex(0xFFFFFF));
-
 
     // Header
     lv_obj_t *hdr = lv_obj_create(s_screen);
@@ -497,11 +496,29 @@ UIDemo_return_code_t UIDemo_setup(void)
     lv_label_set_text(btn2_label, "START");
     lv_obj_add_style(btn2_label, &style_text_invert, 0);
     lv_obj_center(btn2_label);
-    
+#endif
+
     lv_scr_load(s_screen);
     s_ui_ready = true;
-    lvgl_port_unlock();    
+    TouchScreen_lvgl_unlock();
+
+    touchscreen_update();
+}
+
+UIDemo_return_code_t UIDemo_setup(void)
+{
+    // Init liviano; no arranca tarea.
+    ESP_LOGD(TAG, "setup()");
+    // Loading values from NVS
+    UIDemo_netvars_nvs_load();    
+#if CONFIG_UIDEMO_USE_THREAD
+    if (_create_mutex_once() != pdPASS) {
+        ESP_LOGE(TAG, "mutex creation failed");
+        return UIDemo_ret_error;
+    }
 #endif
+
+    UIDemo_ensure_ui();
 
     UIDemo_dre.last_return_code = UIDemo_ret_ok;
     return UIDemo_ret_ok;
@@ -512,6 +529,8 @@ static  // In case we are using a thread, this function should not be part of th
 #endif
 UIDemo_return_code_t UIDemo_spin(void)
 {
+    UIDemo_ensure_ui();
+
 #if CONFIG_UIDEMO_USE_THREAD
     _lock();
 #endif

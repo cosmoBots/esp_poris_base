@@ -24,9 +24,6 @@
 
 // END   --- ESP-IDF headers section ---
 
-// BEGIN --- LVGL headers section ---
-#include <lvgl.h>
-// END   --- LVGL headers section ---
 // BEGIN --- Project configuration section ---
 #include <PrjCfg.h> // Including project configuration module 
 // END   --- Project configuration section ---
@@ -224,33 +221,20 @@ void TouchScreen_execute_function_safemode(void (*callback)())
 
 // END   ------------------ Public API (MULTITASKING)------------------
 
-static bool s_ui_ready = false;
-static lv_obj_t *s_screen = NULL;
+static bool s_display_inited = false;
+static bool s_lvgl_ready = false;
 
-void touchscreen_main(void)
+static void touchscreen_main(void)
 {
-    if (s_ui_ready) return;
+    if (s_display_inited) return;
 
     esp_err_t init_ret = TouchScreen_display_init();
     if (init_ret != ESP_OK) {
         ESP_LOGE(TAG, "display init failed: %s", esp_err_to_name(init_ret));
         return;
     }
-
-    if (!lvgl_port_lock(-1)) {
-        ESP_LOGW(TAG, "LVGL not ready (lvgl_port_lock failed)");
-        return;
-    }
-
-    s_screen = lv_obj_create(NULL);
-    lv_obj_set_size(s_screen, LV_HOR_RES, LV_VER_RES);
-    lv_obj_set_style_pad_all(s_screen, 8, 0);
-    lv_obj_clear_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
-
-
-    lv_scr_load(s_screen);
-    s_ui_ready = true;
-    lvgl_port_unlock();
+    s_display_inited = true;
+    s_lvgl_ready = true;
 }
 
 
@@ -326,3 +310,20 @@ TouchScreen_return_code_t TouchScreen_disable(void)
 }
 
 // BEGIN ------------------ Public API (COMMON)------------------
+
+bool TouchScreen_lvgl_ready(void)
+{
+    return s_lvgl_ready;
+}
+
+bool TouchScreen_lvgl_lock(int timeout_ms)
+{
+    if (!s_lvgl_ready) return false;
+    return lvgl_port_lock(timeout_ms);
+}
+
+void TouchScreen_lvgl_unlock(void)
+{
+    if (!s_lvgl_ready) return;
+    lvgl_port_unlock();
+}

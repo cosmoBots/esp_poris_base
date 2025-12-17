@@ -92,7 +92,17 @@ TouchScreen_return_code_t TouchScreen_setup(void);
 TouchScreen_return_code_t TouchScreen_enable(void);
 TouchScreen_return_code_t TouchScreen_disable(void);
 
-// ------------------ BEGIN Public API (COMMON)--------------------
+/**
+ * LVGL base services (provided by TouchScreen):
+ * - TouchScreen_setup() initializes the display + LVGL port.
+ * - UI components should call TouchScreen_lvgl_ready() before using LVGL.
+ * - LVGL is not thread-safe, so UI components must use the lock wrappers.
+ */
+bool TouchScreen_lvgl_ready(void);
+bool TouchScreen_lvgl_lock(int timeout_ms);
+void TouchScreen_lvgl_unlock(void);
+
+// ------------------ END   Public API (COMMON)--------------------
 
 #ifdef __cplusplus
 }
