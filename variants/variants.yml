@@ -50,6 +50,14 @@ variants:
       LOG_LEVEL: "debug"
       FOO: "bar"
 
+  - id: S34DSTouchScreen
+    target: esp32s3
+    overlays: ["target_esp32s3.defaults","feat_s34ds_touch.defaults","feat_touchscreen4ds_lvgl.defaults"]
+    components: ["PrjCfg", "NetVars","OTA","Provisioning", "MQTTComm","Measurement","TouchScreen"]
+    extra_env:
+      LOG_LEVEL: "debug"
+      FOO: "bar"
+
   - id: S3PoE
     target: esp32s3
     overlays: ["target_esp32s3.defaults","feat_s3_poe.defaults"]

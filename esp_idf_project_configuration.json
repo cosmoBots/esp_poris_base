@@ -173,6 +173,35 @@
       "postFlash": ""
     }
   },
+  "S34DSTouchScreen": {
+    "build": {
+      "compileArgs": [],
+      "ninjaArgs": [],
+      "buildDirectoryPath": "./build_s34dstouchscreen",
+      "sdkconfigDefaults": [
+        "buildcfg/sdkconfig.S34DSTouchScreen.defaults"
+      ],
+      "sdkconfigFilePath": "./build_s34dstouchscreen/sdkconfig"
+    },
+    "env": {
+      "VARIANT": "S34DSTouchScreen",
+      "VAR_SUFFIX": "s34dstouchscreen"
+    },
+    "idfTarget": "esp32s3",
+    "flashBaudRate": "",
+    "monitorBaudRate": "",
+    "openOCD": {
+      "debugLevel": 0,
+      "configs": [],
+      "args": []
+    },
+    "tasks": {
+      "preBuild": "bash poris/prebuild.sh S34DSTouchScreen",
+      "preFlash": "",
+      "postBuild": "",
+      "postFlash": ""
+    }
+  },
   "S3PoE": {
     "build": {
       "compileArgs": [],
