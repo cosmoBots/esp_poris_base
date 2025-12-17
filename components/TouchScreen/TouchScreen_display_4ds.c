@@ -54,6 +54,11 @@ static const char *TAG = "TouchScreen4DS";
 #define GEN4_TOUCH_ADDR            0x38
 #define GEN4_TOUCH_REG             0x02
 
+// IO expander (from gfx4desp32_rgb_panel.h)
+#define GEN4_IOX_ADDR              0x39
+#define GEN4_IOX_INPUT_PORT_REG    0x00
+#define GEN4_IOX_TOUCH_INT_BIT     6  // 1 = no touch, 0 = touch (active-low)
+
 static bool s_i2c_inited = false;
 static lv_indev_drv_t s_indev_drv;
 static lv_indev_t *s_indev = NULL;
@@ -75,10 +80,37 @@ static esp_err_t touch_i2c_init(void)
     return ESP_OK;
 }
 
+static esp_err_t ioexp_touch_int_read(bool *out_notouch)
+{
+    if (!out_notouch) return ESP_ERR_INVALID_ARG;
+    uint8_t reg = GEN4_IOX_INPUT_PORT_REG;
+    uint8_t val = 0xFF;
+    esp_err_t err = i2c_master_write_read_device(
+        GEN4_TOUCH_I2C_PORT,
+        GEN4_IOX_ADDR,
+        &reg,
+        1,
+        &val,
+        1,
+        pdMS_TO_TICKS(50)
+    );
+    if (err != ESP_OK) return err;
+    *out_notouch = ((val >> GEN4_IOX_TOUCH_INT_BIT) & 0x01) != 0;
+    return ESP_OK;
+}
+
 static esp_err_t touch_read(uint16_t *out_x, uint16_t *out_y, bool *out_pressed)
 {
     if (!out_x || !out_y || !out_pressed) return ESP_ERR_INVALID_ARG;
     *out_pressed = false;
+
+    // Fast path: if the IO expander says "no touch" and we're not already pressed,
+    // skip reading the touch controller (saves I2C bandwidth/CPU).
+    static bool last_pressed = false;
+    bool no_touch = false;
+    if (ioexp_touch_int_read(&no_touch) == ESP_OK && no_touch && !last_pressed) {
+        return ESP_OK;
+    }
 
     uint8_t reg = GEN4_TOUCH_REG;
     uint8_t buf[6] = {0};
@@ -95,6 +127,7 @@ static esp_err_t touch_read(uint16_t *out_x, uint16_t *out_y, bool *out_pressed)
 
     uint8_t tps = buf[0];
     if (tps == 0xFF || tps == 0) {
+        last_pressed = false;
         return ESP_OK;
     }
 
@@ -107,6 +140,7 @@ static esp_err_t touch_read(uint16_t *out_x, uint16_t *out_y, bool *out_pressed)
     *out_x = x;
     *out_y = y;
     *out_pressed = true;
+    last_pressed = true;
     return ESP_OK;
 }
 
