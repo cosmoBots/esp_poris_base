@@ -1,0 +1,14 @@
+// Auto-generated fragment for UIDemo netvars
+// Include this inside the definition of struct UIDemo_dre_t
+// DO NOT EDIT MANUALLY; edit netvars.csv and regenerate.
+
+    { "line1", NULL, "line1", NULL, NULL, NETVARS_TYPE_STRING, PRJCFG_NVS_NONE, true, NETVARS_JSON_MODE_INOUT, NETVARS_JSON_REPR_AUTO, 128, (void*)(UIDemo_dre.line1) },
+    { "line2", NULL, "line2", NULL, NULL, NETVARS_TYPE_STRING, PRJCFG_NVS_NONE, true, NETVARS_JSON_MODE_INOUT, NETVARS_JSON_REPR_AUTO, 128, (void*)(UIDemo_dre.line2) },
+    { "line3", NULL, "line3", NULL, NULL, NETVARS_TYPE_STRING, PRJCFG_NVS_NONE, true, NETVARS_JSON_MODE_INOUT, NETVARS_JSON_REPR_AUTO, 128, (void*)(UIDemo_dre.line3) },
+    { "line4", NULL, "line4", NULL, NULL, NETVARS_TYPE_STRING, PRJCFG_NVS_NONE, true, NETVARS_JSON_MODE_INOUT, NETVARS_JSON_REPR_AUTO, 128, (void*)(UIDemo_dre.line4) },
+    { "line5", NULL, "line5", NULL, NULL, NETVARS_TYPE_STRING, PRJCFG_NVS_NONE, true, NETVARS_JSON_MODE_INOUT, NETVARS_JSON_REPR_AUTO, 128, (void*)(UIDemo_dre.line5) },
+    { "line6", NULL, "line6", NULL, NULL, NETVARS_TYPE_STRING, PRJCFG_NVS_NONE, true, NETVARS_JSON_MODE_INOUT, NETVARS_JSON_REPR_AUTO, 128, (void*)(UIDemo_dre.line6) },
+    { "line7", NULL, "line7", NULL, NULL, NETVARS_TYPE_STRING, PRJCFG_NVS_NONE, true, NETVARS_JSON_MODE_INOUT, NETVARS_JSON_REPR_AUTO, 128, (void*)(UIDemo_dre.line7) },
+    { "line8", NULL, "line8", NULL, NULL, NETVARS_TYPE_STRING, PRJCFG_NVS_NONE, true, NETVARS_JSON_MODE_INOUT, NETVARS_JSON_REPR_AUTO, 128, (void*)(UIDemo_dre.line8) },
+    { "line9", NULL, "line9", NULL, NULL, NETVARS_TYPE_STRING, PRJCFG_NVS_NONE, true, NETVARS_JSON_MODE_INOUT, NETVARS_JSON_REPR_AUTO, 128, (void*)(UIDemo_dre.line9) },
+    { "line10", NULL, "line10", NULL, NULL, NETVARS_TYPE_STRING, PRJCFG_NVS_NONE, true, NETVARS_JSON_MODE_INOUT, NETVARS_JSON_REPR_AUTO, 128, (void*)(UIDemo_dre.line10) },

@@ -58,6 +58,9 @@
 #include <Provisioning.h>
 #endif
 #endif
+#ifdef CONFIG_PORIS_ENABLE_UIDEMO
+#include <UIDemo.h>
+#endif
 // [PORIS_INTEGRATION_INCLUDE]
 
 // Include comms callbacks
@@ -148,6 +151,10 @@ app_main_return_code init_components(void)
 #endif
 #ifdef CONFIG_PORIS_ENABLE_TOUCHSCREEN
     error_occurred = (TouchScreen_setup() != TouchScreen_ret_ok);
+    error_accumulator |= error_occurred;
+#endif
+#ifdef CONFIG_PORIS_ENABLE_UIDEMO
+    error_occurred = (UIDemo_setup() != UIDemo_ret_ok);
     error_accumulator |= error_occurred;
 #endif
 // [PORIS_INTEGRATION_INIT]
@@ -254,6 +261,16 @@ app_main_return_code start_components(void)
     if (!error_occurred)
     {
         error_occurred |= (TouchScreen_start() != TouchScreen_ret_ok);
+    }
+#endif
+    error_accumulator |= error_occurred;
+#endif
+#ifdef CONFIG_PORIS_ENABLE_UIDEMO
+    error_occurred = (UIDemo_enable() != UIDemo_ret_ok);
+#ifdef CONFIG_UIDEMO_USE_THREAD
+    if (!error_occurred)
+    {
+        error_occurred |= (UIDemo_start() != UIDemo_ret_ok);
     }
 #endif
     error_accumulator |= error_occurred;

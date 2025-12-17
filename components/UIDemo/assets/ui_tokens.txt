@@ -1,0 +1,6 @@
+
+text_color="0x170632" width="121" height="29"
+text_color="0xffffff" width="188" height="39"
+bg_color="0x437dce" width="137" height="53"
+bg_color="0x033875" width="800" height="70"
+

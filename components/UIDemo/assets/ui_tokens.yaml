@@ -1,0 +1,8 @@
+colors:
+  header_bg: 0x033875
+  primary:   0x437dce
+  text_main: 0x170632
+  text_inv:  0xffffff
+notes:
+  source: "Figma plugin export (LVGL element style)"
+  header_rect: { width: 800, height: 70 }
