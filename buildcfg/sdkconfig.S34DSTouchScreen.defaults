@@ -57,7 +57,9 @@ CONFIG_PARTITION_TABLE_FILENAME="partitions_16mb.csv"
 CONFIG_PARTITION_TABLE_OFFSET=0x8000
 CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
-# auto-created empty overlay: feat_s3_touch.defaults
+# 4DSystems GEN4-ESP32-43CT-CLB variant overlay
+# Select the proper backend for TouchScreen.
+CONFIG_TOUCHSCREEN_DISPLAY_BACKEND_4DS=y
 # This file was generated using idf.py save-defconfig. It can be edited manually.
 # Espressif IoT Development Framework (ESP-IDF) 5.2.0 Project Minimal Configuration
 #

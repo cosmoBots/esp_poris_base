@@ -1,1 +1,3 @@
-# auto-created empty overlay: feat_s3_touch.defaults
+# 4DSystems GEN4-ESP32-43CT-CLB variant overlay
+# Select the proper backend for TouchScreen.
+CONFIG_TOUCHSCREEN_DISPLAY_BACKEND_4DS=y

@@ -37,6 +37,7 @@
 // BEGIN --- Self-includes section ---
 #include "TouchScreen.h"
 #include "TouchScreen_netvars.h"
+#include "TouchScreen_display.h"
 #include "lvgl_port.h"
 // END --- Self-includes section ---
 
@@ -343,15 +344,15 @@ void TouchScreen_execute_function_safemode(void (*callback)())
 // END   ------------------ Public API (MULTITASKING)------------------
 
 
-#include "waveshare_rgb_lcd_port.h"
-
 void touchscreen_main(void)
 {
     if (s_ui_ready) return;
 
-    waveshare_esp32_s3_rgb_lcd_init(); // Initialize the Waveshare ESP32-S3 RGB LCD 
-    // wavesahre_rgb_lcd_bl_on();  //Turn on the screen backlight 
-    // wavesahre_rgb_lcd_bl_off(); //Turn off the screen backlight 
+    esp_err_t init_ret = TouchScreen_display_init();
+    if (init_ret != ESP_OK) {
+        ESP_LOGE(TAG, "display init failed: %s", esp_err_to_name(init_ret));
+        return;
+    }
 
     if (!lvgl_port_lock(-1)) {
         ESP_LOGW(TAG, "LVGL not ready (lvgl_port_lock failed)");

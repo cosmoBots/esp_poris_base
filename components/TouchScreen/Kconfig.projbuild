@@ -62,6 +62,20 @@ endmenu
 menu "Touchscreen Configuration"
 
     menu "Display"
+        choice TOUCHSCREEN_DISPLAY_BACKEND
+            prompt "Display backend"
+            default TOUCHSCREEN_DISPLAY_BACKEND_WAVESHARE
+            help
+              Select the hardware backend used to initialize the LCD+touch and bind it to LVGL.
+
+        config TOUCHSCREEN_DISPLAY_BACKEND_WAVESHARE
+            bool "Waveshare ESP32-S3 Touch LCD 4.3B (RGB + GT911)"
+
+        config TOUCHSCREEN_DISPLAY_BACKEND_4DS
+            bool "4DSystems GEN4-ESP32-43CT-CLB (TBD)"
+
+        endchoice
+
         config LCD_RGB_BOUNCE_BUFFER_HEIGHT
             int "RGB Bounce buffer height"
             default 10
@@ -176,6 +190,5 @@ menu "Touchscreen Configuration"
                 Height of LVGL buffer. The width of the buffer is the same as that of the LCD.
     endmenu
 endmenu
-
 
 
