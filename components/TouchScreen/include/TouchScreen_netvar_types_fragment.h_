@@ -1,14 +1,3 @@
 // Auto-generated fragment for TouchScreen netvars
 // Include this inside the definition of struct TouchScreen_dre_t
 // DO NOT EDIT MANUALLY; edit netvars.csv and regenerate.
-
-    char line1[128];
-    char line2[128];
-    char line3[128];
-    char line4[128];
-    char line5[128];
-    char line6[128];
-    char line7[128];
-    char line8[128];
-    char line9[128];
-    char line10[128];

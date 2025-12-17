@@ -50,16 +50,6 @@ static const char *TAG = "TouchScreen";
 TouchScreen_dre_t TouchScreen_dre = {
     .enabled = true,
     .last_return_code = TouchScreen_ret_ok,
-    .line1 = "linea1",
-    .line2 = "linea2",
-    .line3 = "linea3",
-    .line4 = "linea4",
-    .line5 = "linea5",
-    .line6 = "linea6",
-    .line7 = "linea7",
-    .line8 = "linea8",
-    .line9 = "linea9",
-    .line10 = "linea10"
 };
 
 // END   --- Internal variables (DRE)

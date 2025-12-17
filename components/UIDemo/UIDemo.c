@@ -49,7 +49,17 @@ static const char *TAG = "UIDemo";
 // BEGIN --- Internal variables (DRE)
 UIDemo_dre_t UIDemo_dre = {
     .enabled = true,
-    .last_return_code = UIDemo_ret_ok
+    .last_return_code = UIDemo_ret_ok,
+    .line1 = "linea1",
+    .line2 = "linea2",
+    .line3 = "linea3",
+    .line4 = "linea4",
+    .line5 = "linea5",
+    .line6 = "linea6",
+    .line7 = "linea7",
+    .line8 = "linea8",
+    .line9 = "linea9",
+    .line10 = "linea10"    
 };
 
 lv_style_t style_header_bg;
